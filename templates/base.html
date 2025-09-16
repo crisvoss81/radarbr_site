@@ -1,0 +1,31 @@
+<!doctype html><html lang="pt-br">
+{% if SEARCH_CONSOLE_TOKEN %}
+<meta name="google-site-verification" content="{{ SEARCH_CONSOLE_TOKEN }}">
+{% endif %}
+
+{% if GA4_ID %}
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ GA4_ID }}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', '{{ GA4_ID }}', { 'anonymize_ip': true });
+</script>
+{% endif %}
+
+<link rel="alternate" hreflang="pt-BR" href="{{ request.build_absolute_uri }}">
+  
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block meta_title %}{{ SITE_NAME }}{% endblock %}</title>
+<meta name="description" content="{% block meta_description %}Portal de notícias.{% endblock %}">
+<link rel="canonical" href="{{ request.build_absolute_uri }}">{% block head_extra %}{% endblock %}
+<script src="https://cdn.tailwindcss.com"></script>
+</head><body class="bg-gray-50 text-gray-900">
+<header class="bg-white border-b"><div class="max-w-5xl mx-auto px-4 py-4 flex justify-between">
+  <a href="/" class="text-xl font-bold">{{ SITE_NAME }}</a>
+  <nav class="text-sm"><a class="hover:underline" href="/buscar/">Buscar</a></nav>
+</div></header>
+<main class="max-w-5xl mx-auto px-4 py-6">{% block content %}{% endblock %}</main>
+<footer class="border-t text-sm text-gray-500"><div class="max-w-5xl mx-auto px-4 py-6">© {{ SITE_NAME }} {{ now|date:"Y" }}</div></footer>
+</body></html>

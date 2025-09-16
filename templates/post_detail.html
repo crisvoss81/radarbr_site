@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block meta_title %}{{ post.title }} | {{ SITE_NAME }}{% endblock %}
+{% block meta_description %}{{ post.excerpt|default:post.content|truncatechars:155 }}{% endblock %}
+{% block content %}
+<nav class="text-sm mb-3"><a href="/">Início</a>{% if post.category %} › <a href="{{ post.category.get_absolute_url }}">{{ post.category }}</a>{% endif %} › <span>{{ post.title }}</span></nav>
+<article class="prose max-w-none">
+  <h1 class="text-3xl font-bold mb-2">{{ post.title }}</h1>
+  <p class="text-sm text-gray-500 mb-4">{{ post.published_at|date:"d/m/Y H:i" }}</p>
+  {% if post.cover %}<img src="{{ post.cover.url }}" alt="{{ post.cover_alt|default:post.title }}" class="mb-4 rounded-xl" loading="lazy">{% endif %}
+  <div class="text-lg whitespace-pre-line">{{ post.content }}</div>
+</article>
+{% if related %}
+<hr class="my-8"><h2 class="text-xl font-semibold mb-4">Você também pode gostar</h2>
+<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+  {% for p in related %}
+  <article class="bg-white rounded-xl shadow p-4">
+    {% if p.cover %}<a href="{{ p.get_absolute_url }}"><img src="{{ p.cover.url }}" alt="{{ p.cover_alt|default:p.title }}" loading="lazy" class="mb-3 rounded-lg w-full h-36 object-cover"></a>{% endif %}
+    <a href="{{ p.get_absolute_url }}"><h3 class="font-semibold leading-snug">{{ p.title }}</h3></a>
+  </article>
+  {% endfor %}
+</div>{% endif %}
+{% endblock %}
