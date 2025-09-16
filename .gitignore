@@ -1,7 +1,6 @@
 # Python / Django
 __pycache__/
 *.py[cod]
-*.sqlite3
 db.sqlite3
 .env
 .venv/
@@ -13,6 +12,3 @@ node_modules/
 
 # VS Code
 .vscode/
-
-# Tailwind (build gerado) — opcional ignorar:
-# static/build/
