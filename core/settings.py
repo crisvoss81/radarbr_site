@@ -28,7 +28,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",   # ← adicione aqui
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -52,14 +52,23 @@ TEMPLATES = [{
 }]
 WSGI_APPLICATION = "core.wsgi.application"
 
-DATABASES = {"default":{"ENGINE":"django.db.backends.sqlite3","NAME": BASE_DIR/"db.sqlite3"}}
+import dj_database_url
 
+DATABASES = {
+    "default": dj_database_url.parse(
+        os.getenv("DATABASE_URL", "sqlite:///db.sqlite3"),
+        conn_max_age=600,
+        ssl_require=os.getenv("RENDER", "") == "true",
+    )
+}
 LANGUAGE_CODE="pt-br"
 TIME_ZONE="America/Sao_Paulo"
 USE_I18N=True
 USE_TZ=True
 
-STATIC_URL="/static/"
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 STATICFILES_DIRS=[BASE_DIR/"static"]
 STATIC_ROOT=BASE_DIR/"staticfiles"
 STORAGES={"staticfiles":{"BACKEND":"whitenoise.storage.CompressedManifestStaticFilesStorage"}}
@@ -70,4 +79,6 @@ DEFAULT_AUTO_FIELD="django.db.models.BigAutoField"
 # ... já existe load_dotenv()
 GA4_ID = os.getenv("GA4_ID", "")
 SEARCH_CONSOLE_TOKEN = os.getenv("SEARCH_CONSOLE_TOKEN", "")
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_SSL_REDIRECT = os.getenv("FORCE_HTTPS", "true").lower() == "true"
 
