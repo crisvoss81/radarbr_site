@@ -1,0 +1,18 @@
+﻿services:
+  - type: web
+    name: radarbr
+    env: python
+    plan: free
+    region: oregon
+    buildCommand: |
+      pip install -r requirements.txt
+      python manage.py collectstatic --noinput
+    startCommand: |
+      gunicorn core.wsgi --workers=3 --log-file=-
+    envVars:
+      - key: RENDER
+        value: "true"
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: FORCE_HTTPS
+        value: "true"

@@ -2,6 +2,15 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 load_dotenv()
+# --- .env / variáveis ---
+from dotenv import load_dotenv
+load_dotenv()
+
+DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() == "true"
+SECRET_KEY = os.getenv("SECRET_KEY", "change-me")
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+CSRF_TRUSTED_ORIGINS = [f"https://{h}" for h in ALLOWED_HOSTS if "." in h]
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
