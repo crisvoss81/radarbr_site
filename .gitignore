@@ -1,14 +1,10 @@
-# Python / Django
+.env
+chaves.txt
+db.sqlite3
+.venv/
 __pycache__/
 *.py[cod]
-db.sqlite3
-.env
-.venv/
+node_modules/
 staticfiles/
 media/
-
-# Node
-node_modules/
-
-# VS Code
 .vscode/
