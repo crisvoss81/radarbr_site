@@ -21,11 +21,85 @@
 <meta name="description" content="{% block meta_description %}Portal de notícias.{% endblock %}">
 <link rel="canonical" href="{{ request.build_absolute_uri }}">{% block head_extra %}{% endblock %}
 <script src="https://cdn.tailwindcss.com"></script>
-</head><body class="bg-gray-50 text-gray-900">
-<header class="bg-white border-b"><div class="max-w-5xl mx-auto px-4 py-4 flex justify-between">
-  <a href="/" class="text-xl font-bold">{{ SITE_NAME }}</a>
-  <nav class="text-sm"><a class="hover:underline" href="/buscar/">Buscar</a></nav>
-</div></header>
+</head>
+<body class="bg-gray-50 text-gray-900">
+  <script>
+  // aplica tema antes de renderizar (evita "flash")
+  (function() {
+    try {
+      const s = localStorage.getItem("theme");
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const dark = s ? s === "dark" : prefersDark;
+      document.documentElement.classList.toggle("dark", dark);
+    } catch(e){}
+  })();
+</script>
+<header class="bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800">
+  <div class="container py-4 flex items-center justify-between gap-4">
+    <a href="/" class="text-2xl font-extrabold text-brand-primary">RadarBR</a>
+
+    <!-- Botões à direita (mobile) -->
+    <div class="flex items-center gap-2 md:hidden">
+      <button id="theme-toggle" class="btn" aria-label="Alternar tema">
+        <span class="inline dark:hidden">🌙</span>
+        <span class="hidden dark:inline">☀️</span>
+      </button>
+      <button id="nav-toggle" class="btn" aria-label="Abrir menu">☰</button>
+    </div>
+
+    <!-- Navegação -->
+    <nav id="nav" class="hidden md:flex items-center gap-4 text-sm text-gray-600 dark:text-gray-300">
+      <a href="/categoria/brasil/" class="hover:underline">Brasil</a>
+      <a href="/categoria/tecnologia/" class="hover:underline">Tecnologia</a>
+      <a href="/categoria/esportes/" class="hover:underline">Esportes</a>
+      <a href="/categoria/economia/" class="hover:underline">Economia</a>
+      <a href="/categoria/entretenimento/" class="hover:underline">Entretenimento</a>
+      <a href="/buscar/" class="btn">Buscar</a>
+
+      <!-- Botão tema (desktop) -->
+      <button id="theme-toggle-desktop" class="btn ml-2" aria-label="Alternar tema">
+        <span class="inline dark:hidden">🌙</span>
+        <span class="hidden dark:inline">☀️</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Menu mobile dropdown -->
+  <div id="nav-mobile" class="container pb-3 hidden md:hidden">
+    <div class="mt-2 grid gap-2 text-sm text-gray-700 dark:text-gray-200">
+      <a href="/categoria/brasil/" class="btn">Brasil</a>
+      <a href="/categoria/tecnologia/" class="btn">Tecnologia</a>
+      <a href="/categoria/esportes/" class="btn">Esportes</a>
+      <a href="/categoria/economia/" class="btn">Economia</a>
+      <a href="/categoria/entretenimento/" class="btn">Entretenimento</a>
+      <a href="/buscar/" class="btn">Buscar</a>
+    </div>
+  </div>
+</header>
+
 <main class="max-w-5xl mx-auto px-4 py-6">{% block content %}{% endblock %}</main>
-<footer class="border-t text-sm text-gray-500"><div class="max-w-5xl mx-auto px-4 py-6">© {{ SITE_NAME }} {{ now|date:"Y" }}</div></footer>
-</body></html>
+<footer class="border-t text-sm text-gray-500">
+  <div class="max-w-5xl mx-auto px-4 py-6">© {{ SITE_NAME }} {{ now|date:"Y" }}
+
+  </div>
+</footer>
+<script>
+  // toggle tema
+  function toggleTheme() {
+    const d = document.documentElement;
+    const isDark = d.classList.toggle('dark');
+    try { localStorage.setItem('theme', isDark ? 'dark' : 'light'); } catch(e){}
+  }
+  document.getElementById('theme-toggle')?.addEventListener('click', toggleTheme);
+  document.getElementById('theme-toggle-desktop')?.addEventListener('click', toggleTheme);
+
+  // menu mobile
+  const navToggle = document.getElementById('nav-toggle');
+  const navMobile = document.getElementById('nav-mobile');
+  navToggle?.addEventListener('click', () => {
+    navMobile.classList.toggle('hidden');
+  });
+</script>
+
+</body>
+</html>
