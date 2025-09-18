@@ -1,62 +1,49 @@
 # siteapp/views_news.py
-from datetime import timedelta, timezone as py_utc
-from django.conf import settings
+from datetime import timezone as dt_tz
 from django.http import HttpResponse
-from django.utils import timezone as dj_tz
-from django.utils.html import escape
-
+from django.utils import timezone
+from xml.sax.saxutils import escape
 from .models import Post
 
-
 def _iso_utc(dt):
-    # Usa UTC do Python, não do django.utils.timezone
-    return dt.astimezone(py_utc.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-
+    if dt is None:
+        dt = timezone.now()
+    # garante UTC e formato 2025-09-18T12:34:56Z
+    return dt.astimezone(dt_tz.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 def news_sitemap(request):
-    now = dj_tz.now()
-    window = now - timedelta(hours=48)
+    cutoff = timezone.now() - timezone.timedelta(days=2)
+    posts = (
+        Post.objects.filter(is_published=True, published_at__gte=cutoff)
+        .order_by("-published_at")[:1000]
+    )
 
-    qs = Post.objects.all()
-    field_names = [f.name for f in Post._meta.get_fields()]
+    pub_name = "RadarBR"
+    pub_lang = "pt-BR"
 
-    if "is_published" in field_names:
-        qs = qs.filter(is_published=True)
-
-    if "published_at" in field_names:
-        qs_recent = qs.filter(published_at__gte=window).order_by("-published_at")[:1000]
-    else:
-        qs_recent = qs.none()
-
-    if not qs_recent.exists() and "created_at" in field_names:
-        qs_recent = qs.filter(created_at__gte=window).order_by("-created_at")[:1000]
-
-    lines = [
+    parts = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
         'xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">'
     ]
 
-    site_name = getattr(settings, "SITE_NAME", "RadarBR")
-
-    for p in qs_recent:
+    for p in posts:
         loc = request.build_absolute_uri(p.get_absolute_url())
-        dt = getattr(p, "published_at", None) or getattr(p, "created_at", None) or now
+        pub_date = _iso_utc(p.published_at)
+        title = escape(p.title or "")
+        parts.append(
+            "<url>"
+            f"<loc>{escape(loc)}</loc>"
+            "<news:news>"
+            "<news:publication>"
+            f"<news:name>{escape(pub_name)}</news:name>"
+            f"<news:language>{escape(pub_lang)}</news:language>"
+            "</news:publication>"
+            f"<news:publication_date>{pub_date}</news:publication_date>"
+            f"<news:title>{title}</news:title>"
+            "</news:news>"
+            "</url>"
+        )
 
-        lines += [
-            "<url>",
-            f"<loc>{escape(loc)}</loc>",
-            "<news:news>",
-            "<news:publication>",
-            f"<news:name>{escape(site_name)}</news:name>",
-            "<news:language>pt-BR</news:language>",
-            "</news:publication>",
-            f"<news:publication_date>{_iso_utc(dt)}</news:publication_date>",
-            f"<news:title>{escape(p.title)}</news:title>",
-            "</news:news>",
-            "</url>",
-        ]
-
-    lines.append("</urlset>")
-    xml = "\n".join(lines)
-    return HttpResponse(xml, content_type="application/xml")
+    parts.append("</urlset>")
+    return HttpResponse("\n".join(parts), content_type="application/xml")
