@@ -14,19 +14,17 @@ from siteapp.sitemaps import sitemaps
 from siteapp.feeds import LatestPostsFeed
 
 urlpatterns = [
-    # site
     path("", home, name="home"),
     path("post/<slug:slug>/", post_detail, name="post_detail"),
     path("categoria/<slug:slug>/", category_detail, name="category_detail"),
     path("buscar/", search, name="search"),
 
-    # SEO
     path("robots.txt", robots_txt, name="robots_txt"),
     path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="sitemap"),
     path("news-sitemap.xml", news_sitemap, name="news_sitemap"),
     path("feed.xml", LatestPostsFeed(), name="feed"),
 
-    # Verificação do Google (Arquivo HTML)
+    # verificação do Google (Arquivo HTML)
     path(
         "googlefcd08be596689a50.html",
         TemplateView.as_view(
@@ -36,7 +34,6 @@ urlpatterns = [
         name="google_verification",
     ),
 
-    # admin
     path("admin/", admin.site.urls),
 ]
 
