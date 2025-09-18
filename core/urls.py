@@ -33,3 +33,15 @@ urlpatterns += [
     path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="sitemap"),
 ]
 
+from django.views.generic import TemplateView
+
+urlpatterns = [
+    # ... suas outras rotas
+    path(
+        "googlefcd08be596689a50.html",
+        TemplateView.as_view(
+            template_name="googlefcd08be596689a50.html",
+            content_type="text/html",
+        ),
+    ),
+]
