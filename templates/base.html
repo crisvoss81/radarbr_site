@@ -1,33 +1,40 @@
 {% load static %}
 <!doctype html>
 <html lang="pt-br">
-{% if SEARCH_CONSOLE_TOKEN %}
-<meta name="google-site-verification" content="{{ SEARCH_CONSOLE_TOKEN }}">
-{% endif %}
-
-{% if GA4_ID %}
-<script async src="https://www.googletagmanager.com/gtag/js?id={{ GA4_ID }}"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', '{{ GA4_ID }}', { 'anonymize_ip': true });
-</script>
-{% endif %}
-
-<link rel="alternate" hreflang="pt-BR" href="{{ request.build_absolute_uri }}">
-  
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{% block meta_title %}{{ SITE_NAME }}{% endblock %}</title>
-<meta name="description" content="{% block meta_description %}Portal de notícias.{% endblock %}">
-<link rel="canonical" href="{{ request.build_absolute_uri }}">{% block head_extra %}{% endblock %}
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="{% static 'build/app.css' %}" rel="stylesheet">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
 
+  <title>{% block meta_title %}{{ SITE_NAME }}{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}Portal de notícias.{% endblock %}">
+
+  {# Canonical e hreflang — importante para SEO #}
+  <link rel="canonical" href="{{ request.build_absolute_uri }}">
+  <link rel="alternate" hreflang="pt-BR" href="{{ request.build_absolute_uri }}">
+
+  {# Verificação do Google Search Console (se configurado em settings/.env) #}
+  {% if SEARCH_CONSOLE_TOKEN %}
+  <meta name="google-site-verification" content="{{ SEARCH_CONSOLE_TOKEN }}">
+  {% endif %}
+
+  {# GA4 (opcional) #}
+  {% if GA4_ID %}
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ GA4_ID }}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '{{ GA4_ID }}', { 'anonymize_ip': true });
+  </script>
+  {% endif %}
+
+  {# CSS compilado pelo Tailwind (sem CDN) #}
+  <link href="{% static 'build/app.css' %}" rel="stylesheet">
+
+  {% block head_extra %}{% endblock %}
 </head>
 <body class="bg-gray-50 text-gray-900">
-  <script>
+<script>
   // aplica tema antes de renderizar (evita "flash")
   (function() {
     try {
@@ -38,6 +45,7 @@
     } catch(e){}
   })();
 </script>
+
 <header class="bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800">
   <div class="container py-4 flex items-center justify-between gap-4">
     <a href="/" class="text-2xl font-extrabold text-brand-primary">RadarBR</a>
@@ -81,12 +89,16 @@
   </div>
 </header>
 
-<main class="max-w-5xl mx-auto px-4 py-6">{% block content %}{% endblock %}</main>
-<footer class="border-t text-sm text-gray-500">
-  <div class="max-w-5xl mx-auto px-4 py-6">© {{ SITE_NAME }} {{ now|date:"Y" }}
+<main class="max-w-5xl mx-auto px-4 py-6">
+  {% block content %}{% endblock %}
+</main>
 
+<footer class="border-t text-sm text-gray-500">
+  <div class="max-w-5xl mx-auto px-4 py-6">
+    © {{ SITE_NAME }} {% now "Y" %}
   </div>
 </footer>
+
 <script>
   // toggle tema
   function toggleTheme() {
