@@ -1,0 +1,21 @@
+{
+  "name": "radarbr",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": "20.x",
+    "npm": "10.x"
+  },
+  "scripts": {
+    "dev": "tailwindcss -i ./static/src/app.css -o ./static/build/app.css --watch",
+    "build": "tailwindcss -i ./static/src/app.css -o ./static/build/app.css --minify"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.13",
+    "postcss": "^8.4.47",
+    "autoprefixer": "^10.4.20",
+    "@tailwindcss/typography": "^0.5.15",
+    "@tailwindcss/line-clamp": "^0.4.4",
+    "@tailwindcss/aspect-ratio": "^0.4.2"
+  }
+}
