@@ -1,4 +1,6 @@
-<!doctype html><html lang="pt-br">
+{% load static %}
+<!doctype html>
+<html lang="pt-br">
 {% if SEARCH_CONSOLE_TOKEN %}
 <meta name="google-site-verification" content="{{ SEARCH_CONSOLE_TOKEN }}">
 {% endif %}
@@ -21,6 +23,8 @@
 <meta name="description" content="{% block meta_description %}Portal de notícias.{% endblock %}">
 <link rel="canonical" href="{{ request.build_absolute_uri }}">{% block head_extra %}{% endblock %}
 <script src="https://cdn.tailwindcss.com"></script>
+<link href="{% static 'build/app.css' %}" rel="stylesheet">
+
 </head>
 <body class="bg-gray-50 text-gray-900">
   <script>
