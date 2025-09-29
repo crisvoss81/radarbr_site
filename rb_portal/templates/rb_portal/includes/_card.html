@@ -1,0 +1,22 @@
+{% load rb_filters %}
+<article class="card">
+  <a class="card-thumb" href="{{ obj.get_absolute_url }}" aria-label="{{ obj.titulo|striptags }}">
+    {% if obj.imagem %}
+      <img loading="lazy" src="{{ obj.imagem.url }}" alt="{{ obj.imagem_alt|default:obj.titulo|striptags }}">
+    {% else %}
+      <div class="thumb-ph">RadarBR</div>
+    {% endif %}
+  </a>
+  <div class="card-body">
+    {% if obj.categoria %}
+      <a class="chip" href="{{ obj.categoria.get_absolute_url }}">{{ obj.categoria.nome }}</a>
+    {% endif %}
+    <h3 class="card-title"><a href="{{ obj.get_absolute_url }}">{{ obj.titulo|striptags }}</a></h3>
+    {% with dek_text=obj.conteudo|extract_dek %}
+      {% if dek_text %}
+        <p class="card-resumo">{{ dek_text|truncatechars:160 }}</p>
+      {% endif %}
+    {% endwith %}
+    <div class="card-meta">{{ obj.publicado_em|date:'d \\d\\e F, H\\hi' }}</div>
+  </div>
+</article>

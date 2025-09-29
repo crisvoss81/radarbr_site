@@ -1,0 +1,20 @@
+{% extends 'rb_portal/base.html' %}
+
+{% block title %}{{ categoria.nome }} | RadarBR{% endblock %}
+{% block meta_description %}Acompanhe as últimas de {{ categoria.nome }} no RadarBR.{% endblock %}
+
+{% block content %}
+<header class="category-head">
+  <h1 class="category-title">{{ categoria.nome }}</h1>
+</header>
+
+<div class="list list--grid">
+  {% for obj in page_obj.object_list %}
+    {% include 'rb_portal/includes/_card.html' with obj=obj %}
+  {% empty %}
+    <p class="muted">Ainda não há notícias nesta categoria.</p>
+  {% endfor %}
+</div>
+
+{% include 'rb_portal/includes/_pagination.html' %}
+{% endblock %}

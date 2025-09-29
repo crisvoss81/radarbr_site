@@ -1,0 +1,138 @@
+[
+  {
+    "model": "rb_noticias.categoria",
+    "pk": 1,
+    "fields": {
+      "nome": "Brasil",
+      "slug": "brasil"
+    }
+  },
+  {
+    "model": "rb_noticias.categoria",
+    "pk": 2,
+    "fields": {
+      "nome": "Política",
+      "slug": "politica"
+    }
+  },
+  {
+    "model": "rb_noticias.categoria",
+    "pk": 3,
+    "fields": {
+      "nome": "Economia",
+      "slug": "economia"
+    }
+  },
+  {
+    "model": "rb_noticias.categoria",
+    "pk": 4,
+    "fields": {
+      "nome": "Tecnologia",
+      "slug": "tecnologia"
+    }
+  },
+  {
+    "model": "rb_noticias.categoria",
+    "pk": 5,
+    "fields": {
+      "nome": "Esportes",
+      "slug": "esportes"
+    }
+  },
+  {
+    "model": "rb_noticias.categoria",
+    "pk": 6,
+    "fields": {
+      "nome": "Entretenimento",
+      "slug": "entretenimento"
+    }
+  },
+  {
+    "model": "rb_noticias.categoria",
+    "pk": 7,
+    "fields": {
+      "nome": "Mundo",
+      "slug": "mundo"
+    }
+  },
+  {
+    "model": "rb_noticias.categoria",
+    "pk": 8,
+    "fields": {
+      "nome": "Cidades (RS)",
+      "slug": "cidades-rs"
+    }
+  },
+  {
+    "model": "rb_noticias.categoria",
+    "pk": 9,
+    "fields": {
+      "nome": "Saúde",
+      "slug": "saude"
+    }
+  },
+  {
+    "model": "rb_noticias.categoria",
+    "pk": 10,
+    "fields": {
+      "nome": "Educação",
+      "slug": "educacao"
+    }
+  },
+  {
+    "model": "rb_noticias.categoria",
+    "pk": 11,
+    "fields": {
+      "nome": "Justiça & Segurança",
+      "slug": "justica-seguranca"
+    }
+  },
+  {
+    "model": "rb_noticias.categoria",
+    "pk": 12,
+    "fields": {
+      "nome": "Ciência & Meio Ambiente",
+      "slug": "ciencia-meio-ambiente"
+    }
+  },
+  {
+    "model": "rb_noticias.categoria",
+    "pk": 13,
+    "fields": {
+      "nome": "Carros & Mobilidade",
+      "slug": "carros-mobilidade"
+    }
+  },
+  {
+    "model": "rb_noticias.categoria",
+    "pk": 14,
+    "fields": {
+      "nome": "Agro",
+      "slug": "agro"
+    }
+  },
+  {
+    "model": "rb_noticias.categoria",
+    "pk": 15,
+    "fields": {
+      "nome": "Turismo",
+      "slug": "turismo"
+    }
+  },
+  {
+    "model": "rb_noticias.categoria",
+    "pk": 16,
+    "fields": {
+      "nome": "Trabalho & Carreira",
+      "slug": "trabalho-carreira"
+    }
+  },
+  {
+    "model": "rb_noticias.categoria",
+    "pk": 17,
+    "fields": {
+      "nome": "Loterias",
+      "slug": "loterias"
+    }
+  }
+]

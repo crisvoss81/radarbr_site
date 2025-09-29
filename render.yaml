@@ -5,8 +5,8 @@
     plan: free
     region: oregon
     buildCommand: |
-      pip install -r requirements.txt
-      python manage.py collectstatic --noinput
+      pip install -r requirements.txt && (npm ci || npm install) && npm run build && python manage.py collectstatic --noinput
+
     startCommand: |
       gunicorn core.wsgi --workers=3 --log-file=-
     envVars:

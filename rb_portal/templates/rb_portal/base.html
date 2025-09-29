@@ -1,0 +1,30 @@
+{% load static %}
+{% load humanize %}
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}RadarBR | radarbr.com{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}Últimas notícias do Brasil, tecnologia, esportes, economia e entretenimento, atualizadas automaticamente.{% endblock %}">
+  <link rel="canonical" href="{% block canonical %}{{ request.build_absolute_uri }}{% endblock %}">
+
+  {% block social_meta %}{% endblock %}
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  {% include 'rb_portal/includes/_header.html' %}
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% include 'rb_portal/includes/_footer.html' %}
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

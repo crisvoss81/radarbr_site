@@ -1,40 +1,42 @@
-# core/settings.py
+# core/settings.py — SAFE DEV & PROD
+
 from pathlib import Path
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# -----------------------------------------------------------------------------
-# Básico
-# -----------------------------------------------------------------------------
+# --- CONFIGURAÇÕES DE SEGURANÇA LENDO DO .ENV ---
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-unsafe")
-DEBUG = os.getenv("DJANGO_DEBUG", "false").lower() == "true"
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+PEXELS_API_KEY = os.getenv("PEXELS_API_KEY")
+UNSPLASH_API_KEY = os.getenv("UNSPLASH_API_KEY")
+PIXABAY_API_KEY = os.getenv("PIXABAY_API_KEY")
+STATIC_URL = "/static/"
+STATICFILES_DIRS = [BASE_DIR / "static"] # Diz ao Django onde encontrar seus arquivos estáticos durante o desenvolvimento.
+STATIC_ROOT = BASE_DIR / "staticfiles"    # Onde `collectstatic` irá copiar os arquivos para produção.
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"          # Onde suas imagens de notícias são salvas.
 
-# Hosts permitidos
-DEFAULT_HOSTS = [
-    "127.0.0.1",
-    "localhost",
-    "radarbr.com",
-    "www.radarbr.com",
-    "radarbr-site.onrender.com",   # SEM barra
-]
-ALLOWED_HOSTS = [
-    h.strip()
-    for h in os.getenv("ALLOWED_HOSTS", ",".join(DEFAULT_HOSTS)).split(",")
-    if h.strip()
-]
+# ALTERADO: Lê o DEBUG do .env. O padrão é False (seguro para produção).
+# No seu .env de desenvolvimento, adicione: DEBUG=True
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-# CSRF: sempre com esquema e SEM barra no final
-CSRF_TRUSTED_ORIGINS = [f"https://{h}" for h in ALLOWED_HOSTS if "." in h]
+# ALTERADO: Lê os hosts do .env.
+# No seu .env de desenvolvimento, adicione: ALLOWED_HOSTS=127.0.0.1,localhost
+# No .env de produção, adicione: ALLOWED_HOSTS=www.radarbr.com,radarbr.com
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1').split(',')
 
+
+# --- CONFIGURAÇÕES DO SITE ---
 SITE_NAME = os.getenv("SITE_NAME", "RadarBR")
+SITE_URL = os.getenv("SITE_URL", "http://127.0.0.1:8000")
+SITE_BASE_URL = os.getenv("SITE_BASE_URL", "https://www.radarbr.com")
+SITEMAP_PATH = os.getenv("SITEMAP_PATH", "sitemap.xml")
 
-# -----------------------------------------------------------------------------
-# Apps
-# -----------------------------------------------------------------------------
+
+# --- APLICAÇÕES INSTALADAS ---
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -43,15 +45,15 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sitemaps",
-    "siteapp",
+    "django.contrib.humanize",
+    "rb_portal",
+    "rb_noticias",
+    "rb_ingestor",
 ]
 
-# -----------------------------------------------------------------------------
-# Middleware
-# -----------------------------------------------------------------------------
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",  # serve static em prod
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -73,7 +75,8 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "siteapp.context_processors.site_constants",
+                "core.context_processors.site_constants",
+                "core.context_processors.categorias_nav",
             ],
         },
     }
@@ -81,57 +84,31 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "core.wsgi.application"
 
-# -----------------------------------------------------------------------------
-# Banco
-# -----------------------------------------------------------------------------
-import dj_database_url
-
+# --- BANCO DE DADOS ---
 DATABASES = {
-    "default": dj_database_url.parse(
-        os.getenv("DATABASE_URL", "sqlite:///db.sqlite3"),
-        conn_max_age=600,
-        ssl_require=os.getenv("RENDER", "").lower() == "true",
-    )
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    }
 }
 
-# -----------------------------------------------------------------------------
-# i18n / tz
-# -----------------------------------------------------------------------------
+# --- INTERNACIONALIZAÇÃO ---
 LANGUAGE_CODE = "pt-br"
 TIME_ZONE = "America/Sao_Paulo"
 USE_I18N = True
 USE_TZ = True
 
-# -----------------------------------------------------------------------------
-# Static / Media (WhiteNoise)
-# -----------------------------------------------------------------------------
+# --- ARQUIVOS ESTÁTICOS E DE MÍDIA ---
+# CORRIGIDO: Bloco duplicado removido.
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_DIRS = [BASE_DIR / "static"]  # se tiver a pasta "static"
-
-STORAGES = {
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
-    }
-}
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-# -----------------------------------------------------------------------------
-# Segurança / Proxy
-# -----------------------------------------------------------------------------
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-# Força HTTPS no Render (padrão True em prod, False local)
-SECURE_SSL_REDIRECT = os.getenv(
-    "FORCE_HTTPS",
-    "true" if os.getenv("RENDER", "").lower() == "true" else "false",
-).lower() == "true"
-
-# -----------------------------------------------------------------------------
-# Extras (SEO/Analytics)
-# -----------------------------------------------------------------------------
-GA4_ID = os.getenv("GA4_ID", "")
-SEARCH_CONSOLE_TOKEN = os.getenv("SEARCH_CONSOLE_TOKEN", "")
-
+# --- OUTRAS CONFIGURAÇÕES ---
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# CORRIGIDO: Linha duplicada removida.
+# A linha `TEMPLATES[0]["OPTIONS"]["context_processors"] += [...]` foi apagada.

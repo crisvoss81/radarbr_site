@@ -1,0 +1,24 @@
+{% comment %} conteúdo de rb_portal/templates/rb_portal/includes/_sidebar.html {% endcomment %}
+<div class="box">
+  <h3 class="box-title">Em alta</h3>
+  <ul class="bullet-list">
+    {% with hot=trending|default:others|default:page_obj.object_list %}
+      {% for obj in hot|slice:':8' %}
+        <li><a href="{{ obj.get_absolute_url }}">{{ obj.titulo|striptags }}</a></li>
+      {% empty %}
+        <li class="muted">Sem itens no momento.</li>
+      {% endfor %}
+    {% endwith %}
+  </ul>
+</div>
+
+<div class="box">
+  <h3 class="box-title">Categorias</h3>
+  <ul class="pill-list">
+    {% for cat in cats %}
+      <li><a href="{{ cat.get_absolute_url }}">{{ cat.nome }}</a></li>
+    {% empty %}
+      <li class="muted">Sem categorias cadastradas.</li>
+    {% endfor %}
+  </ul>
+</div>
