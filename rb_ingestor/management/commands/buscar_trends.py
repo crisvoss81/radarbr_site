@@ -1,4 +1,4 @@
-# rb_ingestor/management/commands/buscar_trends.py (Versão com busca de imagem inteligente)
+# rb_ingestor/management/commands/buscar_trends.py
 
 import openai
 import requests
@@ -10,10 +10,9 @@ from django.utils.text import slugify
 from django.core.files.base import ContentFile
 from gnews import GNews
 from dateutil.parser import parse
-from rb_noticias.models import Noticia
+from rb_noticias.models import Noticia, Categoria
 import re
 
-# --- (As funções auxiliares de imagem no topo não mudam e estão corretas) ---
 def _salvar_imagem_de_url(noticia, url_imagem, nome_arquivo, credito_nome, credito_url=None):
     try:
         response_img = requests.get(url_imagem, timeout=15)
@@ -78,6 +77,7 @@ def gerar_imagem_dalle(noticia, termo_busca, api_key):
     print(f"  -> Gerando imagem com DALL-E usando termo: '{termo_busca}'...")
     try:
         openai.api_key = api_key
+        # CORRIGIDO: O prompt agora usa o termo_busca inteligente
         prompt_imagem = f"Uma foto jornalística minimalista e de alta qualidade representando o conceito de: '{termo_busca}'. Sem texto na imagem."
         response_dalle = openai.images.generate(model="dall-e-3", prompt=prompt_imagem, n=1, size="1024x1024", quality="standard")
         url_imagem = response_dalle.data[0].url
@@ -88,9 +88,8 @@ def gerar_imagem_dalle(noticia, termo_busca, api_key):
         print(f'     -> Falha ao gerar imagem com DALL-E: {e}')
     return False
 
-# --- COMANDO PRINCIPAL ---
 class Command(BaseCommand):
-    help = 'Busca notícias, gera conteúdo e imagens e as publica.'
+    help = 'Busca notícias, gera conteúdo, imagens, classifica categorias e as publica.'
 
     def handle(self, *args, **options):
         try:
@@ -98,6 +97,13 @@ class Command(BaseCommand):
             unsplash_key = settings.UNSPLASH_API_KEY; pixabay_key = settings.PIXABAY_API_KEY
         except AttributeError as e:
             raise CommandError(f"A chave {e.name} não foi configurada no seu settings.py")
+
+        self.stdout.write(self.style.NOTICE('Buscando categorias do banco de dados...'))
+        lista_de_categorias = list(Categoria.objects.values_list('nome', flat=True))
+        if not lista_de_categorias:
+            raise CommandError("Nenhuma categoria encontrada. Cadastre algumas no Admin do Django.")
+        lista_de_categorias_string = ", ".join(lista_de_categorias)
+        self.stdout.write(f"Categorias encontradas: {lista_de_categorias_string}")
 
         self.stdout.write(self.style.NOTICE('Buscando notícias no Google News...'))
         gnews = GNews(language='pt', country='BR', period='1d')
@@ -113,7 +119,7 @@ class Command(BaseCommand):
             titulo_bruto = article['title']
             partes = titulo_bruto.rsplit(' - ', 1)
             titulo = partes[0].strip() if len(partes) == 2 else titulo_bruto
-            if not titulo: self.stdout.write(self.style.WARNING(f'     -> Título inválido, pulando notícia: "{titulo_bruto}"')); continue
+            if not titulo: self.stdout.write(self.style.WARNING(f'     -> Título inválido, pulando: "{titulo_bruto}"')); continue
             
             slug_base = slugify(titulo); slug_unico = slug_base; sufixo = 1
             while Noticia.objects.filter(slug=slug_unico).exists(): slug_unico = f"{slug_base}-{sufixo}"; sufixo += 1
@@ -126,34 +132,41 @@ class Command(BaseCommand):
 
             termo_busca_imagem = ""
             try:
-                self.stdout.write('  -> Gerando conteúdo e palavras-chave com IA...')
+                self.stdout.write('  -> Gerando conteúdo, palavras-chave e categoria com IA...')
                 prompt_texto = f"""
-                Sobre o tópico de notícia: '{noticia.titulo}', por favor gere uma resposta em formato JSON contendo duas chaves:
-                1. "artigo": contendo um artigo jornalístico detalhado em português do Brasil com 3 a 5 parágrafos.
-                2. "termo_busca_imagem": contendo uma string com 2 a 4 palavras-chave em português, concisas e visualmente descritivas, ideais para buscar uma imagem de destaque para este artigo.
+                Sobre o tópico de notícia: '{noticia.titulo}', e dadas as seguintes categorias de site: [{lista_de_categorias_string}], por favor gere uma resposta em formato JSON contendo três chaves:
+                1. "artigo": contendo um artigo jornalístico completo e otimizado para SEO em português do Brasil. O artigo deve ter no mínimo 400 palavras, uma introdução, múltiplos parágrafos de desenvolvimento e uma conclusão. Use subtítulos em markdown (ex: ### Subtítulo) para organizar o texto.
+                2. "termo_busca_imagem": contendo uma string com 2 a 4 palavras-chave em português, concisas e visualmente descritivas, para buscar uma imagem de destaque.
+                3. "categoria": contendo o nome de UMA categoria da lista fornecida que melhor se encaixa no tópico.
                 """
                 response = openai.chat.completions.create(
                     model="gpt-3.5-turbo", response_format={"type": "json_object"},
                     messages=[
-                        {"role": "system", "content": "Você é um assistente que retorna respostas estritamente em formato JSON."},
+                        {"role": "system", "content": "Você é um assistente que retorna respostas estritamente em formato JSON, seguindo as chaves solicitadas."},
                         {"role": "user", "content": prompt_texto}
                     ]
                 )
                 resultado_json = json.loads(response.choices[0].message.content.strip())
                 noticia.conteudo = resultado_json.get('artigo', '')
                 termo_busca_imagem = resultado_json.get('termo_busca_imagem', '')
-                if not noticia.conteudo or not termo_busca_imagem: raise ValueError("JSON incompleto.")
-                self.stdout.write(self.style.SUCCESS('     -> Conteúdo e palavras-chave gerados.'))
-                self.stdout.write(f'     -> Termo de busca para imagem: "{termo_busca_imagem}"')
+                nome_categoria_ia = resultado_json.get('categoria', '')
+                if not noticia.conteudo or not termo_busca_imagem or not nome_categoria_ia: raise ValueError("JSON da IA incompleto.")
+                
+                categoria_obj = Categoria.objects.filter(nome__iexact=nome_categoria_ia).first()
+                if categoria_obj: noticia.categoria = categoria_obj
+                
+                self.stdout.write(self.style.SUCCESS('     -> Conteúdo, palavras-chave e categoria gerados.'))
+                self.stdout.write(f'     -> Categoria escolhida pela IA: "{nome_categoria_ia}"')
             except Exception as e:
                 self.stdout.write(self.style.ERROR(f'     -> Falha ao gerar conteúdo: {e}')); noticia.delete(); continue
 
-            imagem_salva = False
             termo_busca = termo_busca_imagem
+            imagem_salva = False
             
             if not imagem_salva: imagem_salva = buscar_imagem_pexels(noticia, termo_busca, pexels_key)
             if not imagem_salva: imagem_salva = buscar_imagem_unsplash(noticia, termo_busca, unsplash_key)
             if not imagem_salva: imagem_salva = buscar_imagem_pixabay(noticia, termo_busca, pixabay_key)
+            # CORRIGIDO: A chamada agora passa o `termo_busca` corretamente
             if not imagem_salva: imagem_salva = gerar_imagem_dalle(noticia, termo_busca, openai_key)
 
             noticia.status = Noticia.Status.PUBLICADO
