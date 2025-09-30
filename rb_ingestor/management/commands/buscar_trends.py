@@ -1,4 +1,4 @@
-# rb_ingestor/management/commands/buscar_trends.py
+# rb_ingestor/management/commands/buscar_trends.py (Versão Final Completa)
 
 import openai
 import requests
@@ -77,7 +77,6 @@ def gerar_imagem_dalle(noticia, termo_busca, api_key):
     print(f"  -> Gerando imagem com DALL-E usando termo: '{termo_busca}'...")
     try:
         openai.api_key = api_key
-        # CORRIGIDO: O prompt agora usa o termo_busca inteligente
         prompt_imagem = f"Uma foto jornalística minimalista e de alta qualidade representando o conceito de: '{termo_busca}'. Sem texto na imagem."
         response_dalle = openai.images.generate(model="dall-e-3", prompt=prompt_imagem, n=1, size="1024x1024", quality="standard")
         url_imagem = response_dalle.data[0].url
@@ -114,15 +113,21 @@ class Command(BaseCommand):
         novas_noticias_processadas = 0
         for article in top_news:
             url_noticia = article['url']
-            if Noticia.objects.filter(fonte_url=url_noticia).exists(): continue
+            if Noticia.objects.filter(fonte_url=url_noticia).exists():
+                continue
 
             titulo_bruto = article['title']
             partes = titulo_bruto.rsplit(' - ', 1)
             titulo = partes[0].strip() if len(partes) == 2 else titulo_bruto
-            if not titulo: self.stdout.write(self.style.WARNING(f'     -> Título inválido, pulando: "{titulo_bruto}"')); continue
+            
+            if not titulo:
+                self.stdout.write(self.style.WARNING(f'     -> Título inválido, pulando: "{titulo_bruto}"'))
+                continue
             
             slug_base = slugify(titulo); slug_unico = slug_base; sufixo = 1
-            while Noticia.objects.filter(slug=slug_unico).exists(): slug_unico = f"{slug_base}-{sufixo}"; sufixo += 1
+            while Noticia.objects.filter(slug=slug_unico).exists():
+                slug_unico = f"{slug_base}-{sufixo}"
+                sufixo += 1
             
             noticia = Noticia.objects.create(
                 titulo=titulo, slug=slug_unico, publicado_em=parse(article['published date']),
@@ -150,15 +155,19 @@ class Command(BaseCommand):
                 noticia.conteudo = resultado_json.get('artigo', '')
                 termo_busca_imagem = resultado_json.get('termo_busca_imagem', '')
                 nome_categoria_ia = resultado_json.get('categoria', '')
-                if not noticia.conteudo or not termo_busca_imagem or not nome_categoria_ia: raise ValueError("JSON da IA incompleto.")
+                if not all([noticia.conteudo, termo_busca_imagem, nome_categoria_ia]):
+                    raise ValueError("JSON da IA incompleto.")
                 
                 categoria_obj = Categoria.objects.filter(nome__iexact=nome_categoria_ia).first()
-                if categoria_obj: noticia.categoria = categoria_obj
+                if categoria_obj:
+                    noticia.categoria = categoria_obj
                 
                 self.stdout.write(self.style.SUCCESS('     -> Conteúdo, palavras-chave e categoria gerados.'))
                 self.stdout.write(f'     -> Categoria escolhida pela IA: "{nome_categoria_ia}"')
             except Exception as e:
-                self.stdout.write(self.style.ERROR(f'     -> Falha ao gerar conteúdo: {e}')); noticia.delete(); continue
+                self.stdout.write(self.style.ERROR(f'     -> Falha ao gerar conteúdo: {e}'))
+                noticia.delete()
+                continue
 
             termo_busca = termo_busca_imagem
             imagem_salva = False
@@ -166,7 +175,6 @@ class Command(BaseCommand):
             if not imagem_salva: imagem_salva = buscar_imagem_pexels(noticia, termo_busca, pexels_key)
             if not imagem_salva: imagem_salva = buscar_imagem_unsplash(noticia, termo_busca, unsplash_key)
             if not imagem_salva: imagem_salva = buscar_imagem_pixabay(noticia, termo_busca, pixabay_key)
-            # CORRIGIDO: A chamada agora passa o `termo_busca` corretamente
             if not imagem_salva: imagem_salva = gerar_imagem_dalle(noticia, termo_busca, openai_key)
 
             noticia.status = Noticia.Status.PUBLICADO
