@@ -30,4 +30,3 @@ urlpatterns = [
 # Bloco explícito para servir arquivos estáticos e de mídia em modo de desenvolvimento
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

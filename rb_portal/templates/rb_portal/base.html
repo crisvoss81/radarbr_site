@@ -16,6 +16,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/main.css' %}">
   {% block extra_head %}{% endblock %}
+  {% comment %} Tag do Google Analytics 4 {% endcomment %}
+  {% if not debug and GA4_ID %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ GA4_ID }}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', '{{ GA4_ID }}');
+    </script>
+  {% endif %}
+
 </head>
 <body>
   {% include 'rb_portal/includes/_header.html' %}

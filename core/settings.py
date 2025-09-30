@@ -18,6 +18,7 @@ STATICFILES_DIRS = [BASE_DIR / "static"] # Diz ao Django onde encontrar seus arq
 STATIC_ROOT = BASE_DIR / "staticfiles"    # Onde `collectstatic` irá copiar os arquivos para produção.
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.getenv('MEDIA_ROOT', BASE_DIR / 'media')          # Onde suas imagens de notícias são salvas.
+GA4_ID = os.getenv("GA4_ID", "")
 
 # ALTERADO: Lê o DEBUG do .env. O padrão é False (seguro para produção).
 # No seu .env de desenvolvimento, adicione: DEBUG=True
