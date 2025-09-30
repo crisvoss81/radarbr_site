@@ -3,6 +3,7 @@
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import dj_database_url
 
 load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -87,10 +88,10 @@ WSGI_APPLICATION = "core.wsgi.application"
 
 # --- BANCO DE DADOS ---
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    'default': dj_database_url.config(
+        # Se a DATABASE_URL não for encontrada no ambiente, usa o sqlite local como padrão
+        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}'
+    )
 }
 
 # --- INTERNACIONALIZAÇÃO ---
