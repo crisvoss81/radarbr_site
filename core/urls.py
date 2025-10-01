@@ -1,4 +1,4 @@
-# core/urls.py (Versão Definitiva de Depuração)
+# core/urls.py (Versão final e unificada)
 
 from django.contrib import admin
 from django.urls import path, include
@@ -27,6 +27,14 @@ urlpatterns = [
     path("feed/", UltimasNoticiasFeed(), name="rss_feed"),
 ]
 
-# Bloco explícito para servir arquivos estáticos e de mídia em modo de desenvolvimento
+# --- Bloco Final para Servir Arquivos (Funciona em DEV e PROD) ---
+
+# Adiciona a rota para arquivos de MÍDIA (imagens das notícias).
+# Esta linha fica FORA do 'if' para funcionar também em produção no Render,
+# servindo os arquivos do seu Disco Persistente.
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# Adiciona a rota para arquivos ESTÁTICOS (CSS, JS), mas APENAS em
+# ambiente de desenvolvimento (DEBUG=True), pois em produção o WhiteNoise cuida disso.
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

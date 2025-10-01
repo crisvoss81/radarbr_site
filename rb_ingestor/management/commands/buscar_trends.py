@@ -1,4 +1,4 @@
-# rb_ingestor/management/commands/buscar_trends.py (Versão Final Completa)
+# rb_ingestor/management/commands/buscar_trends.py (Versão Final e Corrigida)
 
 import openai
 import requests
@@ -77,7 +77,7 @@ def gerar_imagem_dalle(noticia, termo_busca, api_key):
     print(f"  -> Gerando imagem com DALL-E usando termo: '{termo_busca}'...")
     try:
         openai.api_key = api_key
-        prompt_imagem = f"Uma foto jornalística minimalista e de alta qualidade representando o conceito de: '{termo_busca}'. Sem texto na imagem."
+        prompt_imagem = f"Uma foto jornalística de alta qualidade representando a seguinte notícia: '{termo_busca}'. Sem texto na imagem."
         response_dalle = openai.images.generate(model="dall-e-3", prompt=prompt_imagem, n=1, size="1024x1024", quality="standard")
         url_imagem = response_dalle.data[0].url
         if _salvar_imagem_de_url(noticia, url_imagem, f"{noticia.slug}.jpg", "Imagem gerada por IA (DALL-E 3)"):
@@ -113,21 +113,15 @@ class Command(BaseCommand):
         novas_noticias_processadas = 0
         for article in top_news:
             url_noticia = article['url']
-            if Noticia.objects.filter(fonte_url=url_noticia).exists():
-                continue
+            if Noticia.objects.filter(fonte_url=url_noticia).exists(): continue
 
             titulo_bruto = article['title']
             partes = titulo_bruto.rsplit(' - ', 1)
             titulo = partes[0].strip() if len(partes) == 2 else titulo_bruto
-            
-            if not titulo:
-                self.stdout.write(self.style.WARNING(f'     -> Título inválido, pulando: "{titulo_bruto}"'))
-                continue
+            if not titulo: self.stdout.write(self.style.WARNING(f'     -> Título inválido, pulando: "{titulo_bruto}"')); continue
             
             slug_base = slugify(titulo); slug_unico = slug_base; sufixo = 1
-            while Noticia.objects.filter(slug=slug_unico).exists():
-                slug_unico = f"{slug_base}-{sufixo}"
-                sufixo += 1
+            while Noticia.objects.filter(slug=slug_unico).exists(): slug_unico = f"{slug_base}-{sufixo}"; sufixo += 1
             
             noticia = Noticia.objects.create(
                 titulo=titulo, slug=slug_unico, publicado_em=parse(article['published date']),
@@ -135,41 +129,43 @@ class Command(BaseCommand):
             )
             self.stdout.write(f'\n-> Notícia base salva: "{titulo}"')
 
-            termo_busca_imagem = ""
+            # --- BLOCO TRY/EXCEPT CORRIGIDO E MAIS ROBUSTO ---
             try:
-                self.stdout.write('  -> Gerando conteúdo, palavras-chave e categoria com IA...')
+                self.stdout.write('  -> Gerando conteúdo e categoria com IA...')
                 prompt_texto = f"""
-                Sobre o tópico de notícia: '{noticia.titulo}', e dadas as seguintes categorias de site: [{lista_de_categorias_string}], por favor gere uma resposta em formato JSON contendo três chaves:
-                1. "artigo": contendo um artigo jornalístico completo e otimizado para SEO em português do Brasil. O artigo deve ter no mínimo 400 palavras, uma introdução, múltiplos parágrafos de desenvolvimento e uma conclusão. Use subtítulos em markdown (ex: ### Subtítulo) para organizar o texto.
-                2. "termo_busca_imagem": contendo uma string com 2 a 4 palavras-chave em português, concisas e visualmente descritivas, para buscar uma imagem de destaque.
-                3. "categoria": contendo o nome de UMA categoria da lista fornecida que melhor se encaixa no tópico.
+                Sobre o tópico de notícia: '{noticia.titulo}', e dadas as seguintes categorias de site: [{lista_de_categorias_string}], por favor gere uma resposta em formato JSON contendo duas chaves:
+                1. "artigo": contendo um artigo jornalístico completo e otimizado para SEO em português do Brasil, com no mínimo 500 palavras e subtítulos em markdown.
+                2. "categoria": contendo o nome de UMA categoria da lista fornecida que melhor se encaixa no tópico.
                 """
                 response = openai.chat.completions.create(
                     model="gpt-3.5-turbo", response_format={"type": "json_object"},
                     messages=[
-                        {"role": "system", "content": "Você é um assistente que retorna respostas estritamente em formato JSON, seguindo as chaves solicitadas."},
+                        {"role": "system", "content": "Você é um assistente que retorna respostas estritamente em formato JSON."},
                         {"role": "user", "content": prompt_texto}
                     ]
                 )
                 resultado_json = json.loads(response.choices[0].message.content.strip())
                 noticia.conteudo = resultado_json.get('artigo', '')
-                termo_busca_imagem = resultado_json.get('termo_busca_imagem', '')
                 nome_categoria_ia = resultado_json.get('categoria', '')
-                if not all([noticia.conteudo, termo_busca_imagem, nome_categoria_ia]):
-                    raise ValueError("JSON da IA incompleto.")
-                
-                categoria_obj = Categoria.objects.filter(nome__iexact=nome_categoria_ia).first()
-                if categoria_obj:
-                    noticia.categoria = categoria_obj
-                
-                self.stdout.write(self.style.SUCCESS('     -> Conteúdo, palavras-chave e categoria gerados.'))
-                self.stdout.write(f'     -> Categoria escolhida pela IA: "{nome_categoria_ia}"')
+
+                if not noticia.conteudo:
+                    raise ValueError("A chave 'artigo' está faltando no JSON da IA.")
+                self.stdout.write(self.style.SUCCESS('     -> Conteúdo gerado.'))
+
+                if nome_categoria_ia:
+                    categoria_obj = Categoria.objects.filter(nome__iexact=nome_categoria_ia).first()
+                    if categoria_obj:
+                        noticia.categoria = categoria_obj
+                        self.stdout.write(f'     -> Categoria escolhida pela IA: "{nome_categoria_ia}"')
+                else:
+                    self.stdout.write(self.style.WARNING('     -> IA não retornou uma categoria.'))
             except Exception as e:
                 self.stdout.write(self.style.ERROR(f'     -> Falha ao gerar conteúdo: {e}'))
                 noticia.delete()
                 continue
+            # --- FIM DO BLOCO CORRIGIDO ---
 
-            termo_busca = termo_busca_imagem
+            termo_busca = noticia.titulo
             imagem_salva = False
             
             if not imagem_salva: imagem_salva = buscar_imagem_pexels(noticia, termo_busca, pexels_key)
