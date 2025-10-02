@@ -2,10 +2,10 @@
 module.exports = {
   // CORREÇÃO: Apontando para as pastas corretas do seu projeto Django
   content: [
-    './templates/**/*.html',
-    './rb_portal/templates/**/*.html',
-    './rb_noticias/templates/**/*.html',
-  ],
+  './templates/**/*.html',
+  './rb_portal/templates/**/*.html',
+  './rb_noticias/templates/**/*.html',
+],
 
   darkMode: "class",
   theme: {
