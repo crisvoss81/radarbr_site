@@ -1,4 +1,4 @@
-# rb_ingestor/management/commands/buscar_trends.py (Versão Final e Corrigida)
+# rb_ingestor/management/commands/buscar_trends.py (Versão Final Consolidada)
 
 import openai
 import requests
@@ -113,15 +113,21 @@ class Command(BaseCommand):
         novas_noticias_processadas = 0
         for article in top_news:
             url_noticia = article['url']
-            if Noticia.objects.filter(fonte_url=url_noticia).exists(): continue
+            if Noticia.objects.filter(fonte_url=url_noticia).exists():
+                continue
 
             titulo_bruto = article['title']
             partes = titulo_bruto.rsplit(' - ', 1)
             titulo = partes[0].strip() if len(partes) == 2 else titulo_bruto
-            if not titulo: self.stdout.write(self.style.WARNING(f'     -> Título inválido, pulando: "{titulo_bruto}"')); continue
+            
+            if not titulo:
+                self.stdout.write(self.style.WARNING(f'     -> Título inválido, pulando: "{titulo_bruto}"'))
+                continue
             
             slug_base = slugify(titulo); slug_unico = slug_base; sufixo = 1
-            while Noticia.objects.filter(slug=slug_unico).exists(): slug_unico = f"{slug_base}-{sufixo}"; sufixo += 1
+            while Noticia.objects.filter(slug=slug_unico).exists():
+                slug_unico = f"{slug_base}-{sufixo}"
+                sufixo += 1
             
             noticia = Noticia.objects.create(
                 titulo=titulo, slug=slug_unico, publicado_em=parse(article['published date']),
@@ -129,7 +135,6 @@ class Command(BaseCommand):
             )
             self.stdout.write(f'\n-> Notícia base salva: "{titulo}"')
 
-            # --- BLOCO TRY/EXCEPT CORRIGIDO E MAIS ROBUSTO ---
             try:
                 self.stdout.write('  -> Gerando conteúdo e categoria com IA...')
                 prompt_texto = f"""
@@ -150,6 +155,7 @@ class Command(BaseCommand):
 
                 if not noticia.conteudo:
                     raise ValueError("A chave 'artigo' está faltando no JSON da IA.")
+                
                 self.stdout.write(self.style.SUCCESS('     -> Conteúdo gerado.'))
 
                 if nome_categoria_ia:
@@ -163,7 +169,6 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.ERROR(f'     -> Falha ao gerar conteúdo: {e}'))
                 noticia.delete()
                 continue
-            # --- FIM DO BLOCO CORRIGIDO ---
 
             termo_busca = noticia.titulo
             imagem_salva = False
