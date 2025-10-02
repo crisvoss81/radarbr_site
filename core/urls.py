@@ -34,6 +34,7 @@ urlpatterns = [
 # servindo os arquivos do seu Disco Persistente.
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
+
 # Adiciona a rota para arquivos ESTÁTICOS (CSS, JS), mas APENAS em
 # ambiente de desenvolvimento (DEBUG=True), pois em produção o WhiteNoise cuida disso.
 if settings.DEBUG:
