@@ -139,7 +139,7 @@ class Command(BaseCommand):
                 self.stdout.write('  -> Gerando conteúdo e categoria com IA...')
                 prompt_texto = f"""
                 Sobre o tópico de notícia: '{noticia.titulo}', e dadas as seguintes categorias de site: [{lista_de_categorias_string}], por favor gere uma resposta em formato JSON contendo duas chaves:
-                1. "artigo": contendo um artigo jornalístico completo e otimizado para SEO em português do Brasil, com no mínimo 500 palavras e subtítulos em markdown.
+                1. "artigo": contendo um artigo jornalístico completo e otimizado para SEO em português do Brasil, com no mínimo 500 palavras e subtítulos em markdown (ex: ### Subtítulo).
                 2. "categoria": contendo o nome de UMA categoria da lista fornecida que melhor se encaixa no tópico.
                 """
                 response = openai.chat.completions.create(
@@ -150,13 +150,43 @@ class Command(BaseCommand):
                     ]
                 )
                 resultado_json = json.loads(response.choices[0].message.content.strip())
-                noticia.conteudo = resultado_json.get('artigo', '')
+                
+                # --- NOVA LÓGICA PARA "MONTAR" O ARTIGO ---
+                artigo_ia = resultado_json.get('artigo')
+                conteudo_final = ""
+
+                if isinstance(artigo_ia, str):
+                    # Se a IA se comportar e retornar uma string, usamos diretamente
+                    conteudo_final = artigo_ia
+                elif isinstance(artigo_ia, dict):
+                    # Se a IA for teimosa e retornar um dicionário, nós o montamos
+                    partes_do_artigo = []
+                    # Adiciona introdução se existir
+                    if 'introducao' in artigo_ia:
+                        partes_do_artigo.append(artigo_ia['introducao'])
+                    
+                    # Loop para adicionar subtítulos e conteúdos
+                    i = 1
+                    while True:
+                        sub_key = f'subtitulo{i}'
+                        cont_key = f'conteudo{i}'
+                        if sub_key in artigo_ia and cont_key in artigo_ia:
+                            partes_do_artigo.append(f"\n### {artigo_ia[sub_key]}\n")
+                            partes_do_artigo.append(artigo_ia[cont_key])
+                            i += 1
+                        else:
+                            break
+                    conteudo_final = "\n".join(partes_do_artigo)
+
+                noticia.conteudo = conteudo_final.strip()
+                # --- FIM DA NOVA LÓGICA ---
+
                 nome_categoria_ia = resultado_json.get('categoria', '')
 
                 if not noticia.conteudo:
-                    raise ValueError("A chave 'artigo' está faltando no JSON da IA.")
+                    raise ValueError("O campo 'artigo' está faltando ou não pôde ser montado a partir do JSON da IA.")
                 
-                self.stdout.write(self.style.SUCCESS('     -> Conteúdo gerado.'))
+                self.stdout.write(self.style.SUCCESS('     -> Conteúdo gerado e montado.'))
 
                 if nome_categoria_ia:
                     categoria_obj = Categoria.objects.filter(nome__iexact=nome_categoria_ia).first()
