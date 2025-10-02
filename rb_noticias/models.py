@@ -46,7 +46,7 @@ class Noticia(models.Model):
     imagem_licenca = models.CharField(max_length=120, blank=True, default="")
     imagem_fonte_url = models.CharField(max_length=300, blank=True, default="")
 
-    fonte_url = models.CharField(max_length=1000, unique=True, blank=True, default="")
+    fonte_url = models.URLField(max_length=1000, unique=True, blank=True, default="")
     fonte_nome = models.CharField(max_length=160, blank=True, default="")
 
     criado_em = models.DateTimeField(auto_now_add=True)
