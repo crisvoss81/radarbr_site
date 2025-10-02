@@ -1,4 +1,4 @@
-# core/settings.py — SAFE DEV & PROD
+# core/settings.py — Versão Final e Limpa
 
 from pathlib import Path
 import os
@@ -8,35 +8,21 @@ import dj_database_url
 load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# --- CONFIGURAÇÕES DE SEGURANÇA LENDO DO .ENV ---
+# --- CONFIGURAÇÕES DE SEGURANÇA E AMBIENTE ---
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-unsafe")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 PEXELS_API_KEY = os.getenv("PEXELS_API_KEY")
 UNSPLASH_API_KEY = os.getenv("UNSPLASH_API_KEY")
 PIXABAY_API_KEY = os.getenv("PIXABAY_API_KEY")
-STATIC_URL = "/static/"
-STATICFILES_DIRS = [BASE_DIR / "static"] # Diz ao Django onde encontrar seus arquivos estáticos durante o desenvolvimento.
-STATIC_ROOT = BASE_DIR / "staticfiles"    # Onde `collectstatic` irá copiar os arquivos para produção.
-MEDIA_URL = "/media/"
-MEDIA_ROOT = os.getenv('MEDIA_ROOT', BASE_DIR / 'media')          # Onde suas imagens de notícias são salvas.
 GA4_ID = os.getenv("GA4_ID", "")
-
-# ALTERADO: Lê o DEBUG do .env. O padrão é False (seguro para produção).
-# No seu .env de desenvolvimento, adicione: DEBUG=True
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
-
-# ALTERADO: Lê os hosts do .env.
-# No seu .env de desenvolvimento, adicione: ALLOWED_HOSTS=127.0.0.1,localhost
-# No .env de produção, adicione: ALLOWED_HOSTS=www.radarbr.com,radarbr.com
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1').split(',')
-
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
 
 # --- CONFIGURAÇÕES DO SITE ---
 SITE_NAME = os.getenv("SITE_NAME", "RadarBR")
 SITE_URL = os.getenv("SITE_URL", "http://127.0.0.1:8000")
 SITE_BASE_URL = os.getenv("SITE_BASE_URL", "https://www.radarbr.com")
 SITEMAP_PATH = os.getenv("SITEMAP_PATH", "sitemap.xml")
-
 
 # --- APLICAÇÕES INSTALADAS ---
 INSTALLED_APPS = [
@@ -45,6 +31,7 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    "whitenoise.runserver_nostatic",
     "django.contrib.staticfiles",
     "django.contrib.sitemaps",
     "django.contrib.humanize",
@@ -53,6 +40,7 @@ INSTALLED_APPS = [
     "rb_ingestor",
 ]
 
+# --- MIDDLEWARE ---
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -89,7 +77,6 @@ WSGI_APPLICATION = "core.wsgi.application"
 # --- BANCO DE DADOS ---
 DATABASES = {
     'default': dj_database_url.config(
-        # Se a DATABASE_URL não for encontrada no ambiente, usa o sqlite local como padrão
         default=f'sqlite:///{BASE_DIR / "db.sqlite3"}'
     )
 }
@@ -100,17 +87,14 @@ TIME_ZONE = "America/Sao_Paulo"
 USE_I18N = True
 USE_TZ = True
 
-# --- ARQUIVOS ESTÁTICOS E DE MÍDIA ---
-# CORRIGIDO: Bloco duplicado removido.
+# --- ARQUIVOS ESTÁTICOS E DE MÍDIA (CONFIGURAÇÃO ÚNICA E CORRETA) ---
 STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+# Esta linha lê a variável de ambiente do Render, ou usa o padrão local.
+MEDIA_ROOT = os.getenv('MEDIA_ROOT', BASE_DIR / 'media')
 
 # --- OUTRAS CONFIGURAÇÕES ---
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-# CORRIGIDO: Linha duplicada removida.
-# A linha `TEMPLATES[0]["OPTIONS"]["context_processors"] += [...]` foi apagada.

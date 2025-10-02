@@ -1,4 +1,4 @@
-# rb_ingestor/management/commands/buscar_trends.py (Versão Final Consolidada)
+# rb_ingestor/management/commands/buscar_trends.py (Versão Final e Corrigida)
 
 import openai
 import requests
@@ -113,21 +113,15 @@ class Command(BaseCommand):
         novas_noticias_processadas = 0
         for article in top_news:
             url_noticia = article['url']
-            if Noticia.objects.filter(fonte_url=url_noticia).exists():
-                continue
+            if Noticia.objects.filter(fonte_url=url_noticia).exists(): continue
 
             titulo_bruto = article['title']
             partes = titulo_bruto.rsplit(' - ', 1)
             titulo = partes[0].strip() if len(partes) == 2 else titulo_bruto
-            
-            if not titulo:
-                self.stdout.write(self.style.WARNING(f'     -> Título inválido, pulando: "{titulo_bruto}"'))
-                continue
+            if not titulo: self.stdout.write(self.style.WARNING(f'     -> Título inválido, pulando: "{titulo_bruto}"')); continue
             
             slug_base = slugify(titulo); slug_unico = slug_base; sufixo = 1
-            while Noticia.objects.filter(slug=slug_unico).exists():
-                slug_unico = f"{slug_base}-{sufixo}"
-                sufixo += 1
+            while Noticia.objects.filter(slug=slug_unico).exists(): slug_unico = f"{slug_base}-{sufixo}"; sufixo += 1
             
             noticia = Noticia.objects.create(
                 titulo=titulo, slug=slug_unico, publicado_em=parse(article['published date']),
@@ -139,7 +133,7 @@ class Command(BaseCommand):
                 self.stdout.write('  -> Gerando conteúdo e categoria com IA...')
                 prompt_texto = f"""
                 Sobre o tópico de notícia: '{noticia.titulo}', e dadas as seguintes categorias de site: [{lista_de_categorias_string}], por favor gere uma resposta em formato JSON contendo duas chaves:
-                1. "artigo": contendo um artigo jornalístico completo e otimizado para SEO em português do Brasil, com no mínimo 500 palavras e subtítulos em markdown (ex: ### Subtítulo).
+                1. "artigo": contendo um artigo jornalístico completo e otimizado para SEO em português do Brasil, com no mínimo 500 palavras e subtítulos em markdown.
                 2. "categoria": contendo o nome de UMA categoria da lista fornecida que melhor se encaixa no tópico.
                 """
                 response = openai.chat.completions.create(
@@ -151,25 +145,18 @@ class Command(BaseCommand):
                 )
                 resultado_json = json.loads(response.choices[0].message.content.strip())
                 
-                # --- NOVA LÓGICA PARA "MONTAR" O ARTIGO ---
+                # --- LÓGICA DE MONTAGEM E VERIFICAÇÃO CORRIGIDA ---
                 artigo_ia = resultado_json.get('artigo')
                 conteudo_final = ""
 
                 if isinstance(artigo_ia, str):
-                    # Se a IA se comportar e retornar uma string, usamos diretamente
                     conteudo_final = artigo_ia
                 elif isinstance(artigo_ia, dict):
-                    # Se a IA for teimosa e retornar um dicionário, nós o montamos
                     partes_do_artigo = []
-                    # Adiciona introdução se existir
-                    if 'introducao' in artigo_ia:
-                        partes_do_artigo.append(artigo_ia['introducao'])
-                    
-                    # Loop para adicionar subtítulos e conteúdos
+                    if 'introducao' in artigo_ia: partes_do_artigo.append(artigo_ia['introducao'])
                     i = 1
                     while True:
-                        sub_key = f'subtitulo{i}'
-                        cont_key = f'conteudo{i}'
+                        sub_key, cont_key = f'subtitulo{i}', f'conteudo{i}'
                         if sub_key in artigo_ia and cont_key in artigo_ia:
                             partes_do_artigo.append(f"\n### {artigo_ia[sub_key]}\n")
                             partes_do_artigo.append(artigo_ia[cont_key])
@@ -179,8 +166,6 @@ class Command(BaseCommand):
                     conteudo_final = "\n".join(partes_do_artigo)
 
                 noticia.conteudo = conteudo_final.strip()
-                # --- FIM DA NOVA LÓGICA ---
-
                 nome_categoria_ia = resultado_json.get('categoria', '')
 
                 if not noticia.conteudo:
@@ -195,11 +180,14 @@ class Command(BaseCommand):
                         self.stdout.write(f'     -> Categoria escolhida pela IA: "{nome_categoria_ia}"')
                 else:
                     self.stdout.write(self.style.WARNING('     -> IA não retornou uma categoria.'))
+                # --- FIM DA LÓGICA CORRIGIDA ---
+
             except Exception as e:
                 self.stdout.write(self.style.ERROR(f'     -> Falha ao gerar conteúdo: {e}'))
                 noticia.delete()
                 continue
 
+            # O termo de busca para a imagem agora é o próprio título
             termo_busca = noticia.titulo
             imagem_salva = False
             
