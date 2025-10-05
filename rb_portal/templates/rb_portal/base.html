@@ -1,20 +1,8 @@
 {% load static %}
 {% load humanize %}
-
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  {% comment %} Bloco de código para Favicons {% endcomment %}
-  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'img/apple-touch-icon.png' %}">
-  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'img/favicon-32x32.png' %}">
-  <link rel="icon" type="image/png" sizes="16x16" href="{% static 'img/favicon-16x16.png' %}">
-  <link rel="manifest" href="{% static 'img/site.webmanifest' %}">
-  <link rel="mask-icon" href="{% static 'img/safari-pinned-tab.svg' %}" color="#c1121f">
-  <meta name="msapplication-TileColor" content="#ffffff">
-  <meta name="theme-color" content="#ffffff">
-  <meta name="apple-mobile-web-app-title" content="RadarBR" />
-  <meta name="application-name" content="RadarBR" />
-  
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{% block title %}RadarBR | radarbr.com{% endblock %}</title>
@@ -26,8 +14,17 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="{% static 'build/app.css' %}">
+
+  {% comment %} Favicons {% endcomment %}
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'img/apple-touch-icon.png' %}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'img/favicon-32x32.png' %}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{% static 'img/favicon-16x16.png' %}">
+  <link rel="manifest" href="{% static 'img/site.webmanifest' %}">
+  
   {% block extra_head %}{% endblock %}
+  
   {% comment %} Tag do Google Analytics 4 {% endcomment %}
   {% if not debug and GA4_ID %}
     <script async src="https://www.googletagmanager.com/gtag/js?id={{ GA4_ID }}"></script>
@@ -35,11 +32,9 @@
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-
       gtag('config', '{{ GA4_ID }}');
     </script>
   {% endif %}
-
 </head>
 <body>
   {% include 'rb_portal/includes/_header.html' %}

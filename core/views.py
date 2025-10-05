@@ -7,7 +7,7 @@ def robots_txt(request):
         "User-agent: *",
         "Allow: /",
         "Disallow: /admin/",
-        "Disallow: /staticfiles/",   # ajuste se não existir
+        "Disallow: /static/",  # ajuste se não existir
         f"Sitemap: {request.build_absolute_uri(reverse('sitemap'))}",
     ]
     return HttpResponse("\n".join(lines), content_type="text/plain")

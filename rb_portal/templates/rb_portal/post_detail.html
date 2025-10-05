@@ -1,30 +1,11 @@
 {% extends 'rb_portal/base.html' %}
 {% load rb_filters %}
-{% load static %}
+{% load markdown_extras %}
 
 {% block title %}{{ object.titulo|striptags }} | RadarBR{% endblock %}
-{% block meta_description %}{{ object.conteudo|extract_dek|default:object.titulo|truncatechars:150 }}{% endblock %}
-{% block canonical %}{{ request.scheme }}://{{ request.get_host }}{{ object.get_absolute_url }}{% endblock %}
-
-{% block social_meta %}
-<meta property="og:type" content="article" />
-<meta property="og:title" content="{{ object.titulo|striptags }}" />
-<meta property="og:description" content="{{ object.conteudo|extract_dek|default:object.titulo|truncatechars:150 }}" />
-{% if object.imagem %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ object.imagem.url }}" />{% endif %}
-<meta name="twitter:card" content="summary_large_image" />
-{% endblock %}
+{% block meta_description %}{{ object.conteudo|striptags|truncatechars:150 }}{% endblock %}
 
 {% block content %}
-<nav class="breadcrumbs" aria-label="Breadcrumb">
-  <a href="/">Início</a>
-  {% if object.categoria %}
-    <span>/</span>
-    <a href="{{ object.categoria.get_absolute_url }}">{{ object.categoria.nome }}</a>
-  {% endif %}
-  <span>/</span>
-  <span aria-current="page">{{ object.titulo|striptags }}</span>
-</nav>
-
 <article class="post">
   <header class="post-header">
     {% if object.categoria %}<a class="chip" href="{{ object.categoria.get_absolute_url }}">{{ object.categoria.nome }}</a>{% endif %}
@@ -35,7 +16,6 @@
   {% if object.imagem %}
     <figure class="post-figure">
       <img src="{{ object.imagem.url }}" alt="{{ object.imagem_alt|default:object.titulo|striptags }}">
-      
       {% if object.imagem_credito %}
         <figcaption class="muted" style="font-size:.85rem">
           Crédito: 
@@ -44,40 +24,13 @@
           {% else %}
             {{ object.imagem_credito }}
           {% endif %}
-      
-          {% if "unsplash.com" in object.imagem_fonte_url %}
-             on <a href="https://unsplash.com/?utm_source=radarbr&utm_medium=referral" target="_blank" rel="noopener noreferrer">Unsplash</a>
-          {% endif %}
         </figcaption>
       {% endif %}
-
     </figure>
   {% endif %}
+
   <div class="post-content">
-    {{ object.conteudo|linebreaks }}
+    {{ object.conteudo|render_markdown }}
   </div>
-
-  {% if relacionados %}
-  <section class="related">
-    <h3 class="box-title">Relacionadas</h3>
-    <div class="list list--grid">
-      {% for obj in relacionados|slice:':6' %}
-        {% include 'rb_portal/includes/_card.html' with obj=obj %}
-      {% endfor %}
-    </div>
-  </section>
-  {% endif %}
 </article>
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "NewsArticle",
-  "headline": "{{ object.titulo|striptags|escapejs }}",
-  "datePublished": "{{ object.publicado_em|date:'c' }}",
-  "author": {"@type": "Organization", "name": "RadarBR"},
-  {% if object.imagem %}"image": ["{{ request.scheme }}://{{ request.get_host }}{{ object.imagem.url }}"],{% endif %}
-  "description": "{{ object.conteudo|extract_dek|default:object.titulo|truncatechars:150|escapejs }}"
-}
-</script>
 {% endblock %}

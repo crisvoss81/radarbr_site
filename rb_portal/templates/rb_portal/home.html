@@ -7,9 +7,7 @@
 {% block content %}
 <section class="grid">
   <div class="main">
-
     <div class="hero">
-      
       {% if featured %}
         <article class="hero-item">
           <a class="hero-thumb" href="{{ featured.get_absolute_url }}" aria-label="{{ featured.titulo|striptags }}">
@@ -22,37 +20,13 @@
           <div class="hero-body">
             {% if featured.categoria %}<a class="chip" href="{{ featured.categoria.get_absolute_url }}">{{ featured.categoria.nome }}</a>{% endif %}
             <h2 class="hero-title"><a href="{{ featured.get_absolute_url }}">{{ featured.titulo|striptags }}</a></h2>
-            {% with dek_text=featured.conteudo|extract_dek %}
-              {% if dek_text %}<p class="muted">{{ dek_text|truncatechars:180 }}</p>{% endif %}
-            {% endwith %}
-            <div class="card-meta">{{ featured.publicado_em|date:'d \d\e F, H\hi' }}</div>
           </div>
         </article>
       {% endif %}
-
-      {% for obj in others %}
-        <article class="hero-item">
-          <a class="hero-thumb" href="{{ obj.get_absolute_url }}" aria-label="{{ obj.titulo|striptags }}">
-            {% if obj.imagem %}
-              <img src="{{ obj.imagem.url }}" alt="{{ obj.imagem_alt|default:obj.titulo|striptags }}">
-            {% else %}
-              <div class="thumb-ph thumb-ph--lg">RadarBR</div>
-            {% endif %}
-          </a>
-          <div class="hero-body">
-            {% if obj.categoria %}<a class="chip" href="{{ obj.categoria.get_absolute_url }}">{{ obj.categoria.nome }}</a>{% endif %}
-            <h2 class="hero-title"><a href="{{ obj.get_absolute_url }}">{{ obj.titulo|striptags }}</a></h2>
-            {% with dek_text=obj.conteudo|extract_dek %}
-              {% if dek_text %}<p class="muted">{{ dek_text|truncatechars:180 }}</p>{% endif %}
-            {% endwith %}
-            <div class="card-meta">{{ obj.publicado_em|date:'d \d\e F, H\hi' }}</div>
-          </div>
-        </article>
-      {% endfor %}
     </div>
 
     <div class="list">
-      {% for obj in page_obj.object_list|slice:'3:' %}
+      {% for obj in page_obj.object_list|slice:'1:' %}
         {% include 'rb_portal/includes/_card.html' with obj=obj %}
       {% empty %}
         <p class="muted">Nenhuma notícia encontrada.</p>
@@ -63,7 +37,7 @@
   </div>
 
   <aside class="aside">
-    {% include 'rb_portal/includes/_sidebar.html' %} 
+    {% include 'rb_portal/includes/_sidebar.html' %}
   </aside>
 </section>
 {% endblock %}

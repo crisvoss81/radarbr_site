@@ -1,4 +1,4 @@
-# core/settings.py — Versão Final e Limpa
+# core/settings.py
 
 from pathlib import Path
 import os
@@ -87,14 +87,11 @@ TIME_ZONE = "America/Sao_Paulo"
 USE_I18N = True
 USE_TZ = True
 
-# --- ARQUIVOS ESTÁTICOS E DE MÍDIA (CONFIGURAÇÃO ÚNICA E CORRETA) ---
+# --- ARQUIVOS ESTÁTICOS E DE MÍDIA ---
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
-
 MEDIA_URL = "/media/"
-# Esta linha lê a variável de ambiente do Render, ou usa o padrão local.
 MEDIA_ROOT = os.getenv('MEDIA_ROOT', BASE_DIR / 'media')
 
-# --- OUTRAS CONFIGURAÇÕES ---
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

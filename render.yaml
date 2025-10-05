@@ -1,18 +1,19 @@
 ﻿services:
   - type: web
     name: radarbr
-    env: python
-    plan: free
+    runtime: python
     region: oregon
+    plan: free
+    branch: main  # ou ajuste se estiver usando outra branch
     buildCommand: |
-      pip install -r requirements.txt && (npm ci || npm install) && npm run build && python manage.py collectstatic --noinput
-
-    startCommand: |
-      gunicorn core.wsgi --workers=3 --log-file=-
+      ./build.sh
+    startCommand: gunicorn core.wsgi:application
     envVars:
-      - key: RENDER
-        value: "true"
-      - key: DJANGO_DEBUG
-        value: "False"
-      - key: FORCE_HTTPS
-        value: "true"
+      - key: DJANGO_SETTINGS_MODULE
+        value: core.settings
+      - key: PYTHON_VERSION
+        value: 3.13.0
+      - key: NODE_VERSION
+        value: 20.11.1
+      - key: OPENAI_API_KEY
+        sync: false  # ou true se quiser definir no painel

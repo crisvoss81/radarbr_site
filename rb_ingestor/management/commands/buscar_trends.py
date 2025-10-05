@@ -1,4 +1,4 @@
-# rb_ingestor/management/commands/buscar_trends.py (Versão Final e Corrigida)
+# rb_ingestor/management/commands/buscar_trends.py
 
 import openai
 import requests
@@ -133,61 +133,64 @@ class Command(BaseCommand):
                 self.stdout.write('  -> Gerando conteúdo e categoria com IA...')
                 prompt_texto = f"""
                 Sobre o tópico de notícia: '{noticia.titulo}', e dadas as seguintes categorias de site: [{lista_de_categorias_string}], por favor gere uma resposta em formato JSON contendo duas chaves:
-                1. "artigo": contendo um artigo jornalístico completo e otimizado para SEO em português do Brasil, com no mínimo 500 palavras e subtítulos em markdown.
+                1. "artigo": contendo um artigo jornalístico completo e otimizado para SEO em português do Brasil, com no mínimo 400 palavras e subtítulos em markdown.
                 2. "categoria": contendo o nome de UMA categoria da lista fornecida que melhor se encaixa no tópico.
                 """
-                response = openai.chat.completions.create(
-                    model="gpt-3.5-turbo", response_format={"type": "json_object"},
-                    messages=[
-                        {"role": "system", "content": "Você é um assistente que retorna respostas estritamente em formato JSON."},
-                        {"role": "user", "content": prompt_texto}
-                    ]
-                )
-                resultado_json = json.loads(response.choices[0].message.content.strip())
                 
-                # --- LÓGICA DE MONTAGEM E VERIFICAÇÃO CORRIGIDA ---
-                artigo_ia = resultado_json.get('artigo')
-                conteudo_final = ""
+                # Lógica de Repetição (Retry)
+                for tentativa in range(3):
+                    try:
+                        self.stdout.write(f'     -> Tentativa {tentativa + 1}/3...')
+                        response = openai.chat.completions.create(
+                            model="gpt-3.5-turbo", response_format={"type": "json_object"},
+                            messages=[
+                                {"role": "system", "content": "Você é um assistente que retorna respostas estritamente em formato JSON."},
+                                {"role": "user", "content": prompt_texto}
+                            ]
+                        )
+                        resultado_json = json.loads(response.choices[0].message.content.strip())
+                        
+                        artigo_ia = resultado_json.get('artigo')
+                        conteudo_final = ""
+                        if isinstance(artigo_ia, str):
+                            conteudo_final = artigo_ia
+                        elif isinstance(artigo_ia, dict):
+                            # Lógica para montar o artigo a partir de um dicionário
+                            partes = [artigo_ia.get('introducao', '')]
+                            i = 1
+                            while True:
+                                sub = artigo_ia.get(f'subtitulo{i}')
+                                cont = artigo_ia.get(f'conteudo{i}')
+                                if sub and cont:
+                                    partes.append(f"\n### {sub}\n")
+                                    partes.append(cont)
+                                    i += 1
+                                else:
+                                    break
+                            conteudo_final = "\n".join(filter(None, partes))
+                        
+                        noticia.conteudo = conteudo_final.strip()
+                        nome_categoria_ia = resultado_json.get('categoria', '')
 
-                if isinstance(artigo_ia, str):
-                    conteudo_final = artigo_ia
-                elif isinstance(artigo_ia, dict):
-                    partes_do_artigo = []
-                    if 'introducao' in artigo_ia: partes_do_artigo.append(artigo_ia['introducao'])
-                    i = 1
-                    while True:
-                        sub_key, cont_key = f'subtitulo{i}', f'conteudo{i}'
-                        if sub_key in artigo_ia and cont_key in artigo_ia:
-                            partes_do_artigo.append(f"\n### {artigo_ia[sub_key]}\n")
-                            partes_do_artigo.append(artigo_ia[cont_key])
-                            i += 1
+                        if noticia.conteudo:
+                            self.stdout.write(self.style.SUCCESS('     -> Conteúdo gerado.'))
+                            if nome_categoria_ia:
+                                categoria_obj = Categoria.objects.filter(nome__iexact=nome_categoria_ia).first()
+                                if categoria_obj:
+                                    noticia.categoria = categoria_obj
+                                    self.stdout.write(f'     -> Categoria escolhida pela IA: "{nome_categoria_ia}"')
+                            break # Sucesso, sai do loop de tentativas
                         else:
-                            break
-                    conteudo_final = "\n".join(partes_do_artigo)
-
-                noticia.conteudo = conteudo_final.strip()
-                nome_categoria_ia = resultado_json.get('categoria', '')
-
-                if not noticia.conteudo:
-                    raise ValueError("O campo 'artigo' está faltando ou não pôde ser montado a partir do JSON da IA.")
-                
-                self.stdout.write(self.style.SUCCESS('     -> Conteúdo gerado e montado.'))
-
-                if nome_categoria_ia:
-                    categoria_obj = Categoria.objects.filter(nome__iexact=nome_categoria_ia).first()
-                    if categoria_obj:
-                        noticia.categoria = categoria_obj
-                        self.stdout.write(f'     -> Categoria escolhida pela IA: "{nome_categoria_ia}"')
-                else:
-                    self.stdout.write(self.style.WARNING('     -> IA não retornou uma categoria.'))
-                # --- FIM DA LÓGICA CORRIGIDA ---
-
+                            raise ValueError("JSON da IA incompleto ou não pôde ser montado.")
+                    except Exception as e:
+                        self.stdout.write(self.style.WARNING(f'     -> Tentativa {tentativa + 1}/3 falhou: {e}'))
+                        if tentativa == 2: # Última tentativa
+                            raise # Re-lança a exceção final
             except Exception as e:
-                self.stdout.write(self.style.ERROR(f'     -> Falha ao gerar conteúdo: {e}'))
+                self.stdout.write(self.style.ERROR(f'     -> Falha final ao gerar conteúdo: {e}'))
                 noticia.delete()
                 continue
 
-            # O termo de busca para a imagem agora é o próprio título
             termo_busca = noticia.titulo
             imagem_salva = False
             
