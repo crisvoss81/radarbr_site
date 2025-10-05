@@ -15,7 +15,7 @@ class Categoria(models.Model):
         return self.nome
 
     def get_absolute_url(self):
-        return reverse("rb_noticias:categoria", args=[self.slug])
+        return reverse("categoria", args=[self.slug])
 
 
 class Noticia(models.Model):
@@ -60,4 +60,4 @@ class Noticia(models.Model):
         return self.titulo
 
     def get_absolute_url(self):
-        return reverse("rb_noticias:noticia", args=[self.slug])
+        return reverse("noticia", args=[self.slug])
