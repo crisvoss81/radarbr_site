@@ -1,6 +1,7 @@
 # rb_noticias/models.py
 from django.db import models
 from django.urls import reverse
+from cloudinary.models import CloudinaryField # Adicione esta importação
 
 class Categoria(models.Model):
     nome = models.CharField(max_length=120)
@@ -20,7 +21,6 @@ class Categoria(models.Model):
 
 class Noticia(models.Model):
 
-    # MELHORIA: Usando IntegerChoices para o campo status
     class Status(models.IntegerChoices):
         RASCUNHO = 0, "Rascunho"
         PUBLICADO = 1, "Publicado"
@@ -34,13 +34,22 @@ class Noticia(models.Model):
         Categoria, on_delete=models.SET_NULL, null=True, blank=True
     )
     
-    # CORREÇÃO: db_column removido e choices agora usa a classe Status
     status = models.IntegerField(
         default=Status.PUBLICADO,
         choices=Status.choices,
     )
 
-    imagem = models.ImageField(upload_to="noticias/", blank=True, null=True)
+    # AQUI ESTÁ A MUDANÇA: Substituímos ImageField por CloudinaryField
+    imagem = CloudinaryField(
+        'imagem',
+        overwrite=True,
+        resource_type='image',
+        folder='noticias', # Pasta onde as imagens serão salvas no Cloudinary
+        transformation={'quality': 'auto:good', 'fetch_format': 'auto'},
+        blank=True,
+        null=True
+    )
+    
     imagem_alt = models.CharField(max_length=200, blank=True, default="")
     imagem_credito = models.CharField(max_length=200, blank=True, default="")
     imagem_licenca = models.CharField(max_length=120, blank=True, default="")
