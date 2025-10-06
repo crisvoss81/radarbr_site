@@ -52,5 +52,14 @@ img{ display:block; max-width:100%; height:auto }
   border-radius: 14px;
 }
 
+/* Logo */
+.brand-img {
+  height: 100px;
+  width: auto;
+  max-height: 100px;
+  object-fit: contain;
+  background: transparent;
+}
+
 /* Responsive */
 @media (max-width:1000px){ .grid{ grid-template-columns:1fr } .hero-item{ grid-template-columns:1fr } .card{ grid-template-columns:1fr } }

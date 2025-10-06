@@ -26,6 +26,7 @@ except Exception:
     TrendReq = None
 
 # ----------------- filtros de ruído -----------------
+# MOVIDO DE trends_publish.py PARA CÁ, CENTRALIZANDO A LÓGICA
 NOISY_PATTERNS = [
     r"^\s*hoje\b",
     r"^\s*amanh(?:ã|a)\b",
@@ -35,8 +36,14 @@ NOISY_PATTERNS = [
     r"^\s*(vai\s+chover|chuva|previs[aã]o)\b",
     r"^\s*(tem\s+jogo|jogo\s+do|resultado\s+do\s+jogo)\b",
     r"^\s*not[ií]cias(\s+de\s+hoje)?\s*$",
+    # Adicionando filtros mais agressivos para termos comuns que não geram bom conteúdo
+    r"tempo\s+agora",
+    r"fases\s+da\s+lua",
+    r"resultado\s+da\s+lotofacil",
+    r"quina",
+    r"mega-sena",
 ]
-NOISY_RE = re.compile("|".join(NOSY if (NOSY := NOISY_PATTERNS) else []), re.I)
+NOISY_RE = re.compile("|".join(NOISY_PATTERNS), re.I)
 
 def _is_noisy(term: str) -> bool:
     t = (term or "").strip()
@@ -85,7 +92,6 @@ def _from_http_realtime(geo: str) -> List[str]:
     try:
         stories = (((data.get("storySummaries") or {}).get("trendingStories")) or [])
         for s in stories:
-            # tente título principal; se não, primeira entidade
             title = (s.get("title") or "").strip()
             if not title:
                 ents = s.get("entityNames") or []
@@ -175,30 +181,41 @@ def _from_py_top_charts(geo: str) -> List[str]:
     return []
 
 # ----------------- função pública -----------------
-def fetch_trending_terms(geo: str = "BR", limit: int = 10) -> List[str]:
+def fetch_trending_terms(geo: str = "BR", limit: int = 10, debug: bool = False) -> List[str]:
     """
-    Busca termos e aplica limpeza/dedup/filtro.
-    Retorna no máximo `limit` itens.
+    Busca termos, aplica limpeza/dedup/filtro e retorna a quantidade desejada.
     """
     limit = max(0, int(limit) or 0)
+    if not limit:
+        return []
 
-    # 1) HTTP realtime/daily
-    terms: List[str] = []
-    terms += _from_http_realtime(geo)
-    terms += _from_http_daily(geo)
+    # 1) Tenta buscar uma lista grande de termos brutos de várias fontes
+    raw_terms: List[str] = []
+    raw_terms += _from_http_realtime(geo)
+    raw_terms += _from_http_daily(geo)
 
-    # 2) pytrends (se disponível)
-    if not terms:
-        terms += _from_py_realtime(geo)
-        terms += _from_py_today(geo)
-        terms += _from_py_trending()
-        terms += _from_py_top_charts(geo)
+    # 2) Fallback para pytrends se as fontes primárias falharem
+    if not raw_terms:
+        if debug:
+            print("[trends.py] INFO: Fontes primárias falharam, tentando pytrends...")
+        raw_terms += _from_py_realtime(geo)
+        raw_terms += _from_py_today(geo)
+        raw_terms += _from_py_trending()
+        raw_terms += _from_py_top_charts(geo)
 
-    # limpeza
-    cleaned = [_clean(t) for t in terms if t]
-    cleaned = _dedupe_keep_order(cleaned)
+    if debug:
+        print(f"[trends.py] DEBUG: Termos brutos coletados ({len(raw_terms)}): {raw_terms}")
 
-    # filtro de ruído
-    filtered = [t for t in cleaned if not _is_noisy(t)]
+    # 3) Limpa, remove duplicatas e filtra o ruído até atingir o limite
+    cleaned = _dedupe_keep_order([_clean(t) for t in raw_terms if t])
+    
+    filtered_terms = []
+    for term in cleaned:
+        if not _is_noisy(term):
+            filtered_terms.append(term)
+            if len(filtered_terms) >= limit:
+                break # Atingimos o limite desejado
+        elif debug:
+            print(f"[trends.py] DEBUG: Termo filtrado (ruído): '{term}'")
 
-    return filtered[:limit]
+    return filtered_terms

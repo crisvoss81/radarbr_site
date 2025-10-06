@@ -1,5 +1,4 @@
 # rb_ingestor/management/commands/trends_publish.py
-import re
 from django.core.management.base import BaseCommand
 from django.apps import apps
 from django.utils import timezone
@@ -7,31 +6,11 @@ from django.utils.html import strip_tags
 from django.db import models
 from slugify import slugify
 
+# AGORA a busca e o filtro estão centralizados em fetch_trending_terms
 from rb_ingestor.trends import fetch_trending_terms
 from rb_ingestor.ai import generate_article
 from rb_ingestor.images_free import pick_image
 from rb_ingestor.categorize import route_category_for_topic
-
-# ---------------------------
-# Filtros de termos genéricos
-# ---------------------------
-NOISY_PATTERNS = [
-    r"^\s*hoje\b",
-    r"^\s*amanh(?:ã|a)\b",
-    r"^\s*ontem\b",
-    r"^\s*que\s+dia",
-    r"^\s*que\s+horas",
-    r"^\s*(vai\s+chover|chuva|previs[aã]o)\b",
-    r"^\s*(tem\s+jogo|jogo\s+do|resultado\s+do\s+jogo)\b",
-]
-def _is_noisy(term: str) -> bool:
-    t = (term or "").strip()
-    if len(t) <= 3:
-        return True
-    for pat in NOISY_PATTERNS:
-        if re.search(pat, t, flags=re.I):
-            return True
-    return False
 
 
 # ---------------------------------------------
@@ -104,47 +83,39 @@ class Command(BaseCommand):
     help = "Gera artigos a partir de tópicos do Google Trends (BR) + imagem livre."
 
     def add_arguments(self, parser):
-        parser.add_argument("--limit", type=int, default=5)
+        parser.add_argument("--limit", type=int, default=5, help="Número de artigos a serem criados.")
         parser.add_argument("--geo", default="BR")
-        parser.add_argument("--debug", action="store_true")
+        parser.add_argument("--debug", action="store_true", help="Mostra mais informações sobre o processo.")
         parser.add_argument(
             "--force",
             action="store_true",
-            help="força publicação mesmo se já existir hoje",
+            help="Força a publicação mesmo que um tópico similar já exista hoje.",
         )
 
     def handle(self, *args, **opts):
         Noticia = apps.get_model("rb_noticias", "Noticia")
         Categoria = apps.get_model("rb_noticias", "Categoria")
 
-        # categoria padrão (fallback)
+        # Categoria padrão (fallback)
         cat_fallback, _ = Categoria.objects.get_or_create(
             slug="geral", defaults={"nome": "Geral"}
         )
 
-        # Busca MAIS termos e filtra genéricos; preserva ordem e unicidade
-        raw = fetch_trending_terms(geo=opts["geo"], limit=opts["limit"] * 4)
-        uniq_lower, filtered = set(), []
-        for t in raw:
-            t = (t or "").strip()
-            if not t:
-                continue
-            if _is_noisy(t):
-                if opts["debug"]:
-                    self.stdout.write(f"· filtrado (genérico): {t}")
-                continue
-            tl = t.lower()
-            if tl not in uniq_lower:
-                uniq_lower.add(tl)
-                filtered.append(t)
-        terms = filtered[: opts["limit"]]
+        # Busca e filtra os termos diretamente da função fetch_trending_terms
+        # A lógica de filtro de ruído foi movida para dentro desta função.
+        terms = fetch_trending_terms(
+            geo=opts["geo"],
+            limit=opts["limit"],
+            debug=opts["debug"]
+        )
 
         if opts["debug"]:
-            self.stdout.write(self.style.NOTICE(f"Termos ({len(terms)}): {terms}"))
+            self.stdout.write(self.style.NOTICE(f"Termos úteis encontrados ({len(terms)}): {terms}"))
+
         if not terms:
             self.stdout.write(
                 self.style.WARNING(
-                    "Nenhum termo útil após filtro. Aumente --limit ou use --force."
+                    "Nenhum termo útil encontrado após a filtragem. Tente novamente mais tarde."
                 )
             )
             return
@@ -161,10 +132,10 @@ class Command(BaseCommand):
                 i += 1
             return slug
 
-        # valor para status (se houver campo); nunca None
+        # Valor para status (se houver campo); nunca None
         published_value = _status_published(Noticia)
         if opts["debug"] and published_value is not _NO_STATUS_SENTINEL:
-            self.stdout.write(self.style.NOTICE(f"[status] valor a usar = {published_value!r}"))
+            self.stdout.write(self.style.NOTICE(f"[status] Valor a usar = {published_value!r}"))
 
         for topic in terms:
             topic_clean = topic.strip()
@@ -173,10 +144,10 @@ class Command(BaseCommand):
             # DEDUPE por dia (pula a não ser que --force)
             if not opts["force"] and Noticia.objects.filter(fonte_url=key).exists():
                 if opts["debug"]:
-                    self.stdout.write(f"– já existe hoje: {topic_clean}")
+                    self.stdout.write(f"– Já existe hoje: {topic_clean}")
                 continue
             if opts["force"] and opts["debug"]:
-                self.stdout.write(self.style.WARNING(f"· forçando publicação: {topic_clean}"))
+                self.stdout.write(self.style.WARNING(f"· Forçando publicação: {topic_clean}"))
 
             # ---------- Categoria por roteamento ----------
             try:
@@ -189,13 +160,14 @@ class Command(BaseCommand):
 
             # ---------- Geração de conteúdo ----------
             try:
+                self.stdout.write(f"Gerando artigo para: {topic_clean}...")
                 art = generate_article(topic_clean) or {}
             except Exception as e:
                 if opts["debug"]:
                     self.stdout.write(self.style.WARNING(f"· IA falhou para '{topic_clean}': {e}"))
                 art = {}
 
-            title = strip_tags((art.get("title") or topic_clean).strip())[:140]
+            title = strip_tags((art.get("title") or topic_clean).strip())[:200]
             dek = strip_tags((art.get("dek") or art.get("description") or "").strip())[:220]
             body = (art.get("html") or "<p></p>").strip()
             conteudo = f'<p class="dek">{dek}</p>\n{body}' if dek else body
@@ -203,10 +175,11 @@ class Command(BaseCommand):
             # ---------- Imagem ----------
             img_info = None
             try:
+                self.stdout.write(f"Buscando imagem para: {topic_clean}...")
                 img_info = pick_image(topic_clean)
             except Exception as e:
                 if opts["debug"]:
-                    self.stdout.write(self.style.WARNING(f"· imagem falhou para '{topic_clean}': {e}"))
+                    self.stdout.write(self.style.WARNING(f"· Imagem falhou para '{topic_clean}': {e}"))
                 img_info = None
 
             # ---------- Monta kwargs, incluindo status se existir ----------
@@ -215,22 +188,20 @@ class Command(BaseCommand):
                 conteudo=conteudo,
                 publicado_em=timezone.now(),
                 fonte_url=key,
-                categoria=cat,  # <- dinâmica por tópico
+                categoria=cat,
             )
             if published_value is not _NO_STATUS_SENTINEL:
-                kwargs["status"] = published_value  # >>> chave do NOT NULL
+                kwargs["status"] = published_value
 
             obj = Noticia(**kwargs)
 
-            # redundância defensiva: se por qualquer motivo ainda estiver vazio, preenche agora
+            # Redundância defensiva
             if hasattr(obj, "status"):
                 cur = getattr(obj, "status", None)
                 if cur in (None, "", 0, False):
                     fallback = _status_published(Noticia)
                     if fallback is not _NO_STATUS_SENTINEL:
                         setattr(obj, "status", fallback)
-                        if opts["debug"]:
-                            self.stdout.write(self.style.NOTICE(f"[status] ajustado no objeto = {fallback!r}"))
 
             if hasattr(obj, "fonte_nome") and not getattr(obj, "fonte_nome", ""):
                 obj.fonte_nome = "RadarBR Trends"
@@ -248,14 +219,14 @@ class Command(BaseCommand):
                         obj.imagem_fonte_url = img_info.get("fonte_url", "")
                 except Exception as e:
                     if opts["debug"]:
-                        self.stdout.write(self.style.WARNING(f"· falha ao salvar imagem: {e}"))
+                        self.stdout.write(self.style.WARNING(f"· Falha ao salvar imagem: {e}"))
 
             obj.slug = unique_slug(title)
-            obj.save()  # <<< NÃO deve mais falhar por status nulo
+            obj.save()
             created += 1
-            self.stdout.write(self.style.SUCCESS(f"✓ publicado: {topic_clean}"))
+            self.stdout.write(self.style.SUCCESS(f"✓ Publicado: {topic_clean}"))
 
-        self.stdout.write(self.style.SUCCESS(f"Pronto. novos artigos: {created}"))
+        self.stdout.write(self.style.SUCCESS(f"Pronto. Novos artigos criados: {created}"))
 
         # ---------- Ping de buscadores ----------
         try:
@@ -272,5 +243,4 @@ class Command(BaseCommand):
                     )
                 )
         except Exception:
-            # silencioso em dev
             pass

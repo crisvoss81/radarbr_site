@@ -1,21 +1,21 @@
 {
-  "name": "MyWebSite",
-  "short_name": "MySite",
+  "name": "RadarBR",
+  "short_name": "RadarBR",
+  "description": "Últimas notícias do Brasil, tecnologia, esportes, economia e entretenimento",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#c1121f",
   "icons": [
     {
-      "src": "/https://radarbr.com/static/img/favicon.ico/web-app-manifest-192x192.png",
+      "src": "/static/img/favicon-192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
+      "type": "image/png"
     },
     {
-      "src": "/https://radarbr.com/static/img/favicon.ico/web-app-manifest-512x512.png",
+      "src": "/static/img/favicon-512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "type": "image/png"
     }
-  ],
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff",
-  "display": "standalone"
+  ]
 }
