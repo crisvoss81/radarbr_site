@@ -1,6 +1,7 @@
 {% extends 'rb_portal/base.html' %}
 {% load rb_filters %}
 {% load markdown_extras %}
+{% load cloudinary_extras %}
 
 {% block title %}{{ object.titulo|striptags }} | RadarBR{% endblock %}
 {% block meta_description %}{{ object.conteudo|striptags|truncatechars:150 }}{% endblock %}
@@ -15,7 +16,11 @@
 
   {% if object.imagem %}
     <figure class="post-figure">
-      <img src="{{ object.imagem.url }}" alt="{{ object.imagem_alt|default:object.titulo|striptags }}">
+      <img 
+        src="{% cloudinary_image_url object.imagem width=1200 height=630 %}" 
+        {% cloudinary_responsive_image object.imagem %}
+        alt="{{ object.imagem_alt|default:object.titulo|striptags }}"
+      >
       {% if object.imagem_credito %}
         <figcaption class="muted" style="font-size:.85rem">
           Crédito: 

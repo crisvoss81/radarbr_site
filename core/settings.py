@@ -35,6 +35,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sitemaps",
     "django.contrib.humanize",
+    "cloudinary_storage",
+    "cloudinary",
     "rb_portal",
     "rb_noticias",
     "rb_ingestor",
@@ -107,5 +109,19 @@ WHITENOISE_SERVE_MEDIA = True
 WHITENOISE_MAX_AGE = 31536000  # 1 ano para arquivos estáticos
 WHITENOISE_INDEX_FILE = False
 WHITENOISE_MANIFEST_STRICT = False
+
+# --- CONFIGURAÇÕES DO CLOUDINARY ---
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
+    'SECURE': True,
+    'QUALITY': 'auto',
+    'FORMAT': 'auto',
+    'RESOURCE_TYPE': 'auto',
+}
+
+# Configurar Cloudinary como storage padrão para mídia
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

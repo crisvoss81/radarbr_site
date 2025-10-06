@@ -1,8 +1,14 @@
 {% load rb_filters %}
+{% load cloudinary_extras %}
 <article class="card">
   <a class="card-thumb" href="{{ obj.get_absolute_url }}" aria-label="{{ obj.titulo|striptags }}">
     {% if obj.imagem %}
-      <img loading="lazy" src="{{ obj.imagem.url }}" alt="{{ obj.imagem_alt|default:obj.titulo|striptags }}">
+      <img 
+        loading="lazy" 
+        src="{% cloudinary_image_url obj.imagem width=400 height=225 %}" 
+        {% cloudinary_responsive_image obj.imagem %}
+        alt="{{ obj.imagem_alt|default:obj.titulo|striptags }}"
+      >
     {% else %}
       <div class="thumb-ph">RadarBR</div>
     {% endif %}

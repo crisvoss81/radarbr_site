@@ -1,5 +1,6 @@
 {% extends 'rb_portal/base.html' %}
 {% load rb_filters %}
+{% load cloudinary_extras %}
 
 {% block title %}Últimas notícias | RadarBR{% endblock %}
 {% block meta_description %}Acompanhe agora as notícias mais buscadas do Brasil em tempo real: tecnologia, esportes, economia, entretenimento e mais.{% endblock %}
@@ -12,7 +13,11 @@
         <article class="hero-item">
           <a class="hero-thumb" href="{{ featured.get_absolute_url }}" aria-label="{{ featured.titulo|striptags }}">
             {% if featured.imagem %}
-              <img src="{{ featured.imagem.url }}" alt="{{ featured.imagem_alt|default:featured.titulo|striptags }}">
+              <img 
+                src="{% cloudinary_image_url featured.imagem width=800 height=450 %}" 
+                {% cloudinary_responsive_image featured.imagem %}
+                alt="{{ featured.imagem_alt|default:featured.titulo|striptags }}"
+              >
             {% else %}
               <div class="thumb-ph thumb-ph--lg">RadarBR</div>
             {% endif %}
