@@ -99,4 +99,13 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 WHITENOISE_USE_FINDERS = True
 WHITENOISE_AUTOREFRESH = DEBUG
 
+# Configuração para servir arquivos de mídia em produção (Render)
+# Como o Render não tem CDN separado, servimos via Django mesmo
+WHITENOISE_SERVE_MEDIA = True
+
+# Configurações adicionais para otimizar o serviço de arquivos
+WHITENOISE_MAX_AGE = 31536000  # 1 ano para arquivos estáticos
+WHITENOISE_INDEX_FILE = False
+WHITENOISE_MANIFEST_STRICT = False
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

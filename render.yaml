@@ -24,3 +24,5 @@
         generateValue: true
       - key: OPENAI_API_KEY
         sync: false
+      - key: MEDIA_ROOT
+        value: /opt/render/project/src/media
