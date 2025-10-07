@@ -1,4 +1,5 @@
 ﻿services:
+  # Deploy trigger - Google AdSense + Sistema Inteligente
   - type: web
     name: radarbr
     runtime: python
