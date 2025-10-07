@@ -4,6 +4,7 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 import dj_database_url
+from urllib.parse import urlparse
 
 load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -111,10 +112,31 @@ WHITENOISE_INDEX_FILE = False
 WHITENOISE_MANIFEST_STRICT = False
 
 # --- CONFIGURAÇÕES DO CLOUDINARY ---
+# Suporta tanto variáveis separadas (CLOUDINARY_CLOUD_NAME, API_KEY, API_SECRET)
+# quanto a variável única CLOUDINARY_URL=cloudinary://api_key:api_secret@cloud_name
+
+_cloudinary_url = os.getenv('CLOUDINARY_URL')
+_cloud_name = os.getenv('CLOUDINARY_CLOUD_NAME')
+_api_key = os.getenv('CLOUDINARY_API_KEY')
+_api_secret = os.getenv('CLOUDINARY_API_SECRET')
+
+if _cloudinary_url and not (_cloud_name and _api_key and _api_secret):
+    try:
+        parsed = urlparse(_cloudinary_url)
+        # netloc format: api_key:api_secret@cloud_name
+        auth, host = parsed.netloc.split('@')
+        key, secret = auth.split(':', 1)
+        _api_key = _api_key or key
+        _api_secret = _api_secret or secret
+        _cloud_name = _cloud_name or host
+    except Exception:
+        # Se parsing falhar, mantém valores existentes (podem estar None)
+        pass
+
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
-    'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
-    'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
+    'CLOUD_NAME': _cloud_name,
+    'API_KEY': _api_key,
+    'API_SECRET': _api_secret,
     'SECURE': True,
     'QUALITY': 'auto',
     'FORMAT': 'auto',

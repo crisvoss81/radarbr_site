@@ -1,0 +1,38 @@
+{% extends 'rb_portal/base.html' %}
+{% load rb_filters %}
+
+{% block title %}Teste de Imagens | RadarBR{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>Teste de Imagens</h1>
+  
+  <h2>Notícias com Imagens:</h2>
+  {% for noticia in noticias_com_imagem %}
+    <div style="border: 1px solid #ccc; margin: 10px 0; padding: 10px;">
+      <h3>{{ noticia.titulo }}</h3>
+      {% if noticia.imagem %}
+        <p><strong>URL da imagem:</strong> {{ noticia.imagem }}</p>
+        <img src="{{ noticia.imagem }}" alt="{{ noticia.titulo }}" style="max-width: 300px; border: 1px solid red;">
+      {% else %}
+        <p>Sem imagem</p>
+      {% endif %}
+    </div>
+  {% empty %}
+    <p>Nenhuma notícia com imagem encontrada</p>
+  {% endfor %}
+  
+  <h2>Últimas 5 Notícias:</h2>
+  {% for noticia in ultimas_noticias %}
+    <div style="border: 1px solid #ccc; margin: 10px 0; padding: 10px;">
+      <h3>{{ noticia.titulo }}</h3>
+      {% if noticia.imagem %}
+        <p><strong>URL da imagem:</strong> {{ noticia.imagem }}</p>
+        <img src="{{ noticia.imagem }}" alt="{{ noticia.titulo }}" style="max-width: 300px; border: 1px solid blue;">
+      {% else %}
+        <p>Sem imagem</p>
+      {% endif %}
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

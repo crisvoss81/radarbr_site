@@ -3,14 +3,19 @@
 <article class="card">
   <a class="card-thumb" href="{{ obj.get_absolute_url }}" aria-label="{{ obj.titulo|striptags }}">
     {% if obj.imagem %}
-      <img 
-        loading="lazy" 
-        src="{% cloudinary_image_url obj.imagem width=400 height=225 %}" 
+      <img
+        loading="lazy"
+        src="{% cloudinary_image_url obj.imagem width=400 height=225 crop='fill' %}"
         {% cloudinary_responsive_image obj.imagem %}
+        width="400" height="225"
+        decoding="async"
         alt="{{ obj.imagem_alt|default:obj.titulo|striptags }}"
       >
     {% else %}
-      <div class="thumb-ph">RadarBR</div>
+      <div class="thumb-ph thumb-ph--{{ obj.categoria.slug|default:'geral' }}">
+        <div class="thumb-ph-icon">📰</div>
+        RadarBR
+      </div>
     {% endif %}
   </a>
   <div class="card-body">

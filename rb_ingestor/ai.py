@@ -1,12 +1,15 @@
 # rb_ingestor/ai.py
 """
 Gera artigo SEO em PT-BR a partir de um tópico:
-- Retorna dict: {title, dek, html}
+- Retorna dict: {title, dek, html, image_url}
 - Estrutura: H2/H3, parágrafos curtos, listas e FAQ
 - Sem uso de proxies; usa OPENAI_API_KEY/OPENAI_MODEL
+- Integração com sistema de busca de imagens
 """
 from __future__ import annotations
-import os, json, re
+import os
+import json
+import re
 from typing import Dict
 
 try:
@@ -14,17 +17,40 @@ try:
 except Exception:
     OpenAI = None  # o caller deve tratar se a lib não estiver instalada
 
+# Importar sistema de busca de imagens
+try:
+    from .image_search import find_image_for_news
+    from .image_cache import image_cache
+except ImportError:
+    find_image_for_news = None
+    image_cache = None
+
 
 MODEL_DEFAULT = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
 
 def _first_json_blob(text: str) -> str | None:
-    """Extrai o primeiro bloco {...} de JSON válido do texto."""
+    """
+    CORRIGIDO: Extrai o primeiro bloco JSON do texto de forma mais robusta,
+    sem usar regex recursivo.
+    """
     if not text:
         return None
-    # busca um objeto JSON mais externo
-    m = re.search(r"\{(?:[^{}]|(?R))*\}", text, flags=re.S)
-    return m.group(0) if m else None
+    
+    # Encontra o primeiro '{' e o último '}'
+    start_index = text.find('{')
+    end_index = text.rfind('}')
+    
+    if start_index != -1 and end_index != -1 and end_index > start_index:
+        json_str = text[start_index : end_index + 1]
+        try:
+            # Tenta validar se é um JSON válido antes de retornar
+            json.loads(json_str)
+            return json_str
+        except json.JSONDecodeError:
+            return None # Não é um JSON válido
+            
+    return None
 
 
 def _fallback_article(topic: str) -> Dict[str, str]:
@@ -45,7 +71,7 @@ def _fallback_article(topic: str) -> Dict[str, str]:
 <h3>Qual o impacto?</h3>
 <p>Impactos práticos no dia a dia das pessoas.</p>
 """
-    return {"title": title[:140], "dek": dek[:220], "html": html.strip()}
+    return {"title": title[:140], "dek": dek[:220], "html": html.strip(), "image_url": None}
 
 
 def generate_article(topic: str, *, model: str | None = None, min_words: int = 700) -> Dict[str, str]:
@@ -138,4 +164,21 @@ Gere um ARTIGO EM JSON sobre o tópico entre <topic>…</topic>. Regras:
     if "<h2" not in html:
         html = _fallback_article(topic)["html"]
 
-    return {"title": title, "dek": dek, "html": html}
+    # Buscar imagem para o artigo
+    image_url = None
+    if find_image_for_news and image_cache:
+        # Verificar cache primeiro
+        cached_url = image_cache.get(title, topic)
+        if cached_url:
+            image_url = cached_url
+        else:
+            # Buscar nova imagem
+            image_url = find_image_for_news(title, html, topic)
+            if image_url:
+                # Armazenar no cache
+                image_cache.set(title, image_url, topic, {
+                    'source': 'ai_generated',
+                    'topic': topic
+                })
+
+    return {"title": title, "dek": dek, "html": html, "image_url": image_url}

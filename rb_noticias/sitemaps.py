@@ -8,14 +8,27 @@ from .models import Noticia, Categoria
 class NoticiasSitemap(Sitemap):
     changefreq = "hourly"
     priority = 0.9
-    protocol = "https"   # em dev o Django usa o host atual; em prod mantenha https
+    protocol = "https"
 
     def items(self):
-        # limite alto, mas evita carregar tudo de uma vez se seu banco crescer muito
-        return Noticia.objects.order_by("-publicado_em")[:5000]
+        # Apenas notícias publicadas
+        return Noticia.objects.filter(status=Noticia.Status.PUBLICADO).order_by("-publicado_em")[:5000]
 
     def lastmod(self, obj: Noticia):
         return obj.publicado_em
+    
+    def priority(self, obj: Noticia):
+        # Prioridade mais alta para notícias recentes (últimas 24h)
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        now = timezone.now()
+        if obj.publicado_em >= now - timedelta(hours=24):
+            return 0.9
+        elif obj.publicado_em >= now - timedelta(days=7):
+            return 0.8
+        else:
+            return 0.7
 
 
 class CategoriaSitemap(Sitemap):
@@ -31,7 +44,7 @@ class CategoriaSitemap(Sitemap):
 
     def lastmod(self, obj: Categoria):
         return (
-            Noticia.objects.filter(categoria=obj)
+            Noticia.objects.filter(categoria=obj, status=Noticia.Status.PUBLICADO)
             .aggregate(m=Max("publicado_em"))
             .get("m")
         )
@@ -43,8 +56,8 @@ class StaticViewsSitemap(Sitemap):
     protocol = "https"
 
     def items(self):
-        # home e outras rotas “estáticas” que você quiser expor
-        return ["rb_noticias:home"]
+        # home e outras rotas "estáticas" que você quiser expor
+        return ["home"]
 
     def location(self, name: str):
         return reverse(name)

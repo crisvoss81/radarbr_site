@@ -1,7 +1,6 @@
 # rb_noticias/models.py
 from django.db import models
 from django.urls import reverse
-from cloudinary.models import CloudinaryField # Adicione esta importação
 
 class Categoria(models.Model):
     nome = models.CharField(max_length=120)
@@ -39,15 +38,12 @@ class Noticia(models.Model):
         choices=Status.choices,
     )
 
-    # AQUI ESTÁ A MUDANÇA: Substituímos ImageField por CloudinaryField
-    imagem = CloudinaryField(
-        'imagem',
-        overwrite=True,
-        resource_type='image',
-        folder='noticias', # Pasta onde as imagens serão salvas no Cloudinary
-        transformation={'quality': 'auto:good', 'fetch_format': 'auto'},
+    # Campo de imagem - URL externa de serviços gratuitos
+    imagem = models.URLField(
+        max_length=1000,
         blank=True,
-        null=True
+        null=True,
+        help_text="URL da imagem da notícia (Wikimedia, Openverse, etc.)"
     )
     
     imagem_alt = models.CharField(max_length=200, blank=True, default="")

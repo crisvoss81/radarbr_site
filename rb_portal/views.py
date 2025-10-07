@@ -23,6 +23,23 @@ def home(request):
     return render(request, "rb_portal/home.html", ctx)
 
 
+def test_images(request):
+    """View para testar se as imagens estão funcionando"""
+    from rb_noticias.models import Noticia
+    
+    # Notícias com imagens
+    noticias_com_imagem = Noticia.objects.exclude(imagem__isnull=True).exclude(imagem='')[:10]
+    
+    # Últimas 5 notícias
+    ultimas_noticias = Noticia.objects.all().order_by('-publicado_em')[:5]
+    
+    ctx = {
+        "noticias_com_imagem": noticias_com_imagem,
+        "ultimas_noticias": ultimas_noticias,
+    }
+    return render(request, "rb_portal/test_images.html", ctx)
+
+
 def post_detail(request, slug):
     obj = get_object_or_404(Noticia, slug=slug)
     relacionados = (

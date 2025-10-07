@@ -25,17 +25,21 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         dry_run = options['dry_run']
         
-        # Configurar Cloudinary
-        cloudinary.config(
-            cloud_name=settings.CLOUDINARY_STORAGE['CLOUD_NAME'],
-            api_key=settings.CLOUDINARY_STORAGE['API_KEY'],
-            api_secret=settings.CLOUDINARY_STORAGE['API_SECRET'],
-            secure=settings.CLOUDINARY_STORAGE['SECURE']
-        )
+        # Configurar Cloudinary: aceita CLOUDINARY_URL ou chaves separadas
+        cloudinary_url = os.getenv('CLOUDINARY_URL')
+        if cloudinary_url:
+            cloudinary.config(cloudinary_url=cloudinary_url, secure=True)
+        else:
+            cloudinary.config(
+                cloud_name=settings.CLOUDINARY_STORAGE['CLOUD_NAME'],
+                api_key=settings.CLOUDINARY_STORAGE['API_KEY'],
+                api_secret=settings.CLOUDINARY_STORAGE['API_SECRET'],
+                secure=settings.CLOUDINARY_STORAGE['SECURE']
+            )
 
         self.stdout.write("🚀 Iniciando migração de imagens para Cloudinary...")
         
-        # Buscar todas as notícias com imagens
+        # Buscar todas as notícias com imagens (URLs externas)
         noticias_com_imagem = Noticia.objects.filter(imagem__isnull=False).exclude(imagem='')
         
         total = noticias_com_imagem.count()
@@ -49,41 +53,30 @@ class Command(BaseCommand):
         
         for i, noticia in enumerate(noticias_com_imagem, 1):
             try:
-                # Verificar se a imagem existe localmente
-                if noticia.imagem and hasattr(noticia.imagem, 'path'):
-                    caminho_local = noticia.imagem.path
-                    
-                    if os.path.exists(caminho_local):
-                        self.stdout.write(f"[{i}/{total}] Processando: {noticia.titulo[:50]}...")
-                        
-                        if not dry_run:
-                            # Upload para Cloudinary
-                            resultado = cloudinary.uploader.upload(
-                                caminho_local,
-                                folder="radarbr/noticias",
-                                public_id=f"noticia_{noticia.id}",
-                                quality="auto",
-                                format="auto",
-                                transformation=[
-                                    {'width': 1200, 'height': 630, 'crop': 'fill', 'quality': 'auto'},
-                                    {'fetch_format': 'auto'}
-                                ]
-                            )
-                            
-                            # Atualizar o campo imagem com a URL do Cloudinary
-                            noticia.imagem = resultado['secure_url']
-                            noticia.save()
-                            
-                            self.stdout.write(f"✅ Upload concluído: {resultado['secure_url']}")
-                        else:
-                            self.stdout.write(f"🔍 Seria feito upload de: {caminho_local}")
-                        
-                        sucessos += 1
+                # Suporte a URLs externas: subir diretamente a URL para o Cloudinary
+                if noticia.imagem and isinstance(noticia.imagem, str):
+                    remote_url = noticia.imagem
+                    self.stdout.write(f"[{i}/{total}] Enviando URL remota: {remote_url[:80]}...")
+
+                    if not dry_run:
+                        resultado = cloudinary.uploader.upload(
+                            remote_url,
+                            folder="radarbr/noticias",
+                            public_id=f"noticia_{noticia.id}",
+                            quality="auto",
+                            fetch_format="auto",
+                            resource_type="image",
+                        )
+
+                        noticia.imagem = resultado['secure_url']
+                        noticia.save(update_fields=["imagem"])
+                        self.stdout.write(f"✅ Upload concluído: {resultado['secure_url']}")
                     else:
-                        self.stdout.write(f"⚠️ Arquivo não encontrado: {caminho_local}")
-                        erros += 1
+                        self.stdout.write(f"🔍 (dry-run) Upload de URL: {remote_url[:80]}...")
+
+                    sucessos += 1
                 else:
-                    self.stdout.write(f"⚠️ Notícia sem caminho de imagem: {noticia.titulo[:50]}")
+                    self.stdout.write(f"⚠️ Notícia sem URL de imagem: {noticia.titulo[:50]}")
                     erros += 1
                     
             except Exception as e:

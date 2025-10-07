@@ -22,9 +22,15 @@ def categorias_nav(_request):
         return {"menu_top": [], "menu_more": [], "categorias_nav": []}
 
     todas = list(Categoria.objects.order_by("nome"))
-    por_slug = {c.slug: c for c in Categoria.objects.filter(slug__in=MENU_TOP_SLUGS)}
-    menu_top = [por_slug[s] for s in MENU_TOP_SLUGS if s in por_slug]
-    slugs_top = set(MENU_TOP_SLUGS)
-    menu_more = [c for c in todas if c.slug not in slugs_top]
+    
+    # Se não há categorias, retornar vazio
+    if not todas:
+        return {"menu_top": [], "menu_more": [], "categorias_nav": []}
+    
+    # Pegar as primeiras 8 categorias para o menu principal
+    menu_top = todas[:8]
+    
+    # O resto vai para "Mais"
+    menu_more = todas[8:]
 
     return {"menu_top": menu_top, "menu_more": menu_more, "categorias_nav": todas[:20]}

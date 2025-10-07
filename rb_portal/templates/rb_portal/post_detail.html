@@ -5,6 +5,79 @@
 
 {% block title %}{{ object.titulo|striptags }} | RadarBR{% endblock %}
 {% block meta_description %}{{ object.conteudo|striptags|truncatechars:150 }}{% endblock %}
+{% block canonical %}{{ SITE_BASE_URL }}{{ object.get_absolute_url }}{% endblock %}
+
+{% block social_meta %}
+  {# Open Graph #}
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="{{ object.titulo|striptags }}">
+  <meta property="og:description" content="{{ object.conteudo|striptags|truncatechars:200 }}">
+  <meta property="og:url" content="{{ SITE_BASE_URL }}{{ object.get_absolute_url }}">
+  {% if object.imagem %}
+    <meta property="og:image" content="{% cloudinary_image_url object.imagem width=1200 height=630 crop='fill' %}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+  {% endif %}
+
+  {# Twitter Cards #}
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ object.titulo|striptags }}">
+  <meta name="twitter:description" content="{{ object.conteudo|striptags|truncatechars:200 }}">
+  {% if object.imagem %}
+    <meta name="twitter:image" content="{% cloudinary_image_url object.imagem width=1200 height=630 crop='fill' %}">
+  {% endif %}
+
+  {# JSON-LD Article + Breadcrumbs #}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    "headline": "{{ object.titulo|striptags|escapejs }}",
+    "datePublished": "{{ object.publicado_em|date:'c' }}",
+    "dateModified": "{{ object.publicado_em|date:'c' }}",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "{{ SITE_BASE_URL }}{{ object.get_absolute_url }}"
+    }{% if object.imagem %},
+    "image": ["{% cloudinary_image_url object.imagem width=1200 height=630 crop='fill' %}"]{% endif %}{% if object.categoria %},
+    "articleSection": "{{ object.categoria.nome|escapejs }}"{% endif %}
+  }
+  </script>
+  
+  {# Breadcrumbs JSON-LD #}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "{{ SITE_BASE_URL }}/"
+      }{% if object.categoria %},
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "{{ object.categoria.nome|escapejs }}",
+        "item": "{{ SITE_BASE_URL }}{{ object.categoria.get_absolute_url }}"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "{{ object.titulo|striptags|escapejs }}",
+        "item": "{{ SITE_BASE_URL }}{{ object.get_absolute_url }}"
+      }{% else %},
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "{{ object.titulo|striptags|escapejs }}",
+        "item": "{{ SITE_BASE_URL }}{{ object.get_absolute_url }}"
+      }{% endif %}
+    ]
+  }
+  </script>
+{% endblock %}
 
 {% block content %}
 <article class="post">
@@ -16,14 +89,16 @@
 
   {% if object.imagem %}
     <figure class="post-figure">
-      <img 
-        src="{% cloudinary_image_url object.imagem width=1200 height=630 %}" 
+      <img
+        src="{% cloudinary_image_url object.imagem width=1200 height=675 crop='fill' %}"
         {% cloudinary_responsive_image object.imagem %}
+        width="1200" height="675"
+        loading="eager" fetchpriority="high" decoding="async"
         alt="{{ object.imagem_alt|default:object.titulo|striptags }}"
       >
       {% if object.imagem_credito %}
         <figcaption class="muted" style="font-size:.85rem">
-          Crédito: 
+          Crédito:
           {% if object.imagem_fonte_url %}
             <a href="{{ object.imagem_fonte_url }}" target="_blank" rel="noopener noreferrer">{{ object.imagem_credito }}</a>
           {% else %}

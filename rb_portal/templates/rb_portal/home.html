@@ -14,12 +14,17 @@
           <a class="hero-thumb" href="{{ featured.get_absolute_url }}" aria-label="{{ featured.titulo|striptags }}">
             {% if featured.imagem %}
               <img 
-                src="{% cloudinary_image_url featured.imagem width=800 height=450 %}" 
+                src="{% cloudinary_image_url featured.imagem width=800 height=450 crop='fill' %}"
                 {% cloudinary_responsive_image featured.imagem %}
+                width="800" height="450"
+                loading="eager" fetchpriority="high" decoding="async"
                 alt="{{ featured.imagem_alt|default:featured.titulo|striptags }}"
               >
             {% else %}
-              <div class="thumb-ph thumb-ph--lg">RadarBR</div>
+              <div class="thumb-ph thumb-ph--lg thumb-ph--{{ featured.categoria.slug|default:'geral' }}">
+                <div class="thumb-ph-icon">📰</div>
+                RadarBR
+              </div>
             {% endif %}
           </a>
           <div class="hero-body">
@@ -30,9 +35,27 @@
       {% endif %}
     </div>
 
+    <!-- AdSense Banner Inline -->
+    <div class="ad-slot ad-slot--inline" data-ad-slot="content-inline">
+      <div class="ad-placeholder">
+        <div class="ad-label">Publicidade</div>
+        <div class="ad-size">728x90</div>
+      </div>
+    </div>
+
     <div class="list">
       {% for obj in page_obj.object_list|slice:'1:' %}
         {% include 'rb_portal/includes/_card.html' with obj=obj %}
+        
+        <!-- AdSense entre cards (a cada 4 notícias) -->
+        {% if forloop.counter|divisibleby:4 and not forloop.last %}
+          <div class="ad-slot ad-slot--between-cards" data-ad-slot="content-between-{{ forloop.counter }}">
+            <div class="ad-placeholder">
+              <div class="ad-label">Publicidade</div>
+              <div class="ad-size">728x90</div>
+            </div>
+          </div>
+        {% endif %}
       {% empty %}
         <p class="muted">Nenhuma notícia encontrada.</p>
       {% endfor %}

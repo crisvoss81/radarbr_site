@@ -1,24 +1,118 @@
-{% comment %} conteúdo de rb_portal/templates/rb_portal/includes/_sidebar.html {% endcomment %}
-<div class="box">
-  <h3 class="box-title">Em alta</h3>
-  <ul class="bullet-list">
-    {% with hot=trending|default:others|default:page_obj.object_list %}
-      {% for obj in hot|slice:':8' %}
-        <li><a href="{{ obj.get_absolute_url }}">{{ obj.titulo|striptags }}</a></li>
-      {% empty %}
-        <li class="muted">Sem itens no momento.</li>
-      {% endfor %}
-    {% endwith %}
-  </ul>
+{% comment %} Sidebar otimizada para AdSense {% endcomment %}
+
+<!-- AdSense Banner Top -->
+<div class="ad-slot ad-slot--top" data-ad-slot="sidebar-top">
+  <div class="ad-placeholder">
+    <div class="ad-label">Publicidade</div>
+    <div class="ad-size">300x250</div>
+  </div>
 </div>
 
-<div class="box">
-  <h3 class="box-title">Categorias</h3>
-  <ul class="pill-list">
-    {% for cat in cats %}
-      <li><a href="{{ cat.get_absolute_url }}">{{ cat.nome }}</a></li>
-    {% empty %}
-      <li class="muted">Sem categorias cadastradas.</li>
-    {% endfor %}
-  </ul>
+<!-- Trending News Card (Compacto) -->
+<section class="sidebar-card trending-card" aria-labelledby="trending-title">
+  <header class="card-header">
+    <h3 id="trending-title" class="card-title">
+      <svg class="card-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+        <path d="M13 7.83l1.88 1.88-1.6 1.6 1.41 1.41L17 9.42c.39-.39.39-1.02 0-1.41L14.7 5.7l-1.41 1.41L13 7.83zM5 3h14c1.1 0 2 .9 2 2v14c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2zm0 2v14h14V5H5zm4.41 7.41L10 13.17l-.59-.59L8 13.17l1.41 1.41L10 15l2-2-1.41-1.41L10 12.17z"/>
+      </svg>
+      Em alta
+    </h3>
+  </header>
+  
+  <div class="card-content">
+    {% with hot=trending|default:others|default:page_obj.object_list %}
+      {% for obj in hot|slice:':4' %}
+        <article class="trending-item">
+          <a href="{{ obj.get_absolute_url }}" class="trending-link">
+            <h4 class="trending-title">{{ obj.titulo|striptags|truncatechars:50 }}</h4>
+            <div class="trending-meta">
+              <time datetime="{{ obj.publicado_em|date:'c' }}" class="trending-time">
+                {{ obj.publicado_em|timesince }} atrás
+              </time>
+            </div>
+          </a>
+        </article>
+      {% empty %}
+        <p class="empty-state">Sem notícias em destaque.</p>
+      {% endfor %}
+    {% endwith %}
+  </div>
+</section>
+
+<!-- AdSense Banner Middle -->
+<div class="ad-slot ad-slot--middle" data-ad-slot="sidebar-middle">
+  <div class="ad-placeholder">
+    <div class="ad-label">Publicidade</div>
+    <div class="ad-size">300x250</div>
+  </div>
 </div>
+
+<!-- Categories Card (Compacto) -->
+<section class="sidebar-card categories-card" aria-labelledby="categories-title">
+  <header class="card-header">
+    <h3 id="categories-title" class="card-title">
+      <svg class="card-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+      </svg>
+      Categorias
+    </h3>
+  </header>
+  
+  <div class="card-content">
+    <nav class="categories-nav" role="navigation" aria-label="Navegação por categorias">
+      {% for cat in cats|slice:':8' %}
+        <a href="{{ cat.get_absolute_url }}" class="category-link" 
+           aria-label="Ver notícias da categoria {{ cat.nome }}">
+          <span class="category-name">{{ cat.nome }}</span>
+        </a>
+      {% empty %}
+        <p class="empty-state">Sem categorias cadastradas.</p>
+      {% endfor %}
+      
+      {% if cats|length > 8 %}
+        <a href="/categorias/" class="category-link category-link--more">
+          <span class="category-name">Ver todas</span>
+          <svg class="category-arrow" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+            <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+          </svg>
+        </a>
+      {% endif %}
+    </nav>
+  </div>
+</section>
+
+<!-- AdSense Banner Bottom -->
+<div class="ad-slot ad-slot--bottom" data-ad-slot="sidebar-bottom">
+  <div class="ad-placeholder">
+    <div class="ad-label">Publicidade</div>
+    <div class="ad-size">300x600</div>
+  </div>
+</div>
+
+<!-- JSON-LD para SEO -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "RadarBR",
+  "url": "{{ SITE_BASE_URL }}",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "{{ SITE_BASE_URL }}/busca/?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  },
+  "mainEntity": {
+    "@type": "ItemList",
+    "itemListElement": [
+      {% for cat in cats %}
+      {
+        "@type": "ListItem",
+        "position": {{ forloop.counter }},
+        "name": "{{ cat.nome|escapejs }}",
+        "url": "{{ SITE_BASE_URL }}{{ cat.get_absolute_url }}"
+      }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ]
+  }
+}
+</script>
