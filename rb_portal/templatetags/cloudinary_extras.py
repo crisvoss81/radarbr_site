@@ -8,7 +8,7 @@ register = template.Library()
 @register.simple_tag
 def cloudinary_image_url(image_field, width=None, height=None, crop='fill', quality='auto', format='auto'):
     """
-    Gera URL otimizada do Cloudinary para uma imagem
+    Gera URL otimizada do Cloudinary para uma imagem ou retorna URL externa
     
     Uso:
     {% cloudinary_image_url noticia.imagem width=800 height=600 %}
@@ -17,9 +17,12 @@ def cloudinary_image_url(image_field, width=None, height=None, crop='fill', qual
     if not image_field:
         return ''
     
+    # Converter para string se necessário
+    image_url = str(image_field)
+    
     # Se já é uma URL do Cloudinary, usar diretamente
-    if hasattr(image_field, 'url') and 'cloudinary.com' in str(image_field.url):
-        url = str(image_field.url)
+    if 'cloudinary.com' in image_url:
+        url = image_url
         
         # Adicionar transformações se especificadas
         if width or height or crop != 'fill' or quality != 'auto' or format != 'auto':
@@ -45,13 +48,21 @@ def cloudinary_image_url(image_field, width=None, height=None, crop='fill', qual
         
         return url
     
-    # Se não é Cloudinary, retornar URL normal
-    return image_field.url if hasattr(image_field, 'url') else str(image_field)
+    # Se é uma URL externa (Unsplash, etc.), retornar diretamente
+    if image_url.startswith('http'):
+        return image_url
+    
+    # Se é um campo de arquivo, usar .url
+    if hasattr(image_field, 'url'):
+        return image_field.url
+    
+    # Fallback: retornar como string
+    return image_url
 
 @register.simple_tag
 def cloudinary_responsive_image(image_field, sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"):
     """
-    Gera srcset responsivo para imagens do Cloudinary
+    Gera srcset responsivo para imagens do Cloudinary ou retorna srcset simples para URLs externas
     
     Uso:
     {% cloudinary_responsive_image noticia.imagem %}
@@ -61,10 +72,14 @@ def cloudinary_responsive_image(image_field, sizes="(max-width: 768px) 100vw, (m
     
     base_url = cloudinary_image_url(image_field)
     
-    if not base_url or 'cloudinary.com' not in base_url:
-        return f'srcset="{base_url}"'
+    if not base_url:
+        return ''
     
-    # Gerar diferentes tamanhos
+    # Se não é Cloudinary (URL externa), não retornar srcset
+    if 'cloudinary.com' not in base_url:
+        return ''
+    
+    # Gerar diferentes tamanhos para Cloudinary
     sizes_list = [400, 600, 800, 1200, 1600]
     srcset_parts = []
     
@@ -74,7 +89,7 @@ def cloudinary_responsive_image(image_field, sizes="(max-width: 768px) 100vw, (m
             srcset_parts.append(f"{responsive_url} {size}w")
     
     srcset = ", ".join(srcset_parts)
-    return f'srcset="{srcset}" sizes="{sizes}"'
+    return f'srcset=\'{srcset}\' sizes=\'{sizes}\''
 
 @register.simple_tag
 def cloudinary_placeholder(width=400, height=300, text="RadarBR"):

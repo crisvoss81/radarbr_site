@@ -194,6 +194,27 @@ img{ display:block; max-width:100%; height:auto }
   min-height:90px; 
   background:#e5e7eb;
 }
+
+/* Banners específicos para páginas de notícias */
+.ad-slot--post-header,
+.ad-slot--post-image,
+.ad-slot--post-content {
+  margin: 24px 0;
+  text-align: center;
+}
+
+.ad-slot--post-header .ad-placeholder,
+.ad-slot--post-image .ad-placeholder,
+.ad-slot--post-content .ad-placeholder {
+  min-height: 90px;
+  background: #f3f4f6;
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
 .ad-label{ 
   font-size:0.75rem; 
   color:var(--muted); 

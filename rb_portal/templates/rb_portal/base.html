@@ -27,6 +27,10 @@
 
   {% block extra_head %}{% endblock %}
 
+  {% comment %} Google AdSense {% endcomment %}
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3913403142217011"
+       crossorigin="anonymous"></script>
+
   {% comment %} Tag do Google Analytics 4 {% endcomment %}
   {% if not debug and GA4_ID %}
     <script async src="https://www.googletagmanager.com/gtag/js?id={{ GA4_ID }}"></script>

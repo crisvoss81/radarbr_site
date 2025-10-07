@@ -5,7 +5,7 @@
     {% if obj.imagem %}
       <img
         loading="lazy"
-        src="{% cloudinary_image_url obj.imagem width=400 height=225 crop='fill' %}"
+        src='{% cloudinary_image_url obj.imagem width=400 height=225 crop="fill" %}'
         {% cloudinary_responsive_image obj.imagem %}
         width="400" height="225"
         decoding="async"

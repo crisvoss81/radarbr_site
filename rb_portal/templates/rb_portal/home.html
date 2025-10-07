@@ -1,6 +1,7 @@
 {% extends 'rb_portal/base.html' %}
 {% load rb_filters %}
 {% load cloudinary_extras %}
+{% load adsense_extras %}
 
 {% block title %}Últimas notícias | RadarBR{% endblock %}
 {% block meta_description %}Acompanhe agora as notícias mais buscadas do Brasil em tempo real: tecnologia, esportes, economia, entretenimento e mais.{% endblock %}
@@ -36,11 +37,8 @@
     </div>
 
     <!-- AdSense Banner Inline -->
-    <div class="ad-slot ad-slot--inline" data-ad-slot="content-inline">
-      <div class="ad-placeholder">
-        <div class="ad-label">Publicidade</div>
-        <div class="ad-size">728x90</div>
-      </div>
+    <div class="ad-slot ad-slot--inline">
+      {% adsense_banner "1234567890" 728 90 %}
     </div>
 
     <div class="list">
@@ -49,11 +47,8 @@
         
         <!-- AdSense entre cards (a cada 4 notícias) -->
         {% if forloop.counter|divisibleby:4 and not forloop.last %}
-          <div class="ad-slot ad-slot--between-cards" data-ad-slot="content-between-{{ forloop.counter }}">
-            <div class="ad-placeholder">
-              <div class="ad-label">Publicidade</div>
-              <div class="ad-size">728x90</div>
-            </div>
+          <div class="ad-slot ad-slot--between-cards">
+            {% adsense_banner "1234567891" 728 90 %}
           </div>
         {% endif %}
       {% empty %}

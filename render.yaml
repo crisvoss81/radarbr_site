@@ -32,3 +32,30 @@
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
+
+  - type: cron
+    name: radarbr-automation
+    runtime: python
+    region: oregon
+    plan: free
+    branch: main
+    schedule: "0 */6 * * *"  # A cada 6 horas
+    buildCommand: |
+      chmod +x build.sh
+      ./build.sh
+    startCommand: |
+      chmod +x scripts/automation.sh
+      ./scripts/automation.sh
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: core.settings
+      - key: PYTHON_VERSION
+        value: 3.13.0
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false

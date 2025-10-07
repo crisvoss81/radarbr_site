@@ -2,6 +2,7 @@
 {% load rb_filters %}
 {% load markdown_extras %}
 {% load cloudinary_extras %}
+{% load adsense_extras %}
 
 {% block title %}{{ object.titulo|striptags }} | RadarBR{% endblock %}
 {% block meta_description %}{{ object.conteudo|striptags|truncatechars:150 }}{% endblock %}
@@ -14,7 +15,7 @@
   <meta property="og:description" content="{{ object.conteudo|striptags|truncatechars:200 }}">
   <meta property="og:url" content="{{ SITE_BASE_URL }}{{ object.get_absolute_url }}">
   {% if object.imagem %}
-    <meta property="og:image" content="{% cloudinary_image_url object.imagem width=1200 height=630 crop='fill' %}">
+    <meta property="og:image" content='{% cloudinary_image_url object.imagem width=1200 height=630 crop="fill" %}'>
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
   {% endif %}
@@ -24,7 +25,7 @@
   <meta name="twitter:title" content="{{ object.titulo|striptags }}">
   <meta name="twitter:description" content="{{ object.conteudo|striptags|truncatechars:200 }}">
   {% if object.imagem %}
-    <meta name="twitter:image" content="{% cloudinary_image_url object.imagem width=1200 height=630 crop='fill' %}">
+    <meta name="twitter:image" content='{% cloudinary_image_url object.imagem width=1200 height=630 crop="fill" %}'>
   {% endif %}
 
   {# JSON-LD Article + Breadcrumbs #}
@@ -87,10 +88,15 @@
     <div class="post-meta">Publicado em {{ object.publicado_em|date:'d \d\e F \d\e Y, H\hi' }}</div>
   </header>
 
+  <!-- AdSense Banner após título -->
+  <div class="ad-slot ad-slot--post-header">
+    {% adsense_banner "1234567892" 728 90 %}
+  </div>
+
   {% if object.imagem %}
     <figure class="post-figure">
       <img
-        src="{% cloudinary_image_url object.imagem width=1200 height=675 crop='fill' %}"
+        src='{% cloudinary_image_url object.imagem width=1200 height=675 crop="fill" %}'
         {% cloudinary_responsive_image object.imagem %}
         width="1200" height="675"
         loading="eager" fetchpriority="high" decoding="async"
@@ -109,8 +115,18 @@
     </figure>
   {% endif %}
 
+  <!-- AdSense Banner após imagem -->
+  <div class="ad-slot ad-slot--post-image">
+    {% adsense_banner "1234567893" 728 90 %}
+  </div>
+
   <div class="post-content">
     {{ object.conteudo|render_markdown }}
+  </div>
+
+  <!-- AdSense Banner após conteúdo -->
+  <div class="ad-slot ad-slot--post-content">
+    {% adsense_banner "1234567894" 728 90 %}
   </div>
 </article>
 {% endblock %}
