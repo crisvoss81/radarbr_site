@@ -47,7 +47,10 @@ class TrendingAnalyzer:
                         "url": post_data.get('url', '')
                     })
                 return posts
-        except Exception:
+            else:
+                return []
+        except Exception as e:
+            print(f"Erro ao buscar Reddit: {e}")
             return []
     
     def analyze_keyword_potential(self, topic: str) -> Dict:
@@ -120,28 +123,30 @@ class TrendingAnalyzer:
         reddit_trending = self.get_reddit_trending()
         
         # Processar Google Trends
-        for trend in google_trends:
-            analysis = self.analyze_keyword_potential(trend["topic"])
-            all_topics.append({
-                "topic": trend["topic"],
-                "source": "google_trends",
-                "category": trend["category"],
-                "search_volume": trend["search_volume"],
-                "analysis": analysis,
-                "priority": analysis["potential_score"]
-            })
+        if google_trends:
+            for trend in google_trends:
+                analysis = self.analyze_keyword_potential(trend["topic"])
+                all_topics.append({
+                    "topic": trend["topic"],
+                    "source": "google_trends",
+                    "category": trend["category"],
+                    "search_volume": trend["search_volume"],
+                    "analysis": analysis,
+                    "priority": analysis["potential_score"]
+                })
         
         # Processar Reddit
-        for post in reddit_trending[:5]:
-            analysis = self.analyze_keyword_potential(post["title"])
-            all_topics.append({
-                "topic": post["title"],
-                "source": "reddit",
-                "category": "geral",
-                "search_volume": "medium",
-                "analysis": analysis,
-                "priority": analysis["potential_score"]
-            })
+        if reddit_trending:
+            for post in reddit_trending[:5]:
+                analysis = self.analyze_keyword_potential(post["title"])
+                all_topics.append({
+                    "topic": post["title"],
+                    "source": "reddit",
+                    "category": "geral",
+                    "search_volume": "medium",
+                    "analysis": analysis,
+                    "priority": analysis["potential_score"]
+                })
         
         # Ordenar por prioridade e retornar os melhores
         all_topics.sort(key=lambda x: x["priority"], reverse=True)
