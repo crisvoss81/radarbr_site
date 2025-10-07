@@ -60,3 +60,31 @@
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
+
+  # Serviço de teste para verificar Django
+  - type: cron
+    name: radarbr-test
+    runtime: python
+    region: oregon
+    plan: free
+    branch: main
+    schedule: "0 12 * * *"  # Uma vez por dia às 12h
+    buildCommand: |
+      chmod +x build.sh
+      ./build.sh
+    startCommand: |
+      chmod +x scripts/test_render.sh
+      ./scripts/test_render.sh
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: core.settings
+      - key: PYTHON_VERSION
+        value: 3.13.0
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
