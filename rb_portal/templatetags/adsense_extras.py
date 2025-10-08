@@ -4,6 +4,7 @@ Template tags para Google AdSense
 """
 from django import template
 from django.conf import settings
+from django.utils.safestring import mark_safe
 
 register = template.Library()
 
@@ -36,8 +37,12 @@ def adsense_ad(ad_slot, ad_format="auto", responsive=True, width=None, height=No
         attrs.append(f'style="display:block; width:{width}px; height:{height}px;"')
     
     attrs_str = " ".join(attrs)
-    
-    return f'<ins class="adsbygoogle" {attrs_str}></ins><script>(adsbygoogle = window.adsbygoogle || []).push({{}});</script>'
+
+    html = (
+        f'<ins class="adsbygoogle" {attrs_str}></ins>'
+        f'<script>(adsbygoogle = window.adsbygoogle || []).push({{}});</script>'
+    )
+    return mark_safe(html)
 
 @register.simple_tag
 def adsense_placeholder(text="Publicidade", width=728, height=90):
@@ -67,6 +72,6 @@ def adsense_banner(ad_slot, width=728, height=90, placeholder_text="Publicidade"
     {% adsense_banner "1234567890" 300 250 %}
     """
     if settings.DEBUG:
-        return adsense_placeholder(placeholder_text, width, height)
+        return mark_safe(adsense_placeholder(placeholder_text, width, height))
     else:
         return adsense_ad(ad_slot, width=width, height=height)
