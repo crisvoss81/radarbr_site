@@ -17,14 +17,14 @@
       
       <!-- Botão MENU -->
       <div class="menu-wrap relative">
-        <button class="menu-btn flex items-center gap-2 text-sm font-semibold" type="button">
+        <button class="menu-btn flex items-center gap-2 text-sm font-semibold" type="button" onclick="toggleMobileMenu()">
           <span class="menu-ico w-5 h-0.5 bg-black relative block rounded-sm">
             <span class="block absolute -top-1.5 w-5 h-0.5 bg-black rounded-sm"></span>
             <span class="block absolute top-1.5 w-5 h-0.5 bg-black rounded-sm"></span>
           </span>
           <span class="menu-label">MENU</span>
         </button>
-        <div class="menu-panel absolute right-0 top-full mt-3 bg-white border border-gray-200 rounded-lg shadow-lg p-4 hidden group-hover:grid focus-within:grid grid-cols-2 min-w-[300px] z-50">
+        <div class="menu-panel absolute right-0 top-full mt-3 bg-white border border-gray-200 rounded-lg shadow-lg p-4 hidden grid-cols-2 min-w-[300px] z-50" id="mobileMenu">
           <div>
             <h4 class="text-gray-500 text-xs uppercase mb-2">Principais</h4>
             <ul>
