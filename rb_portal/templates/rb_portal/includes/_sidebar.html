@@ -1,11 +1,10 @@
 {% comment %} Sidebar otimizada para AdSense {% endcomment %}
+{% load adsense_extras %}
 
 <!-- AdSense Banner Top -->
-<div class="ad-slot ad-slot--top" data-ad-slot="sidebar-top">
-  <div class="ad-placeholder">
-    <div class="ad-label">Publicidade</div>
-    <div class="ad-size">300x250</div>
-  </div>
+<div class="ad-slot ad-slot--top">
+  {% adsense_banner "9538493649" 300 250 %}
+  <!-- Substitua o número acima pelo seu ad-slot real -->
 </div>
 
 <!-- Trending News Card (Compacto) -->
@@ -40,11 +39,9 @@
 </section>
 
 <!-- AdSense Banner Middle -->
-<div class="ad-slot ad-slot--middle" data-ad-slot="sidebar-middle">
-  <div class="ad-placeholder">
-    <div class="ad-label">Publicidade</div>
-    <div class="ad-size">300x250</div>
-  </div>
+<div class="ad-slot ad-slot--middle">
+  {% adsense_banner "4286166963" 300 250 %}
+  <!-- Substitua o número acima pelo seu ad-slot real -->
 </div>
 
 <!-- Categories Card (Compacto) -->
@@ -82,11 +79,9 @@
 </section>
 
 <!-- AdSense Banner Bottom -->
-<div class="ad-slot ad-slot--bottom" data-ad-slot="sidebar-bottom">
-  <div class="ad-placeholder">
-    <div class="ad-label">Publicidade</div>
-    <div class="ad-size">300x600</div>
-  </div>
+<div class="ad-slot ad-slot--bottom">
+  {% adsense_banner "3631506847" 300 600 %}
+  <!-- Substitua o número acima pelo seu ad-slot real -->
 </div>
 
 <!-- JSON-LD para SEO -->

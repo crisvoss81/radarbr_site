@@ -8,7 +8,13 @@ MENU_TOP_SLUGS = [
 ]
 
 def site_constants(request):
-    return {"SITE_NAME": getattr(settings, "SITE_NAME", "RadarBR")}
+    return {
+        "SITE_NAME": getattr(settings, "SITE_NAME", "RadarBR"),
+        # Expor flags/ids importantes aos templates (GA4/Adsense/Debug)
+        "GA4_ID": getattr(settings, "GA4_ID", ""),
+        "ADSENSE_CLIENT": getattr(settings, "ADSENSE_CLIENT", ""),
+        "debug": getattr(settings, "DEBUG", False),
+    }
 
 def categorias_nav(_request):
     Categoria = None

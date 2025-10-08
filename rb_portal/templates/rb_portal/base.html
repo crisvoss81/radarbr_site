@@ -25,6 +25,9 @@
   <link rel="shortcut icon" href="{% static 'img/favicon.ico' %}">
   <link rel="manifest" href="{% static 'img/site.webmanifest' %}">
 
+  {# Meta para verificação do AdSense (novo método) #}
+  <meta name="google-adsense-account" content="{{ ADSENSE_CLIENT }}">
+
   {% block extra_head %}{% endblock %}
 
   {% comment %} Google AdSense {% endcomment %}
