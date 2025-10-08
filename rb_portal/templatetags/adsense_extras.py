@@ -17,8 +17,8 @@ def adsense_ad(ad_slot, ad_format="auto", responsive=True, width=None, height=No
     {% adsense_ad "1234567890" width=728 height=90 %}
     {% adsense_ad "1234567890" ad_format="rectangle" %}
     """
-    # ID do cliente AdSense (do script principal)
-    client_id = "ca-pub-3913403142217011"
+    # ID do cliente AdSense (do settings)
+    client_id = settings.ADSENSE_CLIENT
     
     # Construir atributos do anúncio
     attrs = [

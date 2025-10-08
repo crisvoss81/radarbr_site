@@ -16,6 +16,7 @@ PEXELS_API_KEY = os.getenv("PEXELS_API_KEY")
 UNSPLASH_API_KEY = os.getenv("UNSPLASH_API_KEY")
 PIXABAY_API_KEY = os.getenv("PIXABAY_API_KEY")
 GA4_ID = os.getenv("GA4_ID", "")
+ADSENSE_CLIENT = os.getenv("ADSENSE_CLIENT", "ca-pub-3913403142217011")
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
 
