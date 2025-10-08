@@ -162,20 +162,18 @@ img{ display:block; max-width:100%; height:auto }
   text-align:center;
   overflow:visible;
   min-height:90px;
+  background:#f8fafc; 
+  border-radius:8px; 
+  padding:16px;
 }
 .ad-slot--top{ margin-top:0; }
 .ad-slot--bottom{ margin-bottom:0; }
 .ad-slot--inline{ 
   margin:24px 0; 
-  background:#f8fafc; 
-  border-radius:8px; 
-  padding:16px;
   min-height:90px;
 }
 .ad-slot--between-cards{ 
   margin:16px 0; 
-  background:#f8fafc; 
-  border-radius:8px; 
   padding:12px;
   min-height:90px;
 }
@@ -205,9 +203,6 @@ img{ display:block; max-width:100%; height:auto }
 .ad-slot--post-content {
   margin: 24px 0;
   text-align: center;
-  background:#f8fafc; 
-  border-radius:8px; 
-  padding:16px;
   min-height:90px;
 }
 
@@ -371,8 +366,8 @@ img{ display:block; max-width:100%; height:auto }
   .post{ padding:0 12px }
   .post-title{ font-size:1.6rem }
   .post-content{ font-size:1rem }
-  .ad-slot{ margin:16px 0 }
-  .ad-slot--inline{ margin:20px 0; padding:12px }
+  .ad-slot{ margin:16px 0; padding:12px }
+  .ad-slot--inline{ margin:20px 0 }
   .ad-slot--between-cards{ margin:12px 0; padding:8px }
 }
 @media (max-width:768px){ 
@@ -384,13 +379,13 @@ img{ display:block; max-width:100%; height:auto }
   .post-title{ font-size:1.4rem }
   .post-content{ font-size:0.95rem }
   .post-content h1,.post-content h2,.post-content h3{ font-size:1.2rem }
-  .ad-slot{ margin:12px 0 }
-  .ad-slot--inline{ margin:16px 0; padding:8px }
+  .ad-slot{ margin:12px 0; padding:8px }
+  .ad-slot--inline{ margin:16px 0 }
   .ad-slot--between-cards{ margin:8px 0; padding:6px }
   .ad-slot--post-header,
   .ad-slot--post-image,
   .ad-slot--post-content { 
     margin: 16px 0; 
-    padding:12px;
+    padding:8px;
   }
 }
