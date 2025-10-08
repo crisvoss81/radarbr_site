@@ -160,6 +160,7 @@ img{ display:block; max-width:100%; height:auto }
 .ad-slot{ 
   margin:20px 0; 
   text-align:center;
+  overflow:hidden;
 }
 .ad-slot--top{ margin-top:0; }
 .ad-slot--bottom{ margin-bottom:0; }
@@ -201,6 +202,9 @@ img{ display:block; max-width:100%; height:auto }
 .ad-slot--post-content {
   margin: 24px 0;
   text-align: center;
+  background:#f8fafc; 
+  border-radius:8px; 
+  padding:16px;
 }
 
 .ad-slot--post-header .ad-placeholder,
@@ -360,6 +364,29 @@ img{ display:block; max-width:100%; height:auto }
   .sidebar-card{ margin-bottom:20px }
   .container{ padding:0 12px }
   .menu-panel{ min-width:280px; grid-template-columns:1fr }
+  .post{ padding:0 12px }
+  .post-title{ font-size:1.6rem }
+  .post-content{ font-size:1rem }
+  .ad-slot{ margin:16px 0 }
+  .ad-slot--inline{ margin:20px 0; padding:12px }
+  .ad-slot--between-cards{ margin:12px 0; padding:8px }
 }
-@media (min-width:1000px){ .list{ grid-template-columns:1fr } }
-@media (min-width:1200px){ .list{ grid-template-columns:1fr } .list--grid{ grid-template-columns: repeat(2, minmax(0,1fr)); } }
+@media (max-width:768px){ 
+  .topbar-inner{ height:60px; padding:0 12px }
+  .brand-img{ height:32px }
+  .menu-btn{ padding:4px }
+  .menu-label{ display:none }
+  .menu-ico{ width:20px }
+  .post-title{ font-size:1.4rem }
+  .post-content{ font-size:0.95rem }
+  .post-content h1,.post-content h2,.post-content h3{ font-size:1.2rem }
+  .ad-slot{ margin:12px 0 }
+  .ad-slot--inline{ margin:16px 0; padding:8px }
+  .ad-slot--between-cards{ margin:8px 0; padding:6px }
+  .ad-slot--post-header,
+  .ad-slot--post-image,
+  .ad-slot--post-content { 
+    margin: 16px 0; 
+    padding:12px;
+  }
+}
