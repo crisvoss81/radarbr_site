@@ -21,6 +21,10 @@ def adsense_ad(ad_slot, ad_format="auto", responsive=True, width=None, height=No
     # ID do cliente AdSense (do settings)
     client_id = settings.ADSENSE_CLIENT
     
+    # Verificar se temos um slot válido
+    if not ad_slot or ad_slot.startswith("123456789"):
+        return mark_safe(f'<!-- Slot inválido: {ad_slot} -->')
+    
     # Construir atributos do anúncio
     attrs = [
         f'data-ad-client="{client_id}"',
@@ -71,5 +75,24 @@ def adsense_banner(ad_slot, width=728, height=90, placeholder_text="Publicidade"
     {% adsense_banner "1234567890" %}
     {% adsense_banner "1234567890" 300 250 %}
     """
-    # Sempre mostrar o anúncio real, mesmo em DEBUG
+    # Em modo DEBUG, mostrar placeholder para evitar erros 400
+    if settings.DEBUG:
+        return mark_safe(f'''
+        <div class="ad-placeholder" style="width:{width}px; height:{height}px; background:#f3f4f6; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; margin:20px auto;">
+            <div class="ad-label" style="font-size:0.75rem; color:#6b7280; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">{placeholder_text}</div>
+            <div class="ad-size" style="font-size:0.8rem; color:#3b82f6; font-weight:500;">{width}x{height} (DEBUG)</div>
+        </div>
+        ''')
+    
+    # Verificar se temos um slot válido
+    if not ad_slot or ad_slot.startswith("123456789"):
+        # Mostrar placeholder em vez de slot inválido
+        return mark_safe(f'''
+        <div class="ad-placeholder" style="width:{width}px; height:{height}px; background:#f3f4f6; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; margin:20px auto;">
+            <div class="ad-label" style="font-size:0.75rem; color:#6b7280; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">{placeholder_text}</div>
+            <div class="ad-size" style="font-size:0.8rem; color:#ef4444; font-weight:500;">Slot inválido: {ad_slot}</div>
+        </div>
+        ''')
+    
+    # Mostrar o anúncio real para slots válidos em produção
     return adsense_ad(ad_slot, width=width, height=height)
