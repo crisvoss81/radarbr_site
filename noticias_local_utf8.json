@@ -1,0 +1,386 @@
+﻿[
+{
+  "model": "rb_noticias.categoria",
+  "pk": 1,
+  "fields": {
+    "nome": "Política",
+    "slug": "politica"
+  }
+},
+{
+  "model": "rb_noticias.categoria",
+  "pk": 2,
+  "fields": {
+    "nome": "Geral",
+    "slug": "geral"
+  }
+},
+{
+  "model": "rb_noticias.categoria",
+  "pk": 3,
+  "fields": {
+    "nome": "Brasil",
+    "slug": "brasil"
+  }
+},
+{
+  "model": "rb_noticias.categoria",
+  "pk": 4,
+  "fields": {
+    "nome": "Economia",
+    "slug": "economia"
+  }
+},
+{
+  "model": "rb_noticias.categoria",
+  "pk": 5,
+  "fields": {
+    "nome": "Tecnologia",
+    "slug": "tecnologia"
+  }
+},
+{
+  "model": "rb_noticias.categoria",
+  "pk": 6,
+  "fields": {
+    "nome": "Esportes",
+    "slug": "esportes"
+  }
+},
+{
+  "model": "rb_noticias.categoria",
+  "pk": 7,
+  "fields": {
+    "nome": "Entretenimento",
+    "slug": "entretenimento"
+  }
+},
+{
+  "model": "rb_noticias.categoria",
+  "pk": 8,
+  "fields": {
+    "nome": "Mundo",
+    "slug": "mundo"
+  }
+},
+{
+  "model": "rb_noticias.categoria",
+  "pk": 9,
+  "fields": {
+    "nome": "Cidades (RS)",
+    "slug": "cidades-rs"
+  }
+},
+{
+  "model": "rb_noticias.categoria",
+  "pk": 10,
+  "fields": {
+    "nome": "Saúde",
+    "slug": "saude"
+  }
+},
+{
+  "model": "rb_noticias.categoria",
+  "pk": 11,
+  "fields": {
+    "nome": "Educação",
+    "slug": "educacao"
+  }
+},
+{
+  "model": "rb_noticias.categoria",
+  "pk": 12,
+  "fields": {
+    "nome": "Justiça & Segurança",
+    "slug": "justica-seguranca"
+  }
+},
+{
+  "model": "rb_noticias.categoria",
+  "pk": 13,
+  "fields": {
+    "nome": "Ciência & Meio Ambiente",
+    "slug": "ciencia-meio-ambiente"
+  }
+},
+{
+  "model": "rb_noticias.categoria",
+  "pk": 14,
+  "fields": {
+    "nome": "Carros & Mobilidade",
+    "slug": "carros-mobilidade"
+  }
+},
+{
+  "model": "rb_noticias.categoria",
+  "pk": 15,
+  "fields": {
+    "nome": "Agro",
+    "slug": "agro"
+  }
+},
+{
+  "model": "rb_noticias.categoria",
+  "pk": 16,
+  "fields": {
+    "nome": "Turismo",
+    "slug": "turismo"
+  }
+},
+{
+  "model": "rb_noticias.categoria",
+  "pk": 17,
+  "fields": {
+    "nome": "Trabalho & Carreira",
+    "slug": "trabalho-carreira"
+  }
+},
+{
+  "model": "rb_noticias.categoria",
+  "pk": 18,
+  "fields": {
+    "nome": "Loterias",
+    "slug": "loterias"
+  }
+},
+{
+  "model": "rb_noticias.noticia",
+  "pk": 459,
+  "fields": {
+    "titulo": "Relator da MP retira aumento de tributação sobre apostas",
+    "slug": "relator-da-mp-retira-aumento-de-tributacao-sobre-apostas",
+    "conteudo": "<p class=\"dek\">Relator da medida provisória que altera o IOF retira aumento de impostos sobre apostas, o que pode resultar em queda de R$ 3 bilhões na arrecadação em 2026.</p>\n<h2>O que é/Contexto</h2>\n<p>A Medida Provisória (MP) que visa alterar a tributação sobre operações financeiras, especificamente o Imposto sobre Operações Financeiras (IOF), tem gerado discussões acaloradas no Congresso. A proposta inicial previa um aumento na tributação sobre apostas, um setor em crescimento no Brasil, mas o relator decidiu retirar essa medida, o que pode impactar significativamente a arrecadação do governo nos próximos anos.</p>\n<h2>Panorama atual</h2>\n<p>O setor de apostas no Brasil tem crescido rapidamente, atraindo investidores e gerando novos empregos. No entanto, a tributação sobre essas atividades sempre foi um tema delicado. A proposta de aumento do IOF sobre apostas levantou preocupações entre os operadores do setor e os apostadores, que temiam uma desestímulo ao mercado. A retirada do aumento é vista como uma tentativa de equilibrar a arrecadação sem prejudicar o setor.</p>\n<h2>Principais pontos</h2>\n<ul><li>A MP original previa aumento na tributação sobre apostas.</li><li>Relator decidiu retirar essa proposta, mantendo a carga tributária atual.</li><li>Expectativa de queda na arrecadação de R$ 3 bilhões até 2026.</li><li>Crescimento contínuo do mercado de apostas no Brasil.</li></ul>\n<h2>Impactos para o público</h2>\n<p>A retirada do aumento na tributação sobre apostas pode beneficiar diretamente os apostadores, que não enfrentarão custos adicionais. Além disso, a decisão pode estimular o crescimento do setor, promovendo a criação de novos empregos e aumentando a concorrência entre as plataformas de apostas. Entretanto, a queda na arrecadação pode afetar os investimentos em áreas essenciais, como saúde e educação, que dependem dos recursos provenientes de tributos.</p>\n<h2>Perguntas frequentes</h2>\n<h3>Qual será o impacto da retirada do aumento na tributação?</h3><p>A retirada do aumento deve manter os custos atuais para os apostadores, estimulando o mercado sem onerar o consumidor.</p>\n<h3>Como isso afeta a arrecadação do governo?</h3><p>O governo pode enfrentar uma queda de R$ 3 bilhões na arrecadação até 2026, o que pode impactar investimentos em serviços públicos.</p>",
+    "publicado_em": "2025-10-07T19:57:22.121Z",
+    "categoria": 2,
+    "status": 1,
+    "imagem": "https://images.unsplash.com/photo-1607037183811-2a54d746cd35?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4MDQ4NDZ8MHwxfHNlYXJjaHwxfHxyZWxhdG9yJTIwcmV0aXJhJTIwYXVtZW50b3xlbnwxfDB8fHwxNzU5ODY3MDQ0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+    "imagem_alt": "Relator da MP retira aumento de tributação sobre apostas",
+    "imagem_credito": "",
+    "imagem_licenca": "",
+    "imagem_fonte_url": "",
+    "fonte_url": "trend:relator da mp alternativa ao iof retira aumento de tributação de bets, e arrecadação prevista deve cair r$ 3 bi em 2026:2025-10-07",
+    "fonte_nome": "RadarBR via GNews",
+    "criado_em": "2025-10-07T19:57:22.753Z"
+  }
+},
+{
+  "model": "rb_noticias.noticia",
+  "pk": 460,
+  "fields": {
+    "titulo": "Reflexões sobre o Hamas: Justiça e Terrorismo",
+    "slug": "reflexoes-sobre-o-hamas-justica-e-terrorismo",
+    "conteudo": "<p class=\"dek\">Entenda a complexidade do conflito e a importância de não justificar ações terroristas como as do Hamas. Uma análise crítica necessária.</p>\n<h2>O que é/Contexto</h2>\n<p>O Hamas é um grupo político e militar palestino que controla a Faixa de Gaza. Fundado em 1987, o Hamas tem como objetivo declarado a criação de um estado palestino e a resistência à ocupação israelense. No entanto, suas táticas incluem atos de terrorismo, que geram polêmica e debate sobre a moralidade de suas ações.</p>\n<h2>Panorama atual</h2>\n<p>Atualmente, o conflito entre Israel e Hamas se intensifica, com consequências devastadoras para a população civil. A violência gera um ciclo vicioso de retaliações, onde o sofrimento humano se agrava. É fundamental analisar a situação sob uma perspectiva que não justifique o terrorismo, independentemente das circunstâncias.</p>\n<h2>Principais pontos</h2>\n<ul><li>A violência do Hamas e suas consequências para a população civil.</li><li>A importância de distinguir entre resistência e terrorismo.</li><li>O impacto das ações do Hamas na imagem da causa palestina.</li><li>A necessidade de soluções pacíficas e diplomáticas para o conflito.</li></ul>\n<h2>Impactos para o público</h2>\n<p>Justificar moralmente as ações do Hamas pode levar à normalização da violência e ao agravamento do conflito. Isso impacta não apenas as vítimas diretas, mas também a percepção global sobre a luta palestina e a possibilidade de um futuro pacífico. É crucial promover um diálogo que busque a paz, sem cair na tentação de justificar atos de terrorismo.</p>\n<h2>Perguntas frequentes</h2>\n<h3>O Hamas é um movimento legítimo?</h3><p>Embora tenha apoio de parte da população palestina, suas táticas violentas geram controvérsias sobre a legitimidade de suas ações.</p>\n<h3>Como a comunidade internacional reage ao Hamas?</h3><p>A comunidade internacional está dividida. Enquanto alguns países apoiam a causa palestina, outros condenam as ações terroristas do Hamas.</p>",
+    "publicado_em": "2025-10-07T19:57:36.568Z",
+    "categoria": 2,
+    "status": 1,
+    "imagem": "https://images.unsplash.com/photo-1719141589248-84a28d332947?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4MDQ4NDZ8MHwxfHNlYXJjaHwxfHxyZWZsZXglQzMlQjVlcyUyMHNvYnJlJTIwaGFtYXN8ZW58MXwwfHx8MTc1OTg2NzA1OHww&ixlib=rb-4.1.0&q=80&w=1080",
+    "imagem_alt": "Reflexões sobre o Hamas: Justiça e Terrorismo",
+    "imagem_credito": "",
+    "imagem_licenca": "",
+    "imagem_fonte_url": "",
+    "fonte_url": "trend:não seja terrorista, não justifique moralmente o hamas:2025-10-07",
+    "fonte_nome": "RadarBR via GNews",
+    "criado_em": "2025-10-07T19:57:37.408Z"
+  }
+},
+{
+  "model": "rb_noticias.noticia",
+  "pk": 461,
+  "fields": {
+    "titulo": "Trump critica preço do café brasileiro nos EUA para Lula",
+    "slug": "trump-critica-preco-do-cafe-brasileiro-nos-eua-para-lula",
+    "conteudo": "<p class=\"dek\">O ex-presidente Donald Trump expressou sua preocupação com o aumento dos preços do café brasileiro nos EUA, discutindo o impacto econômico com o presidente Lula.</p>\n<h2>O que é/Contexto</h2>\n<p>A relação entre os Estados Unidos e o Brasil sempre foi marcada por intercâmbios comerciais significativos. Recentemente, o ex-presidente Donald Trump manifestou sua insatisfação sobre o aumento no preço do café brasileiro nos Estados Unidos. Durante uma conversa com o presidente Luiz Inácio Lula da Silva, Trump ressaltou que o valor do café disparou, prejudicando os consumidores e o mercado americano.</p>\n<h2>Panorama atual</h2>\n<p>O café é um dos produtos mais importantes nas relações comerciais entre Brasil e EUA. O Brasil é o maior produtor de café do mundo, e o aumento de preços pode ter várias causas, incluindo questões climáticas, mudanças na demanda e flutuações econômicas. Atualmente, a inflação e os custos de transporte também têm contribuído para a alta nos preços do café brasileiro no mercado americano.</p>\n<h2>Principais pontos</h2>\n<ul><li>Trump e Lula discutiram o aumento do preço do café brasileiro.</li><li>A inflação e os custos de transporte estão impactando o preço do produto.</li><li>O café brasileiro é crucial para o comércio entre os dois países.</li><li>As preocupações de Trump refletem uma questão de interesse para muitos consumidores americanos.</li></ul>\n<h2>Impactos para o público</h2>\n<p>O aumento dos preços do café pode afetar diretamente os consumidores americanos, que podem enfrentar preços mais altos nas prateleiras. Além disso, produtores e pequenos comerciantes também podem sentir os efeitos, uma vez que a demanda pode ser impactada por preços elevados. A conversa entre Trump e Lula destaca a importância de um diálogo aberto sobre questões comerciais que afetam ambos os países.</p>\n<h2>Perguntas frequentes</h2>\n<h3>Por que o preço do café brasileiro aumentou?</h3>\n<p>O aumento se deve a fatores como inflação, custos de transporte e condições climáticas que afetam a produção.</p>\n<h3>Qual é a importância do café brasileiro para os EUA?</h3>\n<p>O Brasil é o maior fornecedor de café para os EUA, e o produto é essencial para o mercado americano, tanto para consumidores quanto para empresas.</p>",
+    "publicado_em": "2025-10-07T19:57:54.648Z",
+    "categoria": 2,
+    "status": 1,
+    "imagem": "https://images.unsplash.com/photo-1563296299-cc5a1e8bd708?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4MDQ4NDZ8MHwxfHNlYXJjaHwxfHx0cnVtcCUyMGNyaXRpY2ElMjBwcmUlQzMlQTdvfGVufDF8MHx8fDE3NTk4NjcwNzZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+    "imagem_alt": "Trump critica preço do café brasileiro nos EUA para Lula",
+    "imagem_credito": "",
+    "imagem_licenca": "",
+    "imagem_fonte_url": "",
+    "fonte_url": "trend:trump se queixa com lula sobre café brasileiro nos eua: preço do produto disparou:2025-10-07",
+    "fonte_nome": "RadarBR via GNews",
+    "criado_em": "2025-10-07T19:57:55.235Z"
+  }
+},
+{
+  "model": "rb_noticias.noticia",
+  "pk": 462,
+  "fields": {
+    "titulo": "Israel deporta ativistas brasileiros para a Jordânia em operação controversa",
+    "slug": "israel-deporta-ativistas-brasileiros-para-a-jordania-em-operacao-controversa",
+    "conteudo": "<p class=\"dek\">Ativistas brasileiros são deportados de Israel para a Jordânia, gerando debate sobre direitos humanos e políticas de imigração. Entenda os detalhes dessa ação.</p>\n<h2>O que é/Contexto</h2>\n<p>A deportação de ativistas brasileiros por parte de Israel para a Jordânia tem gerado grande repercussão internacional. O episódio ocorre em um contexto de tensões políticas na região e levanta questões sobre as políticas de imigração e direitos humanos. Os ativistas estavam em Israel para participar de uma conferência sobre direitos humanos quando foram detidos.</p>\n<h2>Panorama atual</h2>\n<p>Recentemente, o governo israelense intensificou suas operações de controle de imigração, especialmente em relação a indivíduos que se opõem às suas políticas. A deportação em questão foi justificada pelas autoridades israelenses como uma medida de segurança, mas críticos argumentam que essa ação violou direitos básicos dos ativistas. O incidente destaca a crescente tensão entre Israel e movimentos sociais que trabalham em prol dos direitos humanos na região.</p>\n<h2>Principais pontos</h2>\n<ul><li>Ativistas foram detidos durante conferência em Israel.</li><li>A deportação ocorreu em meio a um aumento da repressão a vozes dissidentes.</li><li>O governo israelense justificou a ação com base em preocupações de segurança.</li><li>A comunidade internacional criticou a deportação, chamando-a de violação dos direitos humanos.</li></ul>\n<h2>Impactos para o público</h2>\n<p>A deportação dos ativistas brasileiros pode ter implicações significativas para as relações entre Brasil e Israel, além de afetar a percepção global sobre a política israelense. O episódio também pode desencorajar outros ativistas a se engajar em iniciativas de defesa dos direitos humanos na região, temendo represálias. A repercussão nas redes sociais e na mídia internacional mostra a importância desse tema para a mobilização social e política.</p>\n<h2>Perguntas frequentes</h2>\n<h3>Por que os ativistas foram deportados?</h3><p>As autoridades israelenses alegaram preocupações de segurança como justificativa para a deportação.</p>\n<h3>Qual é a reação da comunidade internacional?</h3><p>A comunidade internacional expressou preocupação com a violação dos direitos humanos e criticou a ação do governo israelense.</p>",
+    "publicado_em": "2025-10-07T19:58:15.372Z",
+    "categoria": 2,
+    "status": 1,
+    "imagem": "https://images.unsplash.com/photo-1662705060986-021ad0bec683?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4MDQ4NDZ8MHwxfHNlYXJjaHwxfHxpc3JhZWwlMjBkZXBvcnRhJTIwYXRpdmlzdGFzfGVufDF8MHx8fDE3NTk4NjcwOTd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+    "imagem_alt": "Israel deporta ativistas brasileiros para a Jordânia em operação controversa",
+    "imagem_credito": "",
+    "imagem_licenca": "",
+    "imagem_fonte_url": "",
+    "fonte_url": "trend:israel deporta ativistas brasileiros para a jordânia:2025-10-07",
+    "fonte_nome": "RadarBR via GNews",
+    "criado_em": "2025-10-07T19:58:17.584Z"
+  }
+},
+{
+  "model": "rb_noticias.noticia",
+  "pk": 463,
+  "fields": {
+    "titulo": "Nobel de Física 2025 Premia Trio que Conectou Quântico e Realidade",
+    "slug": "nobel-de-fisica-2025-premia-trio-que-conectou-quantico-e-realidade",
+    "conteudo": "<p class=\"dek\">O Nobel de Física 2025 foi concedido a três cientistas que revolucionaram a compreensão do mundo quântico e suas aplicações práticas. Descubra os detalhes dessa conquista.</p>\n<h2>O que é/Contexto</h2>\n<p>O Nobel de Física 2025 foi um marco importante na história da ciência, reconhecendo o trabalho de três cientistas que conseguiram unir a complexidade do mundo quântico com aplicações práticas no cotidiano. Esta conquista representa um avanço significativo no entendimento das leis da física e suas interações com a realidade observável.</p>\n<h2>Panorama atual</h2>\n<p>A física quântica, por muitos anos, foi vista como uma área de estudo restrita a laboratórios e teorias abstratas. No entanto, os recentes avanços promovidos pelo trio de premiados abriram novas possibilidades, tornando conceitos quânticos acessíveis e aplicáveis em diversas tecnologias, como computação quântica e criptografia.</p>\n<h2>Principais pontos</h2>\n<ul><li>Os laureados desenvolveram técnicas que permitem a manipulação de estados quânticos.</li><li>As inovações têm implicações diretas em áreas como a computação e a comunicação.</li><li>A pesquisa promoveu uma melhor compreensão dos fenômenos quânticos, desmistificando a física quântica.</li><li>O trabalho em equipe dos cientistas exemplifica a importância da colaboração interdisciplinar.</li></ul>\n<h2>Impactos para o público</h2>\n<p>O prêmio Nobel de Física 2025 não é apenas uma conquista acadêmica; ele impacta diretamente a sociedade. As inovações trazidas por esses cientistas podem levar a tecnologias mais seguras e eficientes, desde sistemas de comunicação até novos computadores quânticos que prometem revolucionar a forma como processamos informações. O interesse pelo estudo da física quântica também deve aumentar, incentivando novas gerações a se engajar com a ciência.</p>\n<h2>Perguntas frequentes</h2>\n<h3>Quem são os vencedores do Nobel de Física 2025?</h3>\n<p>Os vencedores são três renomados cientistas cujos trabalhos transformaram a compreensão da física quântica.</p>\n<h3>Qual é a importância do prêmio Nobel de Física?</h3>\n<p>O prêmio reconhece contribuições significativas para o avanço da física, impactando a ciência e a tecnologia de forma ampla.</p>",
+    "publicado_em": "2025-10-07T19:58:33.709Z",
+    "categoria": 2,
+    "status": 1,
+    "imagem": "https://images.unsplash.com/photo-1563619913540-9d6aae1666e8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4MDQ4NDZ8MHwxfHNlYXJjaHwxfHxub2JlbCUyMGYlQzMlQURzaWNhJTIwcHJlbWlhfGVufDF8MHx8fDE3NTk4NjcxMTV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+    "imagem_alt": "Nobel de Física 2025 Premia Trio que Conectou Quântico e Realidade",
+    "imagem_credito": "",
+    "imagem_licenca": "",
+    "imagem_fonte_url": "",
+    "fonte_url": "trend:nobel de física 2025 vai para trio que trouxe mundo quântico para o real:2025-10-07",
+    "fonte_nome": "RadarBR via GNews",
+    "criado_em": "2025-10-07T19:58:34.343Z"
+  }
+},
+{
+  "model": "rb_noticias.noticia",
+  "pk": 464,
+  "fields": {
+    "titulo": "Por que não existe um verbo para o café da manhã?",
+    "slug": "por-que-nao-existe-um-verbo-para-o-cafe-da-manha",
+    "conteudo": "<p class=\"dek\">Entenda a curiosidade linguística sobre a falta de um verbo específico para 'café da manhã' e suas implicações na língua portuguesa.</p>\n<h2>O que é/Contexto</h2>\n<p>O café da manhã é uma das refeições mais importantes do dia, marcando o início das atividades cotidianas. Contudo, quando analisamos a língua portuguesa, notamos a ausência de um verbo que descreva essa ação de maneira específica, como acontece com outras refeições. Essa curiosidade linguística provoca reflexões sobre a forma como a cultura e a linguagem se inter-relacionam.</p>\n<h2>Panorama atual</h2>\n<p>No cotidiano, os falantes utilizam expressões como 'tomar café da manhã' ou 'fazer o café da manhã'. Essa construção verbal é comum, mas a falta de um verbo único pode ser um indicativo de como a língua portuguesa se desenvolveu. Muitas vezes, a linguagem reflete hábitos culturais e sociais, e a ausência de um verbo específico para essa refeição pode sugerir que a atividade é vista como um conjunto de ações, e não uma ação isolada.</p>\n<h2>Principais pontos</h2>\n<ul><li>A língua portuguesa usa expressões compostas para descrever o ato de comer no café da manhã.</li><li>A construção de verbos na língua é influenciada por hábitos sociais e culturais.</li><li>A falta de um verbo específico pode indicar uma visão mais ampla sobre as refeições em geral.</li><li>O uso de verbos compostos reflete a riqueza e a complexidade da língua portuguesa.</li></ul>\n<h2>Impactos para o público</h2>\n<p>A ausência de um verbo específico para o café da manhã pode ter impactos no modo como as pessoas se relacionam com essa refeição. Isso pode influenciar desde a forma como os hábitos alimentares são discutidos até a maneira como a cultura do café da manhã é percebida. A linguagem molda a percepção e, ao não ter um verbo específico, pode-se argumentar que a importância dessa refeição é tratada de maneira mais genérica, sem um foco mais profundo.</p>\n<h2>Perguntas frequentes</h2>\n<h3>Por que não existe um verbo para o café da manhã?</h3>\n<p>A falta de um verbo específico pode ser vista como um reflexo de como a língua e a cultura se interagem, onde o ato de comer é considerado um conjunto de ações.</p>\n<h3>Como isso afeta a linguagem cotidiana?</h3>\n<p>Essa ausência leva ao uso de expressões mais longas, o que pode enriquecer a língua, mas também a tornar menos direta em algumas situações.</p>",
+    "publicado_em": "2025-10-07T20:29:47.331Z",
+    "categoria": 2,
+    "status": 1,
+    "imagem": "https://images.unsplash.com/photo-1703449672961-4b4b19956ed5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4MDQ4NDZ8MHwxfHNlYXJjaHwxfHxleGlzdGUlMjB2ZXJibyUyMHBhcmF8ZW58MXwwfHx8MTc1OTg2ODk4OXww&ixlib=rb-4.1.0&q=80&w=1080",
+    "imagem_alt": "Por que não existe um verbo para o café da manhã?",
+    "imagem_credito": "",
+    "imagem_licenca": "",
+    "imagem_fonte_url": "",
+    "fonte_url": "smart_trend:por que não existe um verbo para o café da manhã?:2025-10-07",
+    "fonte_nome": "RadarBR Smart Trends",
+    "criado_em": "2025-10-07T20:29:47.997Z"
+  }
+},
+{
+  "model": "rb_noticias.noticia",
+  "pk": 465,
+  "fields": {
+    "titulo": "Como parar comportamentos indesejados de forma eficaz",
+    "slug": "como-parar-comportamentos-indesejados-de-forma-eficaz",
+    "conteudo": "<p class=\"dek\">Descubra estratégias práticas e eficazes para parar comportamentos indesejados, promovendo mudanças positivas em sua vida e na vida de quem você ama.</p>\n<h2>O que é/Contexto</h2>\n<p>Parar comportamentos indesejados é um desafio comum enfrentado por muitas pessoas. Esses comportamentos podem variar desde hábitos simples, como roer unhas, até ações mais complexas, como vícios. A compreensão do porquê esses comportamentos se instauram é o primeiro passo para a mudança.</p>\n<h2>Panorama atual</h2>\n<p>Atualmente, a sociedade enfrenta diversos tipos de comportamentos indesejados, que podem ser influenciados por fatores emocionais, sociais e ambientais. A necessidade de autocontrole e a busca por autoaperfeiçoamento têm levado muitos a procurar formas de lidar com esses hábitos. Com o avanço da psicologia e das terapias comportamentais, novas abordagens têm sido desenvolvidas para ajudar as pessoas a superarem esses desafios.</p>\n<h2>Principais pontos</h2>\n<ul><li>Identificação do comportamento: Reconhecer o que se deseja parar é fundamental.</li><li>Entendimento das causas: Analisar as razões por trás do comportamento ajuda na sua interrupção.</li><li>Estabelecimento de metas: Definir objetivos claros e alcançáveis pode facilitar o processo.</li><li>Substituição de hábitos: Criar novos hábitos saudáveis para ocupar o lugar do indesejado é uma das estratégias mais eficazes.</li><li>Busca de apoio: Ter a ajuda de amigos, familiares ou profissionais pode aumentar as chances de sucesso.</li></ul>\n<h2>Impactos para o público</h2>\n<p>Parar comportamentos indesejados pode ter um grande impacto na vida das pessoas. A redução desses hábitos pode levar a uma melhora significativa na saúde mental e física, aumentar a produtividade e melhorar relacionamentos. Além disso, a superação de vícios pode proporcionar uma sensação de realização pessoal e maior autoestima.</p>\n<h2>Perguntas frequentes</h2>\n<h3>Como posso identificar um comportamento indesejado?</h3><p>Observe suas ações e sentimentos. Pergunte-se se algum hábito está impactando negativamente sua vida.</p>\n<h3>É possível parar um vício sozinho?</h3><p>Embora seja desafiador, algumas pessoas conseguem. No entanto, buscar apoio pode aumentar as chances de sucesso.</p>",
+    "publicado_em": "2025-10-07T20:30:04.464Z",
+    "categoria": 2,
+    "status": 1,
+    "imagem": "https://images.unsplash.com/photo-1720762187155-9c88b84b221d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4MDQ4NDZ8MHwxfHNlYXJjaHwxfHxjb21vJTIwcGFyYXIlMjBjb21wb3J0YW1lbnRvc3xlbnwxfDB8fHwxNzU5ODY5MDA5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+    "imagem_alt": "Como parar comportamentos indesejados de forma eficaz",
+    "imagem_credito": "",
+    "imagem_licenca": "",
+    "imagem_fonte_url": "",
+    "fonte_url": "smart_trend:como para:2025-10-07",
+    "fonte_nome": "RadarBR Smart Trends",
+    "criado_em": "2025-10-07T20:30:09.895Z"
+  }
+},
+{
+  "model": "rb_noticias.noticia",
+  "pk": 466,
+  "fields": {
+    "titulo": "Eleições 2026: O que esperar do cenário político brasileiro",
+    "slug": "eleicoes-2026-o-que-esperar-do-cenario-politico-brasileiro",
+    "conteudo": "<p class=\"dek\">As eleições de 2026 prometem ser um marco na política brasileira, com debates acalorados e novas propostas. Descubra o que está em jogo.</p>\n<h2>O que é/Contexto</h2>\n<p>As eleições de 2026 no Brasil representam um momento crucial para o futuro político do país. Esse pleito será marcado por uma nova rodada de eleições gerais, onde os eleitores escolherão o presidente, governadores, senadores, deputados federais e estaduais. O cenário político atual traz desafios e oportunidades, que influenciarão as escolhas dos cidadãos.</p>\n<h2>Panorama atual</h2>\n<p>No contexto atual, o Brasil vive um ambiente político polarizado, com diferentes ideologias e propostas em disputa. As recentes crises econômicas e sociais têm gerado debates intensos sobre políticas públicas e gestão governamental. Os partidos políticos estão se reorganizando, buscando alianças estratégicas e definindo seus candidatos para a disputa de 2026.</p>\n<h2>Principais pontos</h2>\n<ul><li>Reformas necessárias: A necessidade de reformas estruturais, como a tributária e a previdenciária, será um tema central nas campanhas.</li><li>Desafios econômicos: A recuperação econômica e o combate à inflação estarão entre as prioridades dos candidatos.</li><li>Questões sociais: A desigualdade, a educação e a saúde são temas que devem dominar os discursos eleitorais.</li><li>Meio ambiente: O debate sobre sustentabilidade e proteção ambiental ganhará destaque, especialmente em relação às políticas do governo atual.</li><li>Novas lideranças: A possibilidade de novos nomes surgirem como candidatos, representando uma nova geração política, pode mudar o jogo.</li></ul>\n<h2>Impactos para o público</h2>\n<p>As eleições de 2026 terão impactos diretos na vida dos cidadãos. As escolhas feitas nas urnas podem determinar a direção das políticas públicas por anos. Questões como emprego, saúde, educação e segurança serão profundamente afetadas pelos resultados. Além disso, a participação ativa dos eleitores é fundamental para garantir que suas vozes sejam ouvidas e que suas demandas sejam atendidas pelos futuros governantes.</p>\n<h2>Perguntas frequentes</h2>\n<h3>Quando serão as eleições de 2026?</h3><p>As eleições gerais de 2026 estão previstas para o mês de outubro, seguindo o calendário eleitoral brasileiro.</p>\n<h3>Quem são os principais candidatos até agora?</h3><p>Ainda é cedo para afirmar, mas diversos nomes de partidos tradicionais e novas lideranças estão sendo cogitados como possíveis candidatos.</p>",
+    "publicado_em": "2025-10-07T20:31:06.140Z",
+    "categoria": 2,
+    "status": 1,
+    "imagem": "https://images.unsplash.com/photo-1598614684665-305d3e4469ed?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4MDQ4NDZ8MHwxfHNlYXJjaHwxfHxlbGVpJUMzJUE3JUMzJUI1ZXMlMjBlc3BlcmFyJTIwY2VuJUMzJUExcmlvfGVufDF8MHx8fDE3NTk4NjkwNjh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+    "imagem_alt": "Eleições 2026: O que esperar do cenário político brasileiro",
+    "imagem_credito": "",
+    "imagem_licenca": "",
+    "imagem_fonte_url": "",
+    "fonte_url": "smart_trend:eleições 2026:2025-10-07",
+    "fonte_nome": "RadarBR Smart Trends",
+    "criado_em": "2025-10-07T20:31:08.141Z"
+  }
+},
+{
+  "model": "rb_noticias.noticia",
+  "pk": 467,
+  "fields": {
+    "titulo": "Como Parar: Dicas Práticas para Controlar Hábitos Indesejados",
+    "slug": "como-parar-dicas-praticas-para-controlar-habitos-indesejados",
+    "conteudo": "<p class=\"dek\">Descubra estratégias eficazes para parar comportamentos indesejados e adotar hábitos saudáveis. Transforme sua vida com dicas simples e práticas.</p>\n<h2>O que é/Contexto</h2>\n<p>Parar um hábito indesejado é um desafio que muitos enfrentam ao longo da vida. Seja fumar, comer em excesso ou procrastinar, entender o que está por trás desses comportamentos é o primeiro passo para a mudança. Reconhecer a necessidade de parar é fundamental para quem busca uma vida mais saudável e produtiva.</p>\n<h2>Panorama atual</h2>\n<p>No mundo atual, a pressão para manter certos hábitos pode ser intensa. Com o acesso constante a informações e influências externas, muitos indivíduos se veem presos em ciclos viciosos. Felizmente, há uma crescente conscientização sobre a importância de parar comportamentos prejudiciais, o que levou ao desenvolvimento de várias estratégias e recursos disponíveis.</p>\n<h2>Principais pontos</h2>\n<ul><li>Identificação do hábito: Reconhecer o que precisa ser parado é o primeiro passo.</li><li>Estabelecimento de metas claras: Definir objetivos específicos ajuda na motivação.</li><li>Desenvolvimento de um plano de ação: Ter um plano estruturado aumenta as chances de sucesso.</li><li>Busque apoio: Contar com o suporte de amigos e familiares pode ser crucial.</li><li>Pratique a autocompaixão: Lidar com recaídas faz parte do processo, e ser gentil consigo mesmo é importante.</li></ul>\n<h2>Impactos para o público</h2>\n<p>Parar hábitos indesejados não apenas melhora a saúde física, mas também impacta positivamente a saúde mental. A sensação de controle sobre a própria vida pode aumentar a autoestima e reduzir a ansiedade. Além disso, ao adotar novos hábitos saudáveis, os indivíduos podem experimentar uma melhora na qualidade de vida e bem-estar geral.</p>\n<h2>Perguntas frequentes</h2>\n<h3>Como saber se um hábito precisa ser parado?</h3>\n<p>Se o hábito traz consequências negativas para sua saúde, relacionamentos ou produtividade, é hora de reconsiderá-lo.</p>\n<h3>Qual a melhor estratégia para parar um hábito?</h3>\n<p>Estabelecer metas claras e criar um plano de ação com suporte social são estratégias eficazes para interromper hábitos indesejados.</p>",
+    "publicado_em": "2025-10-08T12:12:38.830Z",
+    "categoria": 2,
+    "status": 1,
+    "imagem": "https://images.unsplash.com/photo-1720762187155-9c88b84b221d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4MDQ4NDZ8MHwxfHNlYXJjaHwxfHxjb21vJTIwcGFyYXIlMjBkaWNhc3xlbnwxfDB8fHwxNzU5ODY5MzY4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+    "imagem_alt": "Como Parar: Dicas Práticas para Controlar Hábitos Indesejados",
+    "imagem_credito": "",
+    "imagem_licenca": "",
+    "imagem_fonte_url": "",
+    "fonte_url": "smart_trend:como para:2025-10-08",
+    "fonte_nome": "RadarBR Smart Trends",
+    "criado_em": "2025-10-08T12:12:39.152Z"
+  }
+},
+{
+  "model": "rb_noticias.noticia",
+  "pk": 468,
+  "fields": {
+    "titulo": "Melhor para o Seu Estilo de Vida: Dicas e Sugestões",
+    "slug": "melhor-para-o-seu-estilo-de-vida-dicas-e-sugestoes",
+    "conteudo": "<p class=\"dek\">Descubra o que é melhor para o seu estilo de vida, com dicas que vão desde saúde até entretenimento. Aprenda como fazer escolhas mais saudáveis e satisfatórias.</p>\n<h2>O que é/Contexto</h2>\n<p>A expressão \"melhor para\" é frequentemente utilizada para descrever opções que se alinham às necessidades e preferências individuais. Cada pessoa tem um estilo de vida único, e o que é considerado \"melhor\" varia de acordo com fatores como saúde, finanças e interesses pessoais.</p>\n<h2>Panorama atual</h2>\n<p>No mundo atual, onde a informação é abundante, escolher o que é melhor para si pode ser desafiador. Há uma infinidade de produtos, serviços e abordagens disponíveis, desde dietas saudáveis até métodos de investimento. A busca por uma vida equilibrada e satisfatória se tornou uma prioridade para muitos.</p>\n<h2>Principais pontos</h2>\n<ul><li>A importância de conhecer suas necessidades e desejos.</li><li>Como a personalização pode ajudar na escolha do que é melhor.</li><li>O impacto de escolhas saudáveis na qualidade de vida.</li><li>A influência da tecnologia nas decisões cotidianas.</li></ul>\n<h2>Impactos para o público</h2>\n<p>Compreender o que é melhor para si mesmo pode levar a melhorias significativas na qualidade de vida. Escolhas conscientes em áreas como alimentação, atividades físicas e finanças pessoais podem resultar em maior bem-estar e satisfação. Além disso, a capacidade de fazer decisões informadas ajuda a reduzir o estresse e a ansiedade.</p>\n<h2>Perguntas frequentes</h2>\n<h3>Como saber o que é melhor para mim?</h3><p>É fundamental avaliar suas necessidades, desejos e prioridades. Considere consultar especialistas ou utilizar ferramentas de autoavaliação.</p>\n<h3>O que fazer se eu não souber por onde começar?</h3><p>Comece por definir pequenas metas e busque informações sobre diferentes opções. A experimentação e a pesquisa são chave para descobrir o que funciona para você.</p>",
+    "publicado_em": "2025-10-08T12:12:53.177Z",
+    "categoria": 2,
+    "status": 1,
+    "imagem": "https://images.unsplash.com/photo-1598033067000-6a57d614b183?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4MDQ4NDZ8MHwxfHNlYXJjaHwxfHxtZWxob3IlMjBwYXJhJTIwZXN0aWxvfGVufDF8MHx8fDE3NTk5MjU1Nzd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+    "imagem_alt": "Melhor para o Seu Estilo de Vida: Dicas e Sugestões",
+    "imagem_credito": "",
+    "imagem_licenca": "",
+    "imagem_fonte_url": "",
+    "fonte_url": "smart_trend:melhor para:2025-10-08",
+    "fonte_nome": "RadarBR Smart Trends",
+    "criado_em": "2025-10-08T12:12:55.299Z"
+  }
+},
+{
+  "model": "rb_noticias.noticia",
+  "pk": 469,
+  "fields": {
+    "titulo": "Dicas Essenciais para Melhorar Sua Rotina Diária",
+    "slug": "dicas-essenciais-para-melhorar-sua-rotina-diaria",
+    "conteudo": "<p class=\"dek\">Descubra dicas práticas para otimizar sua rotina diária, aumentar sua produtividade e melhorar seu bem-estar com pequenas mudanças.</p>\n<h2>O que é/Contexto</h2>\n<p>A rotina diária é uma parte fundamental da vida de qualquer pessoa. Uma boa organização pode influenciar diretamente a produtividade e o bem-estar. Com a correria do dia a dia, é fácil se perder em compromissos e tarefas. Portanto, adotar algumas dicas simples pode fazer toda a diferença.</p>\n<h2>Panorama atual</h2>\n<p>Com o aumento das demandas profissionais e pessoais, muitas pessoas sentem a necessidade de otimizar seu tempo. A falta de planejamento pode levar ao estresse e à sensação de sobrecarga. Nesse contexto, buscar formas de melhorar a rotina é essencial para manter a saúde mental e física.</p>\n<h2>Principais pontos</h2>\n<ul><li>Estabeleça prioridades: defina o que é mais importante para o seu dia.</li><li>Use ferramentas de organização: aplicativos e agendas ajudam a visualizar suas tarefas.</li><li>Reserve tempo para pausas: pequenas interrupções podem aumentar sua produtividade.</li><li>Estabeleça uma rotina matinal: comece o dia com hábitos saudáveis.</li><li>Desconecte-se: evite distrações como redes sociais durante o trabalho.</li></ul>\n<h2>Impactos para o público</h2>\n<p>Implementar essas dicas pode resultar em uma rotina mais equilibrada e produtiva. As pessoas tendem a se sentir mais satisfeitas com suas conquistas diárias e menos estressadas. Além disso, a organização do tempo pode proporcionar mais momentos de lazer e descanso, fundamentais para a saúde mental.</p>\n<h2>Perguntas frequentes</h2>\n<h3>Como posso começar a organizar minha rotina?</h3><p>Comece listando suas tarefas diárias e estabelecendo prioridades. Use uma agenda ou aplicativo para ajudar na visualização.</p>\n<h3>É necessário seguir uma rotina rígida?</h3><p>Não é necessário ser rígido. O importante é encontrar um equilíbrio que funcione para você e que permita flexibilidade quando necessário.</p>",
+    "publicado_em": "2025-10-08T12:13:10.197Z",
+    "categoria": 2,
+    "status": 1,
+    "imagem": "https://images.unsplash.com/photo-1537531176357-979ae43a69f8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4MDQ4NDZ8MHwxfHNlYXJjaHwxfHxkaWNhcyUyMGVzc2VuY2lhaXMlMjBwYXJhfGVufDF8MHx8fDE3NTk5MjU1OTN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+    "imagem_alt": "Dicas Essenciais para Melhorar Sua Rotina Diária",
+    "imagem_credito": "",
+    "imagem_licenca": "",
+    "imagem_fonte_url": "",
+    "fonte_url": "smart_trend:dicas sobre para:2025-10-08",
+    "fonte_nome": "RadarBR Smart Trends",
+    "criado_em": "2025-10-08T12:13:10.973Z"
+  }
+},
+{
+  "model": "rb_noticias.noticia",
+  "pk": 470,
+  "fields": {
+    "titulo": "Guia Completo para Otimização de Conteúdo Digital",
+    "slug": "guia-completo-para-otimizacao-de-conteudo-digital",
+    "conteudo": "<p class=\"dek\">Descubra como otimizar seu conteúdo digital com este guia completo, abrangendo técnicas de SEO e melhores práticas para engajar seu público.</p>\n<h2>O que é/Contexto</h2><p>A otimização de conteúdo digital refere-se ao conjunto de estratégias e técnicas utilizadas para melhorar a visibilidade de um site nos motores de busca. O objetivo é atrair mais visitantes, aumentando a relevância e a qualidade do conteúdo produzido. Com a evolução constante dos algoritmos de busca, entender como funciona essa dinâmica é crucial para quem deseja se destacar online.</p><h2>Panorama atual</h2><p>Atualmente, a competição por espaço nas primeiras páginas dos motores de busca é intensa. Empresas de todos os tamanhos estão investindo em estratégias de SEO para garantir que seus conteúdos sejam facilmente encontrados. Além disso, o comportamento dos usuários está em constante mudança, tornando essencial que as marcas se adaptem e inovem em suas abordagens.</p><h2>Principais pontos</h2><ul><li>Pesquisa de palavras-chave: Identificar os termos mais buscados pelo seu público é fundamental.</li><li>Qualidade do conteúdo: Produzir textos informativos e relevantes aumenta o tempo de permanência dos usuários no site.</li><li>Otimização on-page: Estruturar corretamente o conteúdo, com uso adequado de headings e meta tags.</li><li>Links internos e externos: Facilitar a navegação e agregar valor ao conteúdo através de referências.</li><li>Responsividade: Garantir que o site funcione bem em dispositivos móveis é vital para a experiência do usuário.</li></ul><h2>Impactos para o público</h2><p>A otimização de conteúdo não beneficia apenas as empresas, mas também os usuários. Um conteúdo bem otimizado proporciona aos visitantes uma experiência mais fluida e informativa, permitindo que encontrem rapidamente o que procuram. Isso resulta em maior satisfação e fidelização do público, além de facilitar a disseminação de informações relevantes.</p><h2>Perguntas frequentes</h2><h3>Pergunta 1</h3><p>O que é SEO?</p><p>SEO, ou Search Engine Optimization, é o conjunto de práticas que visam melhorar a posição de um site nos resultados dos motores de busca.</p><h3>Pergunta 2</h3><p>Como posso saber se meu conteúdo está otimizado?</p><p>Utilize ferramentas de análise de SEO que oferecem relatórios sobre a performance do seu conteúdo e sugestões de melhorias.</p>",
+    "publicado_em": "2025-10-08T12:13:27.043Z",
+    "categoria": 2,
+    "status": 1,
+    "imagem": "https://images.unsplash.com/photo-1667068564906-c3238fa6c8ff?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4MDQ4NDZ8MHwxfHNlYXJjaHwxfHxndWlhJTIwY29tcGxldG8lMjBwYXJhfGVufDF8MHx8fDE3NTk5MjU2MTB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+    "imagem_alt": "Guia Completo para Otimização de Conteúdo Digital",
+    "imagem_credito": "",
+    "imagem_licenca": "",
+    "imagem_fonte_url": "",
+    "fonte_url": "smart_trend:guia completo para:2025-10-08",
+    "fonte_nome": "RadarBR Smart Trends",
+    "criado_em": "2025-10-08T12:13:27.779Z"
+  }
+}
+]
