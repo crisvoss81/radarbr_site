@@ -176,7 +176,11 @@ class Command(BaseCommand):
                 if published_value is not _NO_STATUS_SENTINEL: 
                     kwargs["status"] = published_value
 
-                obj = Noticia(**kwargs)
+                # Usar update_or_create para evitar duplicatas
+                obj, created_obj = Noticia.objects.update_or_create(
+                    fonte_url=key,
+                    defaults=kwargs
+                )
 
                 # Buscar imagem (mesma lógica do comando original)
                 self.stdout.write(f"Buscando imagem para: {topic_clean}...")
@@ -222,13 +226,18 @@ class Command(BaseCommand):
 
                 obj.slug = unique_slug(title)
                 obj.save()
-                created += 1
+                
+                if created_obj:
+                    created += 1
+                    self.stdout.write(self.style.SUCCESS(f"✓ Novo artigo criado: {topic_clean}"))
+                else:
+                    self.stdout.write(self.style.WARNING(f"⚠ Artigo já existia, atualizado: {topic_clean}"))
                 
                 # Mostrar predição de sucesso
                 self.stdout.write(self.style.SUCCESS(f"✓ Publicado: {topic_clean} (Score: {prediction['success_score']:.1f})"))
 
-            except Exception:
-                self.stdout.write(self.style.ERROR(f"Erro ao processar o tópico '{topic_clean}':"))
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f"Erro ao processar o tópico '{topic_clean}': {str(e)}"))
                 if opts["debug"]: traceback.print_exc()
                 continue
 

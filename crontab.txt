@@ -1,0 +1,11 @@
+# Cron jobs para RadarBR
+# Execute: crontab -e e adicione estas linhas
+
+# Executar automação a cada 6 horas
+0 */6 * * * cd /opt/render/project/src && source .venv/bin/activate && python manage.py run_scheduler >> /opt/render/project/logs/cron.log 2>&1
+
+# Ping sitemap a cada 4 horas
+0 */4 * * * cd /opt/render/project/src && source .venv/bin/activate && python manage.py ping_sitemap >> /opt/render/project/logs/cron.log 2>&1
+
+# Limpeza de logs semanalmente (domingos às 2h)
+0 2 * * 0 find /opt/render/project/logs -name "*.log" -mtime +7 -delete
