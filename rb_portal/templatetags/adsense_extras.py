@@ -71,7 +71,5 @@ def adsense_banner(ad_slot, width=728, height=90, placeholder_text="Publicidade"
     {% adsense_banner "1234567890" %}
     {% adsense_banner "1234567890" 300 250 %}
     """
-    if settings.DEBUG:
-        return mark_safe(adsense_placeholder(placeholder_text, width, height))
-    else:
-        return adsense_ad(ad_slot, width=width, height=height)
+    # Sempre mostrar o anúncio real, mesmo em DEBUG
+    return adsense_ad(ad_slot, width=width, height=height)

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Teste AdSense - RadarBR</title>
+    <meta name="google-adsense-account" content="ca-pub-3913403142217011">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3913403142217011" crossorigin="anonymous"></script>
+</head>
+<body>
+    <h1>Teste dos Banners AdSense</h1>
+    
+    <h2>Banner 1 - Sidebar Top (300x250)</h2>
+    <div style="background:#f8fafc; border-radius:8px; padding:16px; margin:20px 0;">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-3913403142217011"
+             data-ad-slot="9538493649"
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+    
+    <h2>Banner 2 - Home Inline (728x90)</h2>
+    <div style="background:#f8fafc; border-radius:8px; padding:16px; margin:20px 0;">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-3913403142217011"
+             data-ad-slot="7682486493"
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+    
+    <h2>Banner 3 - Post Header (728x90)</h2>
+    <div style="background:#f8fafc; border-radius:8px; padding:16px; margin:20px 0;">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-3913403142217011"
+             data-ad-slot="4840700734"
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+    
+    <h2>Debug Info</h2>
+    <div id="debug"></div>
+    
+    <script>
+        // Debug info
+        setTimeout(() => {
+            const debug = document.getElementById('debug');
+            debug.innerHTML = `
+                <p><strong>adsbygoogle:</strong> ${typeof window.adsbygoogle}</p>
+                <p><strong>AdSense Script:</strong> ${document.querySelector('script[src*="adsbygoogle"]') ? 'Carregado' : 'Não encontrado'}</p>
+                <p><strong>Meta Tag:</strong> ${document.querySelector('meta[name="google-adsense-account"]') ? 'Presente' : 'Ausente'}</p>
+                <p><strong>Anúncios:</strong> ${document.querySelectorAll('ins.adsbygoogle').length} encontrados</p>
+            `;
+        }, 2000);
+    </script>
+</body>
+</html>
