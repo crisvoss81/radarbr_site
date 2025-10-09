@@ -390,6 +390,10 @@ img{ display:block; max-width:100%; height:auto }
     z-index:9999;
     box-shadow:0 10px 20px rgba(0,0,0,0.12);
     animation:dropdownSlide 0.2s ease-out both;
+    max-height:calc(100vh - 64px);
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    padding-bottom:16px;
   }
 
   @keyframes dropdownSlide{
