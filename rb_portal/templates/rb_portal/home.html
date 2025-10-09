@@ -36,19 +36,19 @@
       {% endif %}
     </div>
 
-    <!-- AdSense Banner Inline -->
+    <!-- AdSense Banner Inline (responsivo) -->
     <div class="ad-slot ad-slot--inline">
-      {% adsense_banner "7682486493" 728 90 %}
+{% adsense_banner_auto "7682486493" %}
     </div>
 
     <div class="list">
       {% for obj in page_obj.object_list|slice:'1:' %}
         {% include 'rb_portal/includes/_card.html' with obj=obj %}
         
-        <!-- AdSense entre cards (a cada 4 notícias) -->
+        <!-- AdSense entre cards (a cada 4 notícias) - responsivo -->
         {% if forloop.counter|divisibleby:4 and not forloop.last %}
           <div class="ad-slot ad-slot--between-cards">
-            {% adsense_banner "8692315830" 728 90 %}
+            {% adsense_banner_auto "8692315830" %}
           </div>
         {% endif %}
       {% empty %}

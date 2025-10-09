@@ -96,3 +96,26 @@ def adsense_banner(ad_slot, width=728, height=90, placeholder_text="Publicidade"
     
     # Mostrar o anúncio real para slots válidos em produção
     return adsense_ad(ad_slot, width=width, height=height)
+
+@register.simple_tag
+def adsense_banner_auto(ad_slot, placeholder_text="Publicidade"):
+    """
+    Gera banner responsivo (auto) do AdSense em largura total do container.
+    Uso: {% adsense_banner_auto "1234567890" %}
+    """
+    from django.conf import settings
+    if settings.DEBUG:
+        return mark_safe(f'''
+        <div class="ad-placeholder" style="width:100%; min-height:90px; background:#f3f4f6; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; margin:20px auto;">
+            <div class="ad-label" style="font-size:0.75rem; color:#6b7280; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">{placeholder_text}</div>
+            <div class="ad-size" style="font-size:0.8rem; color:#3b82f6; font-weight:500;">auto (DEBUG)</div>
+        </div>
+        ''')
+    if not ad_slot or ad_slot.startswith("123456789"):
+        return mark_safe(f'''
+        <div class="ad-placeholder" style="width:100%; min-height:90px; background:#f3f4f6; border:2px dashed #d1d5db; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; margin:20px auto;">
+            <div class="ad-label" style="font-size:0.75rem; color:#6b7280; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">{placeholder_text}</div>
+            <div class="ad-size" style="font-size:0.8rem; color:#ef4444; font-weight:500;">Slot inválido: {ad_slot}</div>
+        </div>
+        ''')
+    return mark_safe(adsense_ad(ad_slot, ad_format="auto", responsive=True))

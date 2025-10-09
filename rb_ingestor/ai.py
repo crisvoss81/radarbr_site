@@ -11,6 +11,7 @@ import os
 import json
 import re
 from typing import Dict
+from html import unescape
 
 try:
     from openai import OpenAI
@@ -72,6 +73,33 @@ def _fallback_article(topic: str) -> Dict[str, str]:
 <p>Impactos práticos no dia a dia das pessoas.</p>
 """
     return {"title": title[:140], "dek": dek[:220], "html": html.strip(), "image_url": None}
+def _sanitize_generated_html(raw_html: str) -> str:
+    """Remove estilos inline e atributos que causam recuos/margens indevidas.
+    Mantém apenas tags semânticas básicas (p, h2/h3, ul/ol/li, strong, em, a sem href externo).
+    """
+    if not raw_html:
+        return ""
+    html = unescape(raw_html).strip()
+
+    # Remover estilos inline problemáticos (margin, padding, text-indent, width/height)
+    html = re.sub(r'\sstyle="[^"]*(margin|padding|text-indent|width|height)[^"]*"', "", html, flags=re.IGNORECASE)
+
+    # Remover align, class genérica e id que podem vir do modelo
+    html = re.sub(r'\s(align|id|class)="[^"]*"', "", html, flags=re.IGNORECASE)
+
+    # Remover <span> vazios ou apenas de estilo
+    html = re.sub(r'<span>(.*?)</span>', r'\1', html, flags=re.IGNORECASE|re.DOTALL)
+
+    # Normalizar H1->H2 (garantia extra)
+    html = re.sub(r'<\/?h1>', lambda m: '<h2>' if m.group(0)[1] != '/' else '</h2>', html, flags=re.IGNORECASE)
+
+    # Remover tags estranhas comuns
+    html = re.sub(r'</?(section|article|header|footer|figure|figcaption)>', '', html, flags=re.IGNORECASE)
+
+    # Remover múltiplas quebras/linhas
+    html = re.sub(r'\n+', '\n', html)
+
+    return html.strip()
 
 
 def generate_article(topic: str, *, model: str | None = None, min_words: int = 700) -> Dict[str, str]:
@@ -154,7 +182,7 @@ Gere um ARTIGO EM JSON sobre o tópico entre <topic>…</topic>. Regras:
 
     title = (data.get("title") or topic).strip()
     dek = (data.get("dek") or f"Saiba os pontos essenciais sobre {topic}.").strip()
-    html = (data.get("html") or "").strip()
+    html = _sanitize_generated_html((data.get("html") or "").strip())
 
     # pequenos saneamentos
     title = re.sub(r"\s+", " ", title)[:140]

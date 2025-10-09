@@ -88,9 +88,9 @@
     <div class="post-meta">Publicado em {{ object.publicado_em|date:'d \d\e F \d\e Y, H\hi' }}</div>
   </header>
 
-  <!-- AdSense Banner após título -->
+  <!-- AdSense Banner após título (responsivo) -->
   <div class="ad-slot ad-slot--post-header">
-    {% adsense_banner "4840700734" 728 90 %}
+    {% adsense_banner_auto "4840700734" %}
   </div>
 
   {% if object.imagem %}
@@ -115,18 +115,18 @@
     </figure>
   {% endif %}
 
-  <!-- AdSense Banner após imagem -->
+  <!-- AdSense Banner após imagem (responsivo) -->
   <div class="ad-slot ad-slot--post-image">
-    {% adsense_banner "4840700734" 728 90 %}
+    {% adsense_banner_auto "4840700734" %}
   </div>
 
   <div class="post-content">
     {{ object.conteudo|render_markdown }}
   </div>
 
-  <!-- AdSense Banner após conteúdo -->
+  <!-- AdSense Banner após conteúdo (responsivo) -->
   <div class="ad-slot ad-slot--post-content">
-    {% adsense_banner "4840700734" 728 90 %}
+    {% adsense_banner_auto "4840700734" %}
   </div>
 </article>
 {% endblock %}
