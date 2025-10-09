@@ -30,47 +30,37 @@ class Command(BaseCommand):
         if created:
             print(f"OK Categoria criada: {cat.nome}")
         
-        # Tópicos com títulos mais realistas
+        # Tópicos com estrutura SEO otimizada
         topicos = [
             {
                 "titulo": "Nova tecnologia revoluciona mercado brasileiro",
-                "conteudo": "Uma nova tecnologia está transformando o cenário econômico brasileiro, trazendo oportunidades inéditas para empresas e consumidores. Especialistas apontam que esta inovação pode gerar milhares de empregos nos próximos anos."
+                "categoria": "Tecnologia",
+                "dek": "Inovação tecnológica transforma cenário econômico nacional com oportunidades inéditas para empresas e consumidores brasileiros.",
+                "conteudo": "Uma nova tecnologia está transformando o cenário econômico brasileiro, trazendo oportunidades inéditas para empresas e consumidores. Especialistas apontam que esta inovação pode gerar milhares de empregos nos próximos anos.\n\n### Impacto no Mercado Nacional\n\nA tecnologia emergente está revolucionando diversos setores da economia brasileira, desde a indústria até os serviços. Empresas de todos os portes estão se adaptando rapidamente às mudanças.\n\n### Perspectivas Futuras\n\nAnalistas projetam crescimento significativo nos próximos anos, com potencial para posicionar o Brasil como referência tecnológica na América Latina."
             },
             {
                 "titulo": "Economia brasileira mostra sinais de recuperação",
-                "conteudo": "Dados recentes indicam que a economia nacional está apresentando indicadores positivos, com crescimento em setores-chave. Analistas são otimistas quanto ao futuro econômico do país."
+                "categoria": "Economia",
+                "dek": "Indicadores econômicos positivos sinalizam recuperação gradual da economia nacional com crescimento em setores estratégicos.",
+                "conteudo": "Dados recentes indicam que a economia nacional está apresentando indicadores positivos, com crescimento em setores-chave. Analistas são otimistas quanto ao futuro econômico do país.\n\n### Principais Indicadores\n\nOs números mostram evolução positiva em áreas como produção industrial, consumo interno e investimentos privados.\n\n### Expectativas dos Especialistas\n\nEconomistas destacam a importância de manter políticas consistentes para sustentar o crescimento observado."
             },
             {
                 "titulo": "Seleção brasileira se prepara para próximos jogos",
-                "conteudo": "A seleção nacional está intensificando os treinamentos para as próximas competições. O técnico destacou a importância do trabalho em equipe e da dedicação dos atletas."
+                "categoria": "Esportes",
+                "dek": "Time nacional intensifica preparação para competições internacionais com foco em trabalho em equipe e dedicação dos atletas.",
+                "conteudo": "A seleção nacional está intensificando os treinamentos para as próximas competições. O técnico destacou a importância do trabalho em equipe e da dedicação dos atletas.\n\n### Preparação Técnica\n\nA comissão técnica trabalha em estratégias específicas para cada adversário, aproveitando as características dos jogadores.\n\n### Expectativas da Torcida\n\nOs torcedores brasileiros aguardam com ansiedade os próximos jogos da seleção."
             },
             {
                 "titulo": "Festival de cultura movimenta cidade brasileira",
-                "conteudo": "Um grande festival cultural está reunindo artistas de todo o país, promovendo a diversidade e a riqueza da cultura brasileira. O evento tem atraído milhares de visitantes."
+                "categoria": "Cultura",
+                "dek": "Evento cultural reúne artistas de todo o país promovendo diversidade e riqueza da cultura brasileira para milhares de visitantes.",
+                "conteudo": "Um grande festival cultural está reunindo artistas de todo o país, promovendo a diversidade e a riqueza da cultura brasileira. O evento tem atraído milhares de visitantes.\n\n### Programação Diversificada\n\nO festival oferece uma ampla programação incluindo música, teatro, dança e artes visuais.\n\n### Impacto Cultural\n\nO evento contribui significativamente para a valorização e preservação da cultura nacional."
             },
             {
                 "titulo": "Medidas políticas impactam população brasileira",
-                "conteudo": "Novas medidas governamentais foram anunciadas e devem afetar diretamente a vida dos brasileiros. Especialistas analisam os possíveis impactos dessas decisões."
-            },
-            {
-                "titulo": "Projetos ambientais ganham destaque no Brasil",
-                "conteudo": "Iniciativas de preservação ambiental estão sendo implementadas em diversas regiões do país, demonstrando o compromisso com a sustentabilidade e o futuro do planeta."
-            },
-            {
-                "titulo": "Educação brasileira recebe novos investimentos",
-                "conteudo": "Recursos adicionais foram destinados para melhorar a qualidade da educação nacional, com foco em infraestrutura, capacitação de professores e tecnologia educacional."
-            },
-            {
-                "titulo": "Sistema de saúde brasileiro implementa melhorias",
-                "conteudo": "Novas tecnologias e protocolos estão sendo implementados no sistema de saúde público, visando melhorar o atendimento e a qualidade dos serviços oferecidos à população."
-            },
-            {
-                "titulo": "Inovação tecnológica brasileira ganha reconhecimento",
-                "conteudo": "Startups brasileiras estão desenvolvendo soluções inovadoras que chamam atenção internacionalmente, colocando o país em destaque no cenário tecnológico global."
-            },
-            {
-                "titulo": "Turismo brasileiro registra crescimento significativo",
-                "conteudo": "O setor turístico nacional está apresentando números positivos, com aumento no número de visitantes e receita. Destinos brasileiros estão sendo cada vez mais procurados."
+                "categoria": "Política",
+                "dek": "Novas medidas governamentais anunciadas devem afetar diretamente a vida dos brasileiros com análises de especialistas sobre os impactos.",
+                "conteudo": "Novas medidas governamentais foram anunciadas e devem afetar diretamente a vida dos brasileiros. Especialistas analisam os possíveis impactos dessas decisões.\n\n### Principais Mudanças\n\nAs medidas incluem alterações em áreas sensíveis como saúde, educação e previdência social.\n\n### Análise dos Especialistas\n\nEspecialistas em políticas públicas avaliam os possíveis efeitos das mudanças na sociedade brasileira."
             }
         ]
         
@@ -79,8 +69,9 @@ class Command(BaseCommand):
         
         for i in range(num):
             topico_data = random.choice(topicos)
-            timestamp = timezone.now().strftime('%d/%m %H:%M')
-            titulo = f"{topico_data['titulo']} - {timestamp}"
+            
+            # Título SEO-friendly (sem timestamp)
+            titulo = topico_data['titulo']
             slug = slugify(titulo)[:180]
             
             # Verificar se já existe
@@ -88,16 +79,26 @@ class Command(BaseCommand):
                 print(f"AVISO Pulando: {titulo} (ja existe)")
                 continue
             
-            # Conteúdo em Markdown (formato correto para o filtro render_markdown)
-            conteudo = f"""## {topico_data['titulo']}
+            # Criar categoria específica se não existir
+            cat_slug = slugify(topico_data['categoria'])[:140]
+            categoria, created = Categoria.objects.get_or_create(
+                slug=cat_slug,
+                defaults={"nome": topico_data['categoria']}
+            )
+            
+            if created:
+                print(f"OK Categoria criada: {categoria.nome}")
+            
+            # Conteúdo SEO otimizado com estrutura adequada
+            conteudo = f"""<p class="dek">{topico_data['dek']}</p>
 
 {topico_data['conteudo']}
 
+## Conclusão
+
 Esta matéria foi desenvolvida com base em informações atualizadas e análises de especialistas da área. O RadarBR continua acompanhando os desdobramentos desta notícia.
 
-Para mais informações sobre este e outros assuntos, acompanhe nossas atualizações diárias.
-
-*Publicado pelo RadarBR em {timestamp}*"""
+Para mais informações sobre este e outros assuntos, acompanhe nossas atualizações diárias."""
             
             try:
                 noticia = Noticia.objects.create(
@@ -105,17 +106,18 @@ Para mais informações sobre este e outros assuntos, acompanhe nossas atualiza�
                     slug=slug,
                     conteudo=conteudo,
                     publicado_em=timezone.now(),
-                    categoria=cat,
-                    fonte_url=f"simples-{timezone.now().strftime('%Y%m%d-%H%M')}-{i}",
-                    fonte_nome="RadarBR Simples",
-                    status=1
+                    categoria=categoria,
+                    fonte_url=f"seo-simples-{timezone.now().strftime('%Y%m%d-%H%M')}-{i}",
+                    fonte_nome="RadarBR SEO",
+                    status=1,
+                    imagem_alt=f"Imagem relacionada a {topico_data['categoria'].lower()}"
                 )
                 
                 # Buscar e adicionar imagem
                 self._adicionar_imagem(noticia, topico_data['titulo'])
                 
                 criadas += 1
-                print(f"OK Criado: {titulo}")
+                print(f"OK Criado: {titulo} (Categoria: {categoria.nome})")
                 
             except Exception as e:
                 print(f"ERRO: {e}")
