@@ -50,8 +50,10 @@
       const menu = document.getElementById('mobileMenu');
       if (menu.style.display === 'none' || menu.style.display === '') {
         menu.style.display = 'grid';
+        document.body.style.overflow = 'hidden'; // Previne scroll do body
       } else {
         menu.style.display = 'none';
+        document.body.style.overflow = 'auto'; // Restaura scroll do body
       }
     }
     
@@ -61,13 +63,23 @@
       const button = document.querySelector('.menu-btn');
       if (!button.contains(event.target) && !menu.contains(event.target)) {
         menu.style.display = 'none';
+        document.body.style.overflow = 'auto';
+      }
+    });
+    
+    // Fechar menu ao clicar no X
+    document.addEventListener('click', function(event) {
+      if (event.target.textContent === '✕') {
+        document.getElementById('mobileMenu').style.display = 'none';
+        document.body.style.overflow = 'auto';
       }
     });
     
     // Fechar menu ao redimensionar para desktop
     window.addEventListener('resize', function() {
-      if (window.innerWidth > 1000) {
+      if (window.innerWidth > 768) {
         document.getElementById('mobileMenu').style.display = 'none';
+        document.body.style.overflow = 'auto';
       }
     });
   </script>

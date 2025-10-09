@@ -371,11 +371,54 @@ img{ display:block; max-width:100%; height:auto }
   .ad-slot--between-cards{ margin:12px 0; padding:8px }
 }
 @media (max-width:768px){ 
-  .topbar-inner{ height:60px; padding:0 12px }
-  .brand-img{ height:32px }
-  .menu-btn{ padding:4px }
-  .menu-label{ display:none }
-  .menu-ico{ width:20px }
+  .topbar-inner{ height:70px; padding:0 16px }
+  .brand-img{ height:45px }
+  .menu-btn{ padding:8px; gap:8px }
+  .menu-label{ display:block; font-size:0.9rem }
+  .menu-ico{ width:24px }
+  
+  /* Menu mobile em tela cheia */
+  .menu-panel{ 
+    position:fixed; 
+    top:0; 
+    left:0; 
+    right:0; 
+    bottom:0; 
+    width:100vw; 
+    height:100vh; 
+    margin:0; 
+    border:none; 
+    border-radius:0; 
+    padding:80px 20px 20px; 
+    grid-template-columns:1fr; 
+    gap:20px;
+    z-index:9999;
+    overflow-y:auto;
+  }
+  
+  /* Backdrop para fechar menu */
+  .menu-panel::before{
+    content:'';
+    position:fixed;
+    top:0;
+    left:0;
+    right:0;
+    bottom:0;
+    background:rgba(0,0,0,0.5);
+    z-index:-1;
+  }
+  
+  /* Botão fechar no menu mobile */
+  .menu-panel::after{
+    content:'✕';
+    position:absolute;
+    top:20px;
+    right:20px;
+    font-size:24px;
+    color:#666;
+    cursor:pointer;
+    z-index:10000;
+  }
   .post-title{ font-size:1.4rem }
   .post-content{ font-size:0.95rem }
   .post-content h1,.post-content h2,.post-content h3{ font-size:1.2rem }
