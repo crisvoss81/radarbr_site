@@ -213,95 +213,99 @@ class Command(BaseCommand):
     def _generate_optimized_content(self, topic, strategy_name):
         """Gera conteúdo otimizado baseado no tópico e estratégia"""
         
-        # Conteúdos otimizados por estratégia
+        # Conteúdos otimizados por estratégia (em Markdown)
         content_templates = {
-            "Manhã - Conteúdo Informativo": f"""
-            <h2>{topic.title()}</h2>
-            <p>Começando o dia com informações importantes sobre {topic.lower()}.</p>
+            "Manhã - Conteúdo Informativo": f"""## {topic.title()}
+
+Começando o dia com informações importantes sobre {topic.lower()}.
+
+### Principais Destaques
+
+- Informação relevante 1
+- Informação relevante 2  
+- Informação relevante 3
+
+### Análise do Dia
+
+Uma análise detalhada sobre os aspectos mais importantes de {topic.lower()} para o dia de hoje.
+
+### Próximos Passos
+
+O que esperar e como se preparar para os desenvolvimentos em {topic.lower()}.
+""",
             
-            <h3>Principais Destaques</h3>
-            <ul>
-                <li>Informação relevante 1</li>
-                <li>Informação relevante 2</li>
-                <li>Informação relevante 3</li>
-            </ul>
+            "Tarde - Conteúdo Diversificado": f"""## {topic.title()}
+
+Uma visão abrangente sobre {topic.lower()} para o período da tarde.
+
+### Destaques do Momento
+
+- Desenvolvimento importante 1
+- Desenvolvimento importante 2
+- Desenvolvimento importante 3
+
+### Impacto e Relevância
+
+Como {topic.lower()} está influenciando diferentes aspectos da sociedade.
+
+### Perspectivas
+
+O que podemos esperar nos próximos desenvolvimentos relacionados a {topic.lower()}.
+""",
             
-            <h3>Análise do Dia</h3>
-            <p>Uma análise detalhada sobre os aspectos mais importantes de {topic.lower()} para o dia de hoje.</p>
+            "Noite - Conteúdo de Alto Engajamento": f"""## {topic.title()}
+
+Uma análise profunda sobre {topic.lower()} para o período noturno.
+
+### Análise Detalhada
+
+- Ponto crítico 1
+- Ponto crítico 2
+- Ponto crítico 3
+
+### Implicações
+
+As consequências e impactos de {topic.lower()} na sociedade atual.
+
+### Discussão
+
+Pontos para reflexão e discussão sobre {topic.lower()}.
+""",
             
-            <h3>Próximos Passos</h3>
-            <p>O que esperar e como se preparar para os desenvolvimentos em {topic.lower()}.</p>
-            """,
-            
-            "Tarde - Conteúdo Diversificado": f"""
-            <h2>{topic.title()}</h2>
-            <p>Uma visão abrangente sobre {topic.lower()} para o período da tarde.</p>
-            
-            <h3>Destaques do Momento</h3>
-            <ul>
-                <li>Desenvolvimento importante 1</li>
-                <li>Desenvolvimento importante 2</li>
-                <li>Desenvolvimento importante 3</li>
-            </ul>
-            
-            <h3>Impacto e Relevância</h3>
-            <p>Como {topic.lower()} está influenciando diferentes aspectos da sociedade.</p>
-            
-            <h3>Perspectivas</h3>
-            <p>O que podemos esperar nos próximos desenvolvimentos relacionados a {topic.lower()}.</p>
-            """,
-            
-            "Noite - Conteúdo de Alto Engajamento": f"""
-            <h2>{topic.title()}</h2>
-            <p>Uma análise profunda sobre {topic.lower()} para o período noturno.</p>
-            
-            <h3>Análise Detalhada</h3>
-            <ul>
-                <li>Ponto crítico 1</li>
-                <li>Ponto crítico 2</li>
-                <li>Ponto crítico 3</li>
-            </ul>
-            
-            <h3>Implicações</h3>
-            <p>As consequências e impactos de {topic.lower()} na sociedade atual.</p>
-            
-            <h3>Discussão</h3>
-            <p>Pontos para reflexão e discussão sobre {topic.lower()}.</p>
-            """,
-            
-            "Madrugada - Conteúdo Preparatório": f"""
-            <h2>{topic.title()}</h2>
-            <p>Preparação para o dia com foco em {topic.lower()}.</p>
-            
-            <h3>Resumo Executivo</h3>
-            <ul>
-                <li>Ponto principal 1</li>
-                <li>Ponto principal 2</li>
-                <li>Ponto principal 3</li>
-            </ul>
-            
-            <h3>Preparação</h3>
-            <p>Como se preparar para os desenvolvimentos em {topic.lower()}.</p>
-            
-            <h3>Expectativas</h3>
-            <p>O que esperar dos próximos desenvolvimentos em {topic.lower()}.</p>
-            """
+            "Madrugada - Conteúdo Preparatório": f"""## {topic.title()}
+
+Preparação para o dia com foco em {topic.lower()}.
+
+### Resumo Executivo
+
+- Ponto principal 1
+- Ponto principal 2
+- Ponto principal 3
+
+### Preparação
+
+Como se preparar para os desenvolvimentos em {topic.lower()}.
+
+### Expectativas
+
+O que esperar dos próximos desenvolvimentos em {topic.lower()}.
+"""
         }
         
-        return content_templates.get(strategy_name, f"""
-        <h2>{topic.title()}</h2>
-        <p>Conteúdo sobre {topic.lower()} gerado pelo sistema inteligente de automação.</p>
-        
-        <h3>Principais Aspectos</h3>
-        <ul>
-            <li>Aspecto importante 1</li>
-            <li>Aspecto importante 2</li>
-            <li>Aspecto importante 3</li>
-        </ul>
-        
-        <h3>Conclusão</h3>
-        <p>{topic.title()} é um tema relevante que merece atenção contínua.</p>
-        """)
+        return content_templates.get(strategy_name, f"""## {topic.title()}
+
+Conteúdo sobre {topic.lower()} gerado pelo sistema inteligente de automação.
+
+### Principais Aspectos
+
+- Aspecto importante 1
+- Aspecto importante 2
+- Aspecto importante 3
+
+### Conclusão
+
+{topic.title()} é um tema relevante que merece atenção contínua.
+""")
 
     def _post_execution_analysis(self, created_count, audience_data):
         """Análise pós-execução para otimização futura"""

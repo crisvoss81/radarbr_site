@@ -103,72 +103,72 @@ class Command(BaseCommand):
                 self.stdout.write("⚠ Erro ao fazer ping do sitemap")
 
     def _gerar_conteudo_simples(self, topico):
-        """Gera conteúdo simples sem usar IA"""
+        """Gera conteúdo simples sem usar IA (em Markdown)"""
         
         conteudos = {
-            "Tecnologia no Brasil": """
-            <h2>Desenvolvimento Tecnológico no Brasil</h2>
-            <p>O Brasil tem se destacado no cenário tecnológico mundial com inovações em diversas áreas.</p>
+            "Tecnologia no Brasil": """## Desenvolvimento Tecnológico no Brasil
+
+O Brasil tem se destacado no cenário tecnológico mundial com inovações em diversas áreas.
+
+### Principais Áreas de Destaque
+
+- Fintechs e pagamentos digitais
+- Agronegócio tecnológico
+- E-commerce e marketplaces
+- Inteligência artificial aplicada
+
+### Desafios e Oportunidades
+
+O país enfrenta desafios como infraestrutura digital e capacitação técnica, mas também apresenta grandes oportunidades de crescimento.
+""",
             
-            <h3>Principais Áreas de Destaque</h3>
-            <ul>
-                <li>Fintechs e pagamentos digitais</li>
-                <li>Agronegócio tecnológico</li>
-                <li>E-commerce e marketplaces</li>
-                <li>Inteligência artificial aplicada</li>
-            </ul>
+            "Economia brasileira atual": """## Panorama da Economia Brasileira
+
+A economia brasileira apresenta sinais de recuperação com indicadores positivos em diversos setores.
+
+### Indicadores Principais
+
+- Crescimento do PIB
+- Controle da inflação
+- Geração de empregos
+- Investimentos externos
+
+### Perspectivas Futuras
+
+As projeções indicam um cenário positivo para os próximos trimestres, com foco em sustentabilidade e inovação.
+""",
             
-            <h3>Desafios e Oportunidades</h3>
-            <p>O país enfrenta desafios como infraestrutura digital e capacitação técnica, mas também apresenta grandes oportunidades de crescimento.</p>
-            """,
-            
-            "Economia brasileira atual": """
-            <h2>Panorama da Economia Brasileira</h2>
-            <p>A economia brasileira apresenta sinais de recuperação com indicadores positivos em diversos setores.</p>
-            
-            <h3>Indicadores Principais</h3>
-            <ul>
-                <li>Crescimento do PIB</li>
-                <li>Controle da inflação</li>
-                <li>Geração de empregos</li>
-                <li>Investimentos externos</li>
-            </ul>
-            
-            <h3>Perspectivas Futuras</h3>
-            <p>As projeções indicam um cenário positivo para os próximos trimestres, com foco em sustentabilidade e inovação.</p>
-            """,
-            
-            "Esportes nacionais": """
-            <h2>Esportes no Brasil</h2>
-            <p>O Brasil continua sendo uma potência esportiva mundial com destaque em diversas modalidades.</p>
-            
-            <h3>Modalidades em Destaque</h3>
-            <ul>
-                <li>Futebol profissional</li>
-                <li>Vôlei e vôlei de praia</li>
-                <li>Atletismo</li>
-                <li>Natação</li>
-            </ul>
-            
-            <h3>Preparação para Competições</h3>
-            <p>Os atletas brasileiros se preparam intensamente para as próximas competições internacionais.</p>
-            """
+            "Esportes nacionais": """## Esportes no Brasil
+
+O Brasil continua sendo uma potência esportiva mundial com destaque em diversas modalidades.
+
+### Modalidades em Destaque
+
+- Futebol profissional
+- Vôlei e vôlei de praia
+- Atletismo
+- Natação
+
+### Preparação para Competições
+
+Os atletas brasileiros se preparam intensamente para as próximas competições internacionais.
+"""
         }
         
         # Conteúdo padrão se não encontrar o tópico específico
-        conteudo_padrao = f"""
-        <h2>{topico}</h2>
-        <p>Este é um artigo sobre {topico.lower()} desenvolvido pelo sistema de automação.</p>
-        
-        <h3>Principais Aspectos</h3>
-        <ul>
-            <li>Aspecto importante 1</li>
-            <li>Aspecto importante 2</li>
-            <li>Aspecto importante 3</li>
-        </ul>
-        
-        <h3>Conclusão</h3>
-        <p>{topico} é um tema relevante que merece atenção e análise contínua.</p>
-        """
+        conteudo_padrao = f"""## {topico}
+
+Este é um artigo sobre {topico.lower()} desenvolvido pelo sistema de automação.
+
+### Principais Aspectos
+
+- Aspecto importante 1
+- Aspecto importante 2
+- Aspecto importante 3
+
+### Conclusão
+
+{topico} é um tema relevante que merece atenção e análise contínua.
+"""
         
         return conteudos.get(topico, conteudo_padrao)

@@ -55,22 +55,35 @@ def _first_json_blob(text: str) -> str | None:
 
 
 def _fallback_article(topic: str) -> Dict[str, str]:
-    title = topic.strip().capitalize()
-    dek = f"Entenda, de forma objetiva, os principais pontos sobre {topic.strip()}."
+    title = f"Tudo sobre {topic.strip().title()}: Guia Completo"
+    dek = f"Descubra os principais aspectos de {topic.strip()} e entenda como isso impacta o Brasil. Informações essenciais para você ficar por dentro."
     html = f"""
-<h2>Resumo rápido</h2>
-<p>Este conteúdo traz uma visão direta sobre <strong>{topic}</strong>: contexto, principais fatos e o que observar a seguir.</p>
-<h2>Principais pontos</h2>
+<h2>Introdução</h2>
+<p>Quando falamos sobre <strong>{topic}</strong>, estamos tratando de um tema que tem ganhado cada vez mais relevância no cenário brasileiro. Vamos explorar os principais pontos para você entender melhor essa questão.</p>
+
+<h2>O que você precisa saber</h2>
+<p>Para compreender completamente {topic}, é importante entender alguns conceitos fundamentais e como eles se aplicam à nossa realidade.</p>
+
+<h2>Principais aspectos</h2>
 <ul>
-  <li>O que é: definição breve do tema.</li>
-  <li>Por que importa: impacto para o público.</li>
-  <li>Próximos passos: o que acompanhar.</li>
+  <li><strong>Definição:</strong> O que realmente significa {topic} na prática</li>
+  <li><strong>Relevância:</strong> Por que isso importa para os brasileiros</li>
+  <li><strong>Impacto:</strong> Como isso afeta o dia a dia das pessoas</li>
+  <li><strong>Perspectivas:</strong> O que esperar para o futuro</li>
 </ul>
-<h2>Perguntas frequentes</h2>
+
+<h2>Impacto no Brasil</h2>
+<p>No contexto brasileiro, {topic} tem se mostrado um fator importante que merece atenção. Vamos entender melhor como isso se manifesta em nosso país.</p>
+
+<h2>Perguntas Frequentes</h2>
 <h3>O que é {topic}?</h3>
-<p>Resumo simples e claro.</p>
-<h3>Qual o impacto?</h3>
-<p>Impactos práticos no dia a dia das pessoas.</p>
+<p>Uma explicação clara e objetiva sobre o conceito, sem complicações desnecessárias.</p>
+
+<h3>Como isso afeta o brasileiro?</h3>
+<p>Os impactos práticos e diretos na vida das pessoas, com exemplos reais.</p>
+
+<h3>O que esperar?</h3>
+<p>Uma visão sobre as tendências e desenvolvimentos futuros relacionados ao tema.</p>
 """
     return {"title": title[:140], "dek": dek[:220], "html": html.strip(), "image_url": None}
 def _sanitize_generated_html(raw_html: str) -> str:
@@ -119,9 +132,12 @@ def generate_article(topic: str, *, model: str | None = None, min_words: int = 7
     model = model or MODEL_DEFAULT
 
     system = (
-        "Você é um redator sênior de portal de notícias brasileiro. "
-        "Escreva em PT-BR, direto ao ponto, tom informativo, com práticas de SEO. "
-        "Nunca invente dados específicos (datas, placares, preços). Quando necessário, use linguagem geral."
+        "Você é um redator sênior especializado em SEO para portal de notícias brasileiro. "
+        "Escreva em PT-BR com tom natural, humano e envolvente. "
+        "Use variações de vocabulário, sinônimos e expressões coloquiais brasileiras. "
+        "Evite repetições e linguagem robótica. "
+        "Nunca invente dados específicos (datas, placares, preços). "
+        "Foque em conteúdo de valor real para o leitor brasileiro."
     )
 
     user = f"""
@@ -129,34 +145,44 @@ Gere um ARTIGO EM JSON sobre o tópico entre <topic>…</topic>. Regras:
 
 <topic>{topic.strip()}</topic>
 
-[OBJETIVO]
-- Otimizar para SEO e intenção de busca (informacional).
-- Tamanho alvo: >= {min_words} palavras (conteúdo substancial, sem enrolação).
-- Linguagem simples, parágrafos de 2–4 linhas.
+[OBJETIVO SEO]
+- Tamanho alvo: {min_words}-{min_words+300} palavras (conteúdo substancial e natural).
+- Densidade de palavra-chave: 1-2% (natural, não forçada).
+- Use sinônimos e variações da palavra-chave principal.
+- Linguagem natural, parágrafos variados (2-5 linhas).
+- Tom conversacional e envolvente.
 
-[ESTRUTURA]
+[ESTRUTURA SEO]
 - Retorne **apenas** um JSON com campos: "title", "dek", "html".
-- title: 55–70 caracteres, claro e sem clickbait.
-- dek: 140–200 caracteres, resumo chamativo com a palavra-chave principal.
+- title: 50-60 caracteres, inclua palavra-chave principal naturalmente.
+- dek: 150-160 caracteres, resumo envolvente com palavra-chave.
 - html: conteúdo em HTML sem <html>/<body>, seguindo:
 
-<h2>O que é/Contexto</h2>
-<p>…</p>
-<h2>Panorama atual</h2>
-<p>…</p>
-<h2>Principais pontos</h2>
-<ul><li>…</li><li>…</li></ul>
-<h2>Impactos para o público</h2>
-<p>…</p>
-<h2>Perguntas frequentes</h2>
-<h3>Pergunta 1</h3><p>Resposta curta e útil.</p>
-<h3>Pergunta 2</h3><p>Resposta curta e útil.</p>
+<h2>Introdução Natural</h2>
+<p>Parágrafo de abertura envolvente que introduz o tema...</p>
 
-[REGRAS]
-- Não use marcações Markdown; apenas HTML nos trechos de conteúdo.
-- Não coloque tag <h1> no corpo (o template já cuida do H1).
+<h2>Desenvolvimento Principal</h2>
+<p>Conteúdo detalhado com informações valiosas...</p>
+<p>Use transições naturais entre parágrafos...</p>
+
+<h2>Aspectos Importantes</h2>
+<ul><li>Ponto relevante 1</li><li>Ponto relevante 2</li><li>Ponto relevante 3</li></ul>
+
+<h2>Impacto e Relevância</h2>
+<p>Como isso afeta o leitor brasileiro...</p>
+
+<h2>Perguntas Frequentes</h2>
+<h3>Pergunta natural 1</h3><p>Resposta útil e completa.</p>
+<h3>Pergunta natural 2</h3><p>Resposta útil e completa.</p>
+
+[REGRAS DE QUALIDADE]
+- Use expressões brasileiras naturais ("cara", "galera", "rola", etc.).
+- Varie o vocabulário (não repita palavras desnecessariamente).
+- Não use marcações Markdown; apenas HTML.
+- Não coloque tag <h1> no corpo.
 - Não cite que foi gerado por IA.
 - Sem links externos.
+- Conteúdo único e original.
 - NUNCA retorne nada além do JSON final.
 """
 
@@ -167,8 +193,11 @@ Gere um ARTIGO EM JSON sobre o tópico entre <topic>…</topic>. Regras:
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
             ],
-            temperature=0.7,
-            max_tokens=2000,
+            temperature=0.8,  # Mais criatividade para evitar repetição
+            max_tokens=3000,  # Mais tokens para conteúdo mais longo
+            top_p=0.9,       # Diversidade de vocabulário
+            frequency_penalty=0.3,  # Penaliza repetições
+            presence_penalty=0.2,   # Incentiva novos tópicos
         )
         content = resp.choices[0].message.content or ""
     except Exception:
