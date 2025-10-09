@@ -85,13 +85,14 @@ class Command(BaseCommand):
             source_stats[source] = source_stats.get(source, 0) + 1
         
         # Calcular métricas
-        avg_per_hour = period_count / (period_delta.total_seconds() / 3600) if period_delta.total_seconds() > 0 else 0
+        period_duration = timezone.now() - start_time
+        avg_per_hour = period_count / (period_duration.total_seconds() / 3600) if period_duration.total_seconds() > 0 else 0
         
         return {
             "period": {
                 "start": start_time,
                 "end": timezone.now(),
-                "duration": str(period_delta)
+                "duration": str(period_duration)
             },
             "metrics": {
                 "total_news": total_news,
