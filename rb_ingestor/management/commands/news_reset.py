@@ -18,11 +18,13 @@ class Command(BaseCommand):
         parser.add_argument(
             "--with-media",
             action="store_true",
+            dest="with_media",
             help="Também apaga arquivos de imagem do disco (campo 'imagem').",
         )
         parser.add_argument(
             "--no-publish",
             action="store_true",
+            dest="no_publish",
             help="Não publica novamente (só limpar).",
         )
         parser.add_argument("--limit", type=int, default=8, help="Quantas novas publicar (se for publicar).")
@@ -45,7 +47,7 @@ class Command(BaseCommand):
         has_image_field = any(f.name == "imagem" for f in Noticia._meta.fields)
 
         with transaction.atomic():
-            if opts["with-media"] and has_image_field:
+            if opts["with_media"] and has_image_field:
                 # apaga arquivos físicos antes do delete()
                 for n in qs.only("id", "imagem").iterator():
                     try:
@@ -57,7 +59,7 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS("Limpeza concluída."))
 
-        if opts["no-publish"]:
+        if opts["no_publish"]:
             return
 
         self.stdout.write(self.style.NOTICE("Publicando novas via trends_publish..."))
