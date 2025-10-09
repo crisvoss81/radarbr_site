@@ -89,13 +89,15 @@ if [ "$recent_count" -lt 2 ]; then
     # Executar comando de publicação
     log "🚀 Executando: smart_trends_publish --strategy $strategy --limit $limit"
     
-    # Tentar comando completo primeiro, depois simplificado
-    if python manage.py smart_trends_publish --strategy "$strategy" --limit "$limit" --force; then
-        log "✅ Comando smart_trends_publish executado com sucesso"
+    # Sistema inteligente de automação com fallbacks
+    if python manage.py smart_automation --mode auto; then
+        log "✅ Sistema inteligente executado com sucesso"
+    elif python manage.py smart_trends_publish --strategy "$strategy" --limit "$limit" --force; then
+        log "✅ Comando smart_trends_publish executado com sucesso (fallback 1)"
     elif python manage.py automacao_simples --limit "$limit" --force; then
-        log "✅ Comando automacao_simples executado com sucesso (fallback)"
+        log "✅ Comando automacao_simples executado com sucesso (fallback 2)"
     else
-        log "❌ Erro na publicação - ambos os comandos falharam"
+        log "❌ Erro na publicação - todos os comandos falharam"
         exit 1
     fi
     

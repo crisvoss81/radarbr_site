@@ -61,14 +61,60 @@
       - key: CLOUDINARY_API_SECRET
         sync: false
 
-  # Agendamento inteligente a cada hora (mais responsivo)
+  # Sistema inteligente de automação - execução principal
   - type: cron
-    name: radarbr-smart-scheduler
+    name: radarbr-smart-automation
     runtime: python
     region: oregon
     plan: free
     branch: main
-    schedule: "0 * * * *"  # A cada hora
+    schedule: "0 8,12,15,18,20 * * *"  # Horários otimizados: 8h, 12h, 15h, 18h, 20h
+    buildCommand: |
+      chmod +x build.sh
+      ./build.sh
+    startCommand: |
+      python manage.py smart_automation --mode auto
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: core.settings
+      - key: PYTHON_VERSION
+        value: 3.13.0
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+
+  # Monitor de performance - execução diária
+  - type: cron
+    name: radarbr-performance-monitor
+    runtime: python
+    region: oregon
+    plan: free
+    branch: main
+    schedule: "0 6 * * *"  # Todo dia às 6h
+    buildCommand: |
+      chmod +x build.sh
+      ./build.sh
+    startCommand: |
+      python manage.py monitor_performance --period 24h --export
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: core.settings
+      - key: PYTHON_VERSION
+        value: 3.13.0
+
+  # Sistema de fallback - execução a cada 2 horas
+  - type: cron
+    name: radarbr-fallback-automation
+    runtime: python
+    region: oregon
+    plan: free
+    branch: main
+    schedule: "0 */2 * * *"  # A cada 2 horas
     buildCommand: |
       chmod +x build.sh
       ./build.sh
