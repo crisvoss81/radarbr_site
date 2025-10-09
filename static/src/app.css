@@ -377,6 +377,19 @@ img{ display:block; max-width:100%; height:auto }
   .menu-label{ display:block; font-size:0.9rem }
   .menu-ico{ width:24px }
   
+  /* Menu mobile: dropdown em largura total abaixo do header */
+  .menu-panel{
+    position:fixed;
+    top:64px; /* igual à altura do header no mobile */
+    left:0;
+    right:0;
+    margin:0;
+    border-radius:0;
+    min-width:auto;
+    grid-template-columns:1fr;
+    z-index:9999;
+  }
+  
   
   /* Melhorar links do menu */
   .menu-panel a{
