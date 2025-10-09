@@ -30,27 +30,57 @@ class Command(BaseCommand):
         if created:
             print(f"OK Categoria criada: {cat.nome}")
         
-        # Tópicos simples
+        # Tópicos com títulos mais realistas
         topicos = [
-            "Tecnologia",
-            "Economia", 
-            "Esportes",
-            "Cultura",
-            "Política",
-            "Meio Ambiente",
-            "Educação",
-            "Saúde",
-            "Inovação",
-            "Turismo"
+            {
+                "titulo": "Nova tecnologia revoluciona mercado brasileiro",
+                "conteudo": "Uma nova tecnologia está transformando o cenário econômico brasileiro, trazendo oportunidades inéditas para empresas e consumidores. Especialistas apontam que esta inovação pode gerar milhares de empregos nos próximos anos."
+            },
+            {
+                "titulo": "Economia brasileira mostra sinais de recuperação",
+                "conteudo": "Dados recentes indicam que a economia nacional está apresentando indicadores positivos, com crescimento em setores-chave. Analistas são otimistas quanto ao futuro econômico do país."
+            },
+            {
+                "titulo": "Seleção brasileira se prepara para próximos jogos",
+                "conteudo": "A seleção nacional está intensificando os treinamentos para as próximas competições. O técnico destacou a importância do trabalho em equipe e da dedicação dos atletas."
+            },
+            {
+                "titulo": "Festival de cultura movimenta cidade brasileira",
+                "conteudo": "Um grande festival cultural está reunindo artistas de todo o país, promovendo a diversidade e a riqueza da cultura brasileira. O evento tem atraído milhares de visitantes."
+            },
+            {
+                "titulo": "Medidas políticas impactam população brasileira",
+                "conteudo": "Novas medidas governamentais foram anunciadas e devem afetar diretamente a vida dos brasileiros. Especialistas analisam os possíveis impactos dessas decisões."
+            },
+            {
+                "titulo": "Projetos ambientais ganham destaque no Brasil",
+                "conteudo": "Iniciativas de preservação ambiental estão sendo implementadas em diversas regiões do país, demonstrando o compromisso com a sustentabilidade e o futuro do planeta."
+            },
+            {
+                "titulo": "Educação brasileira recebe novos investimentos",
+                "conteudo": "Recursos adicionais foram destinados para melhorar a qualidade da educação nacional, com foco em infraestrutura, capacitação de professores e tecnologia educacional."
+            },
+            {
+                "titulo": "Sistema de saúde brasileiro implementa melhorias",
+                "conteudo": "Novas tecnologias e protocolos estão sendo implementados no sistema de saúde público, visando melhorar o atendimento e a qualidade dos serviços oferecidos à população."
+            },
+            {
+                "titulo": "Inovação tecnológica brasileira ganha reconhecimento",
+                "conteudo": "Startups brasileiras estão desenvolvendo soluções inovadoras que chamam atenção internacionalmente, colocando o país em destaque no cenário tecnológico global."
+            },
+            {
+                "titulo": "Turismo brasileiro registra crescimento significativo",
+                "conteudo": "O setor turístico nacional está apresentando números positivos, com aumento no número de visitantes e receita. Destinos brasileiros estão sendo cada vez mais procurados."
+            }
         ]
         
         criadas = 0
         num = options["num"]
         
         for i in range(num):
-            topico = random.choice(topicos)
+            topico_data = random.choice(topicos)
             timestamp = timezone.now().strftime('%d/%m %H:%M')
-            titulo = f"{topico} - {timestamp}"
+            titulo = f"{topico_data['titulo']} - {timestamp}"
             slug = slugify(titulo)[:180]
             
             # Verificar se já existe
@@ -58,12 +88,13 @@ class Command(BaseCommand):
                 print(f"AVISO Pulando: {titulo} (ja existe)")
                 continue
             
-            # Conteúdo simples
+            # Conteúdo mais completo e realista
             conteudo = f"""
-            <h2>{topico}</h2>
-            <p>Artigo sobre {topico} gerado automaticamente.</p>
-            <p>Este conteúdo aborda aspectos importantes relacionados ao tema.</p>
-            <p><em>Gerado pelo RadarBR em {timestamp}</em></p>
+            <h2>{topico_data['titulo']}</h2>
+            <p>{topico_data['conteudo']}</p>
+            <p>Esta matéria foi desenvolvida com base em informações atualizadas e análises de especialistas da área. O RadarBR continua acompanhando os desdobramentos desta notícia.</p>
+            <p>Para mais informações sobre este e outros assuntos, acompanhe nossas atualizações diárias.</p>
+            <p><em>Publicado pelo RadarBR em {timestamp}</em></p>
             """
             
             try:
