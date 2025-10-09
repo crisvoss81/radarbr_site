@@ -61,6 +61,34 @@
       - key: CLOUDINARY_API_SECRET
         sync: false
 
+  # Agendamento inteligente a cada hora (mais responsivo)
+  - type: cron
+    name: radarbr-smart-scheduler
+    runtime: python
+    region: oregon
+    plan: free
+    branch: main
+    schedule: "0 * * * *"  # A cada hora
+    buildCommand: |
+      chmod +x build.sh
+      ./build.sh
+    startCommand: |
+      chmod +x scripts/smart_scheduler.sh
+      ./scripts/smart_scheduler.sh
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: core.settings
+      - key: PYTHON_VERSION
+        value: 3.13.0
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+
   # Serviço de teste para verificar Django
   - type: cron
     name: radarbr-test

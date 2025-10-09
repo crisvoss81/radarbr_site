@@ -126,6 +126,40 @@ img{ display:block; max-width:100%; height:auto }
 .post-content ul,.post-content ol{ margin:0 0 16px 0; padding-left:24px }
 .post-content li{ margin:0 0 8px 0 }
 
+/* Reset de margens laterais e padronização no conteúdo da notícia */
+.post-content h1,
+.post-content h2,
+.post-content h3,
+.post-content h4,
+.post-content h5,
+.post-content h6,
+.post-content p,
+.post-content ul,
+.post-content ol,
+.post-content blockquote{
+  margin-left:0;
+  padding-left:0;
+}
+
+.post-content ul,
+.post-content ol{
+  list-style-position: outside;
+  padding-left:1.25rem; /* 20px */
+}
+
+.post-content blockquote{
+  margin:16px 0; 
+  padding-left:1rem; 
+  border-left:3px solid #e5e7eb; 
+  color:#374151;
+}
+
+.post-content img,
+.post-content iframe{
+  max-width:100%;
+  height:auto;
+}
+
 /* Logo */
 .brand-img {
   height: 100px;
@@ -421,8 +455,14 @@ img{ display:block; max-width:100%; height:auto }
     font-weight:700;
     font-size:0.8rem;
     letter-spacing:0.5px;
-    margin-bottom:12px;
+    margin:0 0 12px 0;
     color:#374151;
+    position:sticky;
+    top:0;
+    background:#fff;
+    padding:8px 16px;
+    z-index:1;
+    box-shadow:0 1px 0 rgba(0,0,0,0.08);
   }
 }
 
