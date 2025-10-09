@@ -33,22 +33,22 @@ class Command(BaseCommand):
         self.stdout.write("\n=== SLOTS CONFIGURADOS ===")
         for slot in slots_used:
             if slot.startswith("123456789"):
-                self.stdout.write(self.style.ERROR(f"❌ Slot inválido: {slot}"))
+                self.stdout.write(self.style.ERROR(f"ERRO Slot invalido: {slot}"))
             else:
-                self.stdout.write(self.style.SUCCESS(f"✅ Slot válido: {slot}"))
+                self.stdout.write(self.style.SUCCESS(f"OK Slot valido: {slot}"))
         
         # Recomendações
-        self.stdout.write("\n=== RECOMENDAÇÕES ===")
+        self.stdout.write("\n=== RECOMENDACOES ===")
         if not client_id:
-            self.stdout.write(self.style.ERROR("❌ ADSENSE_CLIENT não configurado"))
+            self.stdout.write(self.style.ERROR("ERRO ADSENSE_CLIENT nao configurado"))
         else:
-            self.stdout.write(self.style.SUCCESS("✅ ADSENSE_CLIENT configurado"))
+            self.stdout.write(self.style.SUCCESS("OK ADSENSE_CLIENT configurado"))
             
         if debug:
-            self.stdout.write(self.style.WARNING("⚠️ DEBUG=True - alguns recursos podem não funcionar"))
+            self.stdout.write(self.style.WARNING("AVISO DEBUG=True - alguns recursos podem nao funcionar"))
         
-        self.stdout.write("\n=== PRÓXIMOS PASSOS ===")
-        self.stdout.write("1. Verifique se os slots são válidos no AdSense")
-        self.stdout.write("2. Confirme se o site está aprovado")
-        self.stdout.write("3. Aguarde até 48h para anúncios aparecerem")
-        self.stdout.write("4. Teste em modo incógnito (sem bloqueadores)")
+        self.stdout.write("\n=== PROXIMOS PASSOS ===")
+        self.stdout.write("1. Verifique se os slots sao validos no AdSense")
+        self.stdout.write("2. Confirme se o site esta aprovado")
+        self.stdout.write("3. Aguarde ate 48h para anuncios aparecerem")
+        self.stdout.write("4. Teste em modo incognito (sem bloqueadores)")
