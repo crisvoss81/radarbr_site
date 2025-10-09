@@ -202,6 +202,9 @@ class Command(BaseCommand):
                     status=1  # PUBLICADO
                 )
                 
+                # Buscar e salvar imagem (sem Cloudinary)
+                self._add_image_to_news(noticia, topic)
+                
                 created_count += 1
                 self.stdout.write(f"✓ Criado: {title}")
                 
@@ -306,6 +309,30 @@ Conteúdo sobre {topic.lower()} gerado pelo sistema inteligente de automação.
 
 {topic.title()} é um tema relevante que merece atenção contínua.
 """)
+
+    def _add_image_to_news(self, noticia, topic):
+        """Busca e adiciona imagem à notícia (funciona sem Cloudinary)"""
+        try:
+            from rb_ingestor.images_free import pick_image
+            
+            # Buscar imagem gratuita
+            image_info = pick_image(topic)
+            
+            if image_info and image_info.get("url"):
+                # Salvar URL da imagem diretamente (sem Cloudinary)
+                noticia.imagem = image_info["url"]
+                noticia.imagem_alt = f"Imagem relacionada a {topic}"
+                noticia.imagem_credito = image_info.get("credito", "Imagem gratuita")
+                noticia.imagem_licenca = image_info.get("licenca", "CC")
+                noticia.imagem_fonte_url = image_info.get("fonte_url", image_info["url"])
+                noticia.save()
+                
+                self.stdout.write(f"✓ Imagem adicionada: {topic}")
+            else:
+                self.stdout.write(f"⚠ Nenhuma imagem encontrada para: {topic}")
+                
+        except Exception as e:
+            self.stdout.write(f"⚠ Erro ao buscar imagem para {topic}: {e}")
 
     def _post_execution_analysis(self, created_count, audience_data):
         """Análise pós-execução para otimização futura"""

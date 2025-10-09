@@ -81,6 +81,9 @@ class Command(BaseCommand):
                     status=1  # PUBLICADO
                 )
                 
+                # Buscar e adicionar imagem (sem Cloudinary)
+                self._adicionar_imagem(noticia, topico)
+                
                 created_count += 1
                 self.stdout.write(self.style.SUCCESS(f"✓ Criado: {title}"))
                 
@@ -172,3 +175,27 @@ Este é um artigo sobre {topico.lower()} desenvolvido pelo sistema de automaçã
 """
         
         return conteudos.get(topico, conteudo_padrao)
+
+    def _adicionar_imagem(self, noticia, topico):
+        """Busca e adiciona imagem à notícia (funciona sem Cloudinary)"""
+        try:
+            from rb_ingestor.images_free import pick_image
+            
+            # Buscar imagem gratuita
+            image_info = pick_image(topico)
+            
+            if image_info and image_info.get("url"):
+                # Salvar URL da imagem diretamente (sem Cloudinary)
+                noticia.imagem = image_info["url"]
+                noticia.imagem_alt = f"Imagem relacionada a {topico}"
+                noticia.imagem_credito = image_info.get("credito", "Imagem gratuita")
+                noticia.imagem_licenca = image_info.get("licenca", "CC")
+                noticia.imagem_fonte_url = image_info.get("fonte_url", image_info["url"])
+                noticia.save()
+                
+                self.stdout.write(f"✓ Imagem adicionada: {topico}")
+            else:
+                self.stdout.write(f"⚠ Nenhuma imagem encontrada para: {topico}")
+                
+        except Exception as e:
+            self.stdout.write(f"⚠ Erro ao buscar imagem para {topico}: {e}")
