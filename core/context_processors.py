@@ -10,9 +10,10 @@ MENU_TOP_SLUGS = [
 def site_constants(request):
     return {
         "SITE_NAME": getattr(settings, "SITE_NAME", "RadarBR"),
+        "SITE_BASE_URL": getattr(settings, "SITE_BASE_URL", "https://www.radarbr.com"),
         # Expor flags/ids importantes aos templates (GA4/Adsense/Debug)
         "GA4_ID": getattr(settings, "GA4_ID", ""),
-        "ADSENSE_CLIENT": getattr(settings, "ADSENSE_CLIENT", ""),
+        "ADSENSE_CLIENT": getattr(settings, "ADSENSE_CLIENT", "ca-pub-3913403142217011"),
         "debug": getattr(settings, "DEBUG", False),
     }
 

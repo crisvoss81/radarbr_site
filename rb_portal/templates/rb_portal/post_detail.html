@@ -1,11 +1,14 @@
 {% extends 'rb_portal/base.html' %}
+{% load static %}
 {% load rb_filters %}
 {% load markdown_extras %}
 {% load cloudinary_extras %}
 {% load adsense_extras %}
 
 {% block title %}{{ object.titulo|striptags }} | RadarBR{% endblock %}
-{% block meta_description %}{{ object.conteudo|striptags|truncatechars:150 }}{% endblock %}
+{% block meta_description %}{{ object.conteudo|striptags|truncatechars:160 }}{% endblock %}
+<meta name="author" content="RadarBR">
+<meta name="keywords" content="{% if object.categoria %}{{ object.categoria.nome }}, {% endif %}notícias, Brasil, {{ object.titulo|striptags|truncatechars:50 }}">
 {% block canonical %}{{ SITE_BASE_URL }}{{ object.get_absolute_url }}{% endblock %}
 
 {% block social_meta %}
@@ -28,7 +31,7 @@
     <meta name="twitter:image" content='{% cloudinary_image_url object.imagem width=1200 height=630 crop="fill" %}'>
   {% endif %}
 
-  {# JSON-LD Article + Breadcrumbs #}
+  {# JSON-LD Article + Breadcrumbs + FAQ #}
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -36,12 +39,28 @@
     "headline": "{{ object.titulo|striptags|escapejs }}",
     "datePublished": "{{ object.publicado_em|date:'c' }}",
     "dateModified": "{{ object.publicado_em|date:'c' }}",
+    "author": {
+      "@type": "Organization",
+      "name": "RadarBR",
+      "url": "{{ SITE_BASE_URL }}"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "RadarBR",
+      "url": "{{ SITE_BASE_URL }}",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "{{ SITE_BASE_URL }}{% static 'img/logo-radarbr.png' %}"
+      }
+    },
     "mainEntityOfPage": {
       "@type": "WebPage",
       "@id": "{{ SITE_BASE_URL }}{{ object.get_absolute_url }}"
     }{% if object.imagem %},
     "image": ["{% cloudinary_image_url object.imagem width=1200 height=630 crop='fill' %}"]{% endif %}{% if object.categoria %},
-    "articleSection": "{{ object.categoria.nome|escapejs }}"{% endif %}
+    "articleSection": "{{ object.categoria.nome|escapejs }}"{% endif %},
+    "wordCount": {{ object.conteudo|length }},
+    "timeRequired": "PT{% widthratio object.conteudo|length 250 1 %}M"
   }
   </script>
   
@@ -85,7 +104,10 @@
   <header class="post-header">
     {% if object.categoria %}<a class="chip" href="{{ object.categoria.get_absolute_url }}">{{ object.categoria.nome }}</a>{% endif %}
     <h1 class="post-title">{{ object.titulo|striptags }}</h1>
-    <div class="post-meta">Publicado em {{ object.publicado_em|date:'d \d\e F \d\e Y, H\hi' }}</div>
+    <div class="post-meta">
+      Publicado em {{ object.publicado_em|date:'d \d\e F \d\e Y, H\hi' }}
+      <span class="reading-time">• {% widthratio object.conteudo|length 250 1 %} min de leitura</span>
+    </div>
   </header>
 
   <!-- AdSense Banner após título (responsivo) -->
@@ -128,5 +150,25 @@
   <div class="ad-slot ad-slot--post-content">
     {% adsense_banner_auto "4840700734" %}
   </div>
+
+  <!-- Artigos Relacionados -->
+  {% if related_articles %}
+  <section class="related-articles">
+    <h2>Artigos Relacionados</h2>
+    <div class="related-grid">
+      {% for article in related_articles %}
+      <article class="related-item">
+        <a href="{{ article.get_absolute_url }}" class="related-link">
+          {% if article.imagem %}
+            <img src="{% cloudinary_image_url article.imagem width=300 height=200 crop='fill' %}" alt="{{ article.imagem_alt|default:article.titulo|striptags }}" class="related-thumb">
+          {% endif %}
+          <h3 class="related-title">{{ article.titulo|striptags|truncatechars:60 }}</h3>
+          <div class="related-meta">{{ article.publicado_em|date:'d/m/Y' }}</div>
+        </a>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
 </article>
 {% endblock %}

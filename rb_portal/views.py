@@ -49,7 +49,7 @@ def post_detail(request, slug):
     )
     ctx = {
         "object": obj,
-        "relacionados": relacionados,
+        "related_articles": relacionados,
         "cats": Categoria.objects.all().order_by("nome"),
     }
     return render(request, "rb_portal/post_detail.html", ctx)

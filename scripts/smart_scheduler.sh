@@ -89,16 +89,23 @@ if [ "$recent_count" -lt 2 ]; then
     # Executar comando de publicação
     log "🚀 Executando: smart_trends_publish --strategy $strategy --limit $limit"
     
+    # Tentar comando completo primeiro, depois simplificado
     if python manage.py smart_trends_publish --strategy "$strategy" --limit "$limit" --force; then
-        log "✅ Publicação executada com sucesso!"
+        log "✅ Comando smart_trends_publish executado com sucesso"
+    elif python manage.py automacao_simples --limit "$limit" --force; then
+        log "✅ Comando automacao_simples executado com sucesso (fallback)"
+    else
+        log "❌ Erro na publicação - ambos os comandos falharam"
+        exit 1
+    fi
+    
+    # Ping sitemap após publicação bem-sucedida
+    log "🗺️ Atualizando sitemap..."
+    python manage.py ping_sitemap
         
-        # Ping sitemap após publicação
-        log "🗺️ Atualizando sitemap..."
-        python manage.py ping_sitemap
-        
-        # Mostrar estatísticas
-        log "📊 Estatísticas pós-publicação:"
-        python manage.py shell -c "
+    # Mostrar estatísticas
+    log "📊 Estatísticas pós-publicação:"
+    python manage.py shell -c "
 from django.utils import timezone
 from datetime import timedelta
 from rb_noticias.models import Noticia
@@ -111,11 +118,6 @@ recentes = Noticia.objects.filter(
 print(f'Total: {total} notícias')
 print(f'Última hora: {recentes} notícias')
 "
-        
-    else
-        log "❌ Erro na publicação"
-        exit 1
-    fi
     
 else
     log "✅ Quantidade adequada de notícias recentes - pulando automação"

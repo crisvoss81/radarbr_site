@@ -1,3 +1,4 @@
+{% load static %}
 {% now "Y" as current_year %}
 <footer class="footer">
   <div class="container footer-inner">
@@ -12,3 +13,26 @@
     </ul>
   </div>
 </footer>
+
+<!-- Organization Schema -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "RadarBR",
+  "url": "{{ SITE_BASE_URL }}",
+  "logo": "{{ SITE_BASE_URL }}{% static 'img/logo-radarbr.png' %}",
+  "description": "Portal de notícias do Brasil com tecnologia, esportes, economia e entretenimento",
+  "foundingDate": "2024",
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "contactType": "customer service",
+    "email": "contato@radarbr.com"
+  },
+  "sameAs": [
+    "https://facebook.com/radarbr",
+    "https://instagram.com/radarbr",
+    "https://tiktok.com/@radarbr"
+  ]
+}
+</script>
