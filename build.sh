@@ -1,18 +1,33 @@
 #!/bin/bash
+# Script para build completo do projeto
 
-echo "🐍 Instalando dependências Python..."
+echo "=== BUILD RADARBR ==="
+
+# 1. Ativar ambiente virtual (se existir)
+if [ -d ".venv" ]; then
+    echo "Ativando ambiente virtual..."
+    source .venv/bin/activate 2>/dev/null || .venv/Scripts/activate 2>/dev/null
+fi
+
+# 2. Instalar dependências Python
+echo "Instalando dependências Python..."
 pip install -r requirements.txt
 
-echo "📦 Instalando dependências Node..."
+# 3. Instalar dependências Node.js
+echo "Instalando dependências Node.js..."
 npm install
 
-echo "🎨 Compilando Tailwind CSS..."
-npm run build
+# 4. Build do CSS
+echo "Compilando CSS..."
+npx tailwindcss -i static/src/app.css -o static/build/app.css
 
-echo "📁 Coletando arquivos estáticos do Django..."
-python manage.py collectstatic --noinput
+# 5. Coletar arquivos estáticos
+echo "Coletando arquivos estáticos..."
+python manage.py collectstatic --noinput --clear
 
-echo "🔧 Aplicando migrações..."
+# 6. Executar migrações
+echo "Executando migrações..."
 python manage.py migrate
 
-echo "✅ Build finalizado com sucesso!"
+echo "=== BUILD CONCLUÍDO ==="
+echo "Para iniciar o servidor: python manage.py runserver"
