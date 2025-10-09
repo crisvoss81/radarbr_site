@@ -1515,12 +1515,12 @@ img{
 
 @media (max-width:768px){
   .topbar-inner{
-    height:70px;
+    height:80px;
     padding:0 16px
   }
 
   .brand-img{
-    height:45px
+    height:60px
   }
 
   .menu-btn{
@@ -1555,6 +1555,8 @@ img{
     gap:20px;
     z-index:9999;
     overflow-y:auto;
+    background:rgba(255,255,255,0.95);
+    backdrop-filter:blur(10px);
   }
 
   /* Backdrop para fechar menu */
@@ -1577,10 +1579,105 @@ img{
     position:absolute;
     top:20px;
     right:20px;
-    font-size:24px;
-    color:#666;
+    font-size:28px;
+    color:#c1121f;
     cursor:pointer;
     z-index:10000;
+    background:rgba(255,255,255,0.9);
+    border-radius:50%;
+    width:40px;
+    height:40px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 2px 8px rgba(0,0,0,0.1);
+    transition:all 0.2s ease;
+  }
+
+  .menu-panel::after:hover{
+    background:rgba(193,18,31,0.1);
+    transform:scale(1.1);
+  }
+
+  /* Animações do menu mobile */
+
+  .menu-panel{
+    animation:slideInFromTop 0.3s ease-out;
+  }
+
+  @keyframes slideInFromTop {
+    from {
+      transform:translateY(-100%);
+      opacity:0;
+    }
+
+    to {
+      transform:translateY(0);
+      opacity:1;
+    }
+  }
+
+  /* Melhorar links do menu */
+
+  .menu-panel a{
+    padding:12px 16px;
+    border-radius:8px;
+    transition:all 0.2s ease;
+    font-weight:500;
+  }
+
+  .menu-panel a:hover{
+    background:rgba(193,18,31,0.1);
+    color:#c1121f;
+    transform:translateX(4px);
+  }
+
+  /* Títulos das seções */
+
+  .menu-panel h4{
+    font-weight:700;
+    font-size:0.8rem;
+    letter-spacing:0.5px;
+    margin-bottom:12px;
+    color:#374151;
+  }
+}
+
+/* Telas muito pequenas (smartphones pequenos) */
+
+@media (max-width:480px){
+  .topbar-inner{
+    height:85px;
+    padding:0 12px
+  }
+
+  .brand-img{
+    height:65px
+  }
+
+  .menu-btn{
+    padding:10px;
+    gap:10px
+  }
+
+  .menu-label{
+    font-size:1rem
+  }
+
+  .menu-ico{
+    width:26px
+  }
+
+  .menu-panel{
+    padding:90px 16px 20px;
+  }
+
+  .menu-panel::after{
+    top:25px;
+    right:16px;
+    font-size:30px;
+    width:44px;
+    height:44px;
   }
 
   .post-title{
