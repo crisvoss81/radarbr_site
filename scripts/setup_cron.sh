@@ -15,8 +15,8 @@ crontab -l > /opt/render/project/crontab_backup.txt 2>/dev/null || echo "# Cront
 # Adicionar novos cron jobs
 cat > /opt/render/project/crontab_new.txt << 'EOF'
 # Cron jobs para RadarBR
-# Executar automação a cada 6 horas
-0 */6 * * * cd /opt/render/project/src && source .venv/bin/activate && python manage.py run_scheduler >> /opt/render/project/logs/cron.log 2>&1
+# Executar verificação de automação a cada 6 horas
+0 */6 * * * bash /opt/render/project/src/scripts/check_automation_simple.sh >> /opt/render/project/logs/cron.log 2>&1
 
 # Ping sitemap a cada 4 horas  
 0 */4 * * * cd /opt/render/project/src && source .venv/bin/activate && python manage.py ping_sitemap >> /opt/render/project/logs/cron.log 2>&1

@@ -4,10 +4,18 @@ Script para executar automação no Render
 Verifica se há poucas notícias recentes e executa automação se necessário
 """
 import os
+import sys
 import django
 from django.core.management import call_command
 from django.utils import timezone
 from datetime import timedelta
+
+# Adicionar o diretório do projeto ao Python path
+project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, project_dir)
+
+# Mudar para o diretório do projeto
+os.chdir(project_dir)
 
 # Configurar Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
