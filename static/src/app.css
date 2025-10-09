@@ -388,6 +388,13 @@ img{ display:block; max-width:100%; height:auto }
     min-width:auto;
     grid-template-columns:1fr;
     z-index:9999;
+    box-shadow:0 10px 20px rgba(0,0,0,0.12);
+    animation:dropdownSlide 0.2s ease-out both;
+  }
+
+  @keyframes dropdownSlide{
+    from{ transform:translateY(-8px); opacity:0 }
+    to{ transform:translateY(0); opacity:1 }
   }
   
   
