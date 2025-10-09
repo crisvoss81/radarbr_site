@@ -88,14 +88,16 @@ class Command(BaseCommand):
                 print(f"AVISO Pulando: {titulo} (ja existe)")
                 continue
             
-            # Conteúdo mais completo e realista
-            conteudo = f"""
-            <h2>{topico_data['titulo']}</h2>
-            <p>{topico_data['conteudo']}</p>
-            <p>Esta matéria foi desenvolvida com base em informações atualizadas e análises de especialistas da área. O RadarBR continua acompanhando os desdobramentos desta notícia.</p>
-            <p>Para mais informações sobre este e outros assuntos, acompanhe nossas atualizações diárias.</p>
-            <p><em>Publicado pelo RadarBR em {timestamp}</em></p>
-            """
+            # Conteúdo em Markdown (formato correto para o filtro render_markdown)
+            conteudo = f"""## {topico_data['titulo']}
+
+{topico_data['conteudo']}
+
+Esta matéria foi desenvolvida com base em informações atualizadas e análises de especialistas da área. O RadarBR continua acompanhando os desdobramentos desta notícia.
+
+Para mais informações sobre este e outros assuntos, acompanhe nossas atualizações diárias.
+
+*Publicado pelo RadarBR em {timestamp}*"""
             
             try:
                 noticia = Noticia.objects.create(
@@ -109,6 +111,9 @@ class Command(BaseCommand):
                     status=1
                 )
                 
+                # Buscar e adicionar imagem
+                self._adicionar_imagem(noticia, topico_data['titulo'])
+                
                 criadas += 1
                 print(f"OK Criado: {titulo}")
                 
@@ -117,3 +122,37 @@ class Command(BaseCommand):
         
         print(f"\nCONCLUIDO: {criadas} noticias criadas")
         print(f"Total no sistema: {Noticia.objects.count()}")
+    
+    def _adicionar_imagem(self, noticia, titulo):
+        """Busca e adiciona imagem à notícia"""
+        try:
+            from rb_ingestor.images_free import pick_image
+            
+            # Extrair palavra-chave do título para busca
+            palavras_chave = titulo.lower().split()
+            # Remover palavras comuns e pegar as mais relevantes
+            palavras_relevantes = [p for p in palavras_chave if len(p) > 3 and p not in ['nova', 'brasileiro', 'brasileira', 'mercado', 'mostra', 'ganha', 'recebe', 'implementa', 'registra']]
+            
+            if palavras_relevantes:
+                topico_busca = palavras_relevantes[0]  # Usar a primeira palavra relevante
+            else:
+                topico_busca = "tecnologia"  # Fallback
+            
+            # Buscar imagem gratuita
+            image_info = pick_image(topico_busca)
+            
+            if image_info and image_info.get("url"):
+                # Salvar URL da imagem diretamente
+                noticia.imagem = image_info["url"]
+                noticia.imagem_alt = f"Imagem relacionada a {topico_busca}"
+                noticia.imagem_credito = image_info.get("credito", "Imagem gratuita")
+                noticia.imagem_licenca = image_info.get("licenca", "CC")
+                noticia.imagem_fonte_url = image_info.get("fonte_url", image_info["url"])
+                noticia.save()
+                
+                print(f"OK Imagem adicionada: {topico_busca}")
+            else:
+                print(f"AVISO Nenhuma imagem encontrada para: {topico_busca}")
+                
+        except Exception as e:
+            print(f"AVISO Erro ao buscar imagem para {titulo}: {e}")
