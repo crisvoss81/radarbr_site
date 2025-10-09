@@ -28,7 +28,6 @@ class Command(BaseCommand):
             help="Não publica novamente (só limpar).",
         )
         parser.add_argument("--limit", type=int, default=8, help="Quantas novas publicar (se for publicar).")
-        parser.add_argument("--geo", default="BR", help="País do Google Trends (ex.: BR).")
         parser.add_argument("--debug", action="store_true", help="Mais logs.")
         parser.add_argument("--force", action="store_true", help="Força publicação mesmo se já existir hoje.")
 
@@ -62,11 +61,11 @@ class Command(BaseCommand):
         if opts["no_publish"]:
             return
 
-        self.stdout.write(self.style.NOTICE("Publicando novas via trends_publish..."))
+        self.stdout.write(self.style.NOTICE("Publicando novas via smart_trends_publish..."))
         call_command(
-            "trends_publish",
+            "smart_trends_publish",
             limit=opts["limit"],
-            geo=opts["geo"],
+            strategy="mixed",
             debug=opts["debug"],
             force=opts["force"],
         )
