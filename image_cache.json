@@ -306,5 +306,49 @@
       "category": "geral",
       "success_score": 1.0
     }
+  },
+  "365058eae77214520685b6af5b29bc85": {
+    "url": "https://images.unsplash.com/photo-1598614684665-305d3e4469ed?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4MDQ4NDZ8MHwxfHNlYXJjaHwxfHxlbGVpJUMzJUE3JUMzJUI1ZXMlMjAyMDI2JTIwZWxlaSVDMyVBNyVDMyVCNWVzJTIwZXNwZXJhcnxlbnwxfDB8fHwxNzU5OTg2ODUzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+    "timestamp": 1759986852.7867646,
+    "title": "Eleições 2026: O que Esperar do Processo Eleitoral",
+    "category": "eleições 2026",
+    "metadata": {
+      "source": "ai_generated",
+      "topic": "eleições 2026"
+    }
+  },
+  "e0a054be5946277e37635cb2a0f3b7c7": {
+    "url": "https://images.unsplash.com/photo-1636061833972-b9e09f8d3e73?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4MDQ4NDZ8MHwxfHNlYXJjaHwxfHxlbGVpJUMzJUE3JUMzJUI1ZXMlMjBlc3BlcmFyJTIwcHJvY2Vzc298ZW58MXwwfHx8MTc1OTk4Njg1NXww&ixlib=rb-4.1.0&q=80&w=1080",
+    "timestamp": 1759986854.590341,
+    "title": "Eleições 2026: O que Esperar do Processo Eleitoral",
+    "category": "geral",
+    "metadata": {
+      "source": "smart_trends_publish",
+      "topic": "eleições 2026",
+      "category": "geral",
+      "success_score": 2.0
+    }
+  },
+  "04f275385cb3c4e7a3de4d63f70be545": {
+    "url": "https://images.unsplash.com/photo-1635146260963-23e0fd38bb49?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4MDQ4NDZ8MHwxfHNlYXJjaHwxfHxjb21vJTIwcGFyYSUyMGNvbW8lMjBwYXJhcnxlbnwxfDB8fHwxNzU5OTg2ODcxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+    "timestamp": 1759986870.1833956,
+    "title": "Como parar de procrastinar e aumentar a produtividade",
+    "category": "como para",
+    "metadata": {
+      "source": "ai_generated",
+      "topic": "como para"
+    }
+  },
+  "d7554e5cb68a9b840068a6f9f3184e5b": {
+    "url": "https://images.unsplash.com/photo-1611224923853-80b023f02d71?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4MDQ4NDZ8MHwxfHNlYXJjaHwxfHxjb21vJTIwcGFyYXIlMjBwcm9jcmFzdGluYXJ8ZW58MXwwfHx8MTc1OTk1MzMyMHww&ixlib=rb-4.1.0&q=80&w=1080",
+    "timestamp": 1759986870.557216,
+    "title": "Como parar de procrastinar e aumentar a produtividade",
+    "category": "geral",
+    "metadata": {
+      "source": "smart_trends_publish",
+      "topic": "como para",
+      "category": "geral",
+      "success_score": 3.0
+    }
   }
 }
