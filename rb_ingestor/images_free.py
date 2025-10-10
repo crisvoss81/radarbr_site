@@ -97,7 +97,73 @@ def pick_image(topic: str) -> Optional[Dict]:
     if not topic:
         return None
 
+    # Limpar e otimizar o tópico para busca
+    topic_clean = _clean_topic_for_search(topic)
+    
     # Tenta encontrar uma imagem, primeiro na Wikimedia, depois no Openverse
-    image_info = _wikimedia_search(topic) or _openverse_search(topic)
+    image_info = _wikimedia_search(topic_clean) or _openverse_search(topic_clean)
+    
+    # Se não encontrar, tenta variações do tópico
+    if not image_info:
+        variations = _get_topic_variations(topic)
+        for variation in variations:
+            image_info = _wikimedia_search(variation) or _openverse_search(variation)
+            if image_info:
+                break
 
     return image_info
+
+def _clean_topic_for_search(topic: str) -> str:
+    """Limpa e otimiza o tópico para busca de imagens"""
+    # Remover palavras genéricas
+    generic_words = ["análise", "completa", "tendências", "impactos", "sociedade", "moderna"]
+    words = topic.lower().split()
+    cleaned_words = [word for word in words if word not in generic_words]
+    
+    # Reconstruir o tópico
+    cleaned_topic = " ".join(cleaned_words)
+    
+    # Mapear tópicos genéricos para mais específicos
+    topic_mapping = {
+        "entretenimento": "entretenimento brasil cultura",
+        "cultura": "cultura brasileira arte",
+        "lifestyle": "lifestyle brasil vida",
+        "tecnologia": "tecnologia brasil inovação",
+        "economia": "economia brasil mercado",
+        "esportes": "esportes brasil futebol",
+        "política": "política brasil governo",
+        "saúde": "saúde brasil medicina",
+        "educação": "educação brasil escola",
+        "meio ambiente": "meio ambiente brasil natureza"
+    }
+    
+    for key, value in topic_mapping.items():
+        if key in cleaned_topic:
+            return value
+    
+    return cleaned_topic or topic
+
+def _get_topic_variations(topic: str) -> list:
+    """Gera variações do tópico para busca"""
+    variations = []
+    
+    # Variações básicas
+    variations.append(topic)
+    variations.append(topic + " brasil")
+    variations.append(topic + " brasileiro")
+    
+    # Variações por palavra-chave
+    if "entretenimento" in topic.lower():
+        variations.extend(["show", "festival", "música", "cinema", "teatro"])
+    elif "cultura" in topic.lower():
+        variations.extend(["arte", "museu", "teatro", "literatura", "folclore"])
+    elif "lifestyle" in topic.lower():
+        variations.extend(["vida", "estilo", "moda", "gastronomia", "viagem"])
+    elif "tecnologia" in topic.lower():
+        variations.extend(["inovação", "startup", "digital", "app", "software"])
+    elif "economia" in topic.lower():
+        variations.extend(["mercado", "negócios", "investimento", "finanças"])
+    elif "esportes" in topic.lower():
+        variations.extend(["futebol", "atletismo", "natação", "vôlei"])
+    
+    return variations[:5]  # Limitar a 5 variações
