@@ -30,19 +30,19 @@ class Command(BaseCommand):
         Noticia = apps.get_model("rb_noticias", "Noticia")
         Categoria = apps.get_model("rb_noticias", "Categoria")
         
-        self.stdout.write("=== SISTEMA INTELIGENTE DE AUTOMAÇÃO ===")
+        self.stdout.write("=== SISTEMA INTELIGENTE DE AUTOMACAO ===")
         
         # Análise de audiência
         audience_data = self._analyze_audience()
-        self.stdout.write(f"📊 Análise de audiência: {audience_data['summary']}")
+        self.stdout.write(f"ANALISE de audiencia: {audience_data['summary']}")
         
         # Determinar estratégia baseada no horário e dados
         strategy = self._determine_strategy(audience_data)
-        self.stdout.write(f"🎯 Estratégia escolhida: {strategy['name']}")
+        self.stdout.write(f"ESTRATEGIA escolhida: {strategy['name']}")
         
         # Verificar se deve executar
         if not options["force"] and not self._should_execute():
-            self.stdout.write("⏭️ Pulando execução - timing não otimizado")
+            self.stdout.write("PULANDO execucao - timing nao otimizado")
             return
         
         # Executar automação
@@ -51,7 +51,7 @@ class Command(BaseCommand):
         # Análise pós-execução
         self._post_execution_analysis(created_count, audience_data)
         
-        self.stdout.write(self.style.SUCCESS(f"\n✅ Automação concluída: {created_count} notícias criadas"))
+        self.stdout.write(self.style.SUCCESS(f"\nOK Automacao concluida: {created_count} noticias criadas"))
 
     def _analyze_audience(self):
         """Analisa dados da audiência para otimização"""
@@ -206,10 +206,10 @@ class Command(BaseCommand):
                 self._add_image_to_news(noticia, topic)
                 
                 created_count += 1
-                self.stdout.write(f"✓ Criado: {title}")
+                self.stdout.write(f"OK Criado: {title}")
                 
             except Exception as e:
-                self.stdout.write(self.style.ERROR(f"✗ Erro: {e}"))
+                self.stdout.write(self.style.ERROR(f"ERRO: {e}"))
         
         return created_count
 
@@ -327,16 +327,16 @@ Conteúdo sobre {topic.lower()} gerado pelo sistema inteligente de automação.
                 noticia.imagem_fonte_url = image_info.get("fonte_url", image_info["url"])
                 noticia.save()
                 
-                self.stdout.write(f"✓ Imagem adicionada: {topic}")
+                self.stdout.write(f"OK Imagem adicionada: {topic}")
             else:
-                self.stdout.write(f"⚠ Nenhuma imagem encontrada para: {topic}")
+                self.stdout.write(f"AVISO Nenhuma imagem encontrada para: {topic}")
                 
         except Exception as e:
-            self.stdout.write(f"⚠ Erro ao buscar imagem para {topic}: {e}")
+            self.stdout.write(f"AVISO Erro ao buscar imagem para {topic}: {e}")
 
     def _post_execution_analysis(self, created_count, audience_data):
         """Análise pós-execução para otimização futura"""
-        self.stdout.write(f"\n📈 ANÁLISE PÓS-EXECUÇÃO:")
+        self.stdout.write(f"\nANALISE POS-EXECUCAO:")
         self.stdout.write(f"Notícias criadas: {created_count}")
         
         # Estatísticas gerais
