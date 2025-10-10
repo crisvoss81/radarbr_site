@@ -181,20 +181,21 @@ Este é um artigo sobre {topico.lower()} desenvolvido pelo sistema de automaçã
         return conteudos.get(topico, conteudo_padrao)
 
     def _adicionar_imagem(self, noticia, topico):
-        """Busca e adiciona imagem à notícia (funciona sem Cloudinary)"""
+        """Busca e adiciona imagem à notícia usando ImageSearchEngine"""
         try:
-            from rb_ingestor.images_free import pick_image
+            from rb_ingestor.image_search import ImageSearchEngine
             
-            # Buscar imagem gratuita
-            image_info = pick_image(topico)
+            # Usar o ImageSearchEngine que já está funcionando
+            search_engine = ImageSearchEngine()
+            image_url = search_engine.search_image(noticia.titulo, noticia.conteudo, noticia.categoria.nome if noticia.categoria else "geral")
             
-            if image_info and image_info.get("url"):
-                # Salvar URL da imagem diretamente (sem Cloudinary)
-                noticia.imagem = image_info["url"]
+            if image_url:
+                # Salvar URL da imagem
+                noticia.imagem = image_url
                 noticia.imagem_alt = f"Imagem relacionada a {topico}"
-                noticia.imagem_credito = image_info.get("credito", "Imagem gratuita")
-                noticia.imagem_licenca = image_info.get("licenca", "CC")
-                noticia.imagem_fonte_url = image_info.get("fonte_url", image_info["url"])
+                noticia.imagem_credito = "Imagem gratuita"
+                noticia.imagem_licenca = "CC"
+                noticia.imagem_fonte_url = image_url
                 noticia.save()
                 
                 self.stdout.write(f"✓ Imagem adicionada: {topico}")
