@@ -30,19 +30,19 @@ class Command(BaseCommand):
         Noticia = apps.get_model("rb_noticias", "Noticia")
         Categoria = apps.get_model("rb_noticias", "Categoria")
         
-        self.stdout.write("=== SISTEMA INTELIGENTE DE AUTOMAÇÃO ===")
+        self.stdout.write("=== SISTEMA INTELIGENTE DE AUTOMACAO ===")
         
         # Análise de audiência
         audience_data = self._analyze_audience()
-        self.stdout.write(f"📊 Análise de audiência: {audience_data['summary']}")
+        self.stdout.write(f"ANALISE de audiencia: {audience_data['summary']}")
         
         # Determinar estratégia baseada no horário e dados
         strategy = self._determine_strategy(audience_data)
-        self.stdout.write(f"🎯 Estratégia escolhida: {strategy['name']}")
+        self.stdout.write(f"ESTRATEGIA escolhida: {strategy['name']}")
         
         # Verificar se deve executar
         if not options["force"] and not self._should_execute():
-            self.stdout.write("⏭️ Pulando execução - timing não otimizado")
+            self.stdout.write("PULANDO execucao - timing nao otimizado")
             return
         
         # Executar automação
@@ -51,7 +51,7 @@ class Command(BaseCommand):
         # Análise pós-execução
         self._post_execution_analysis(created_count, audience_data)
         
-        self.stdout.write(self.style.SUCCESS(f"\n✅ Automação concluída: {created_count} notícias criadas"))
+        self.stdout.write(self.style.SUCCESS(f"\nOK Automacao concluida: {created_count} noticias criadas"))
 
     def _analyze_audience(self):
         """Analisa dados da audiência para otimização"""
@@ -211,10 +211,10 @@ class Command(BaseCommand):
                 self._add_image_to_news(noticia, topic)
                 
                 created_count += 1
-                self.stdout.write(f"✓ Criado: {title}")
+                self.stdout.write(f"OK Criado: {title}")
                 
             except Exception as e:
-                self.stdout.write(self.style.ERROR(f"✗ Erro: {e}"))
+                self.stdout.write(self.style.ERROR(f"ERRO: {e}"))
         
         return created_count
 
@@ -223,24 +223,92 @@ class Command(BaseCommand):
         
         # Conteúdos otimizados por estratégia (em Markdown)
         content_templates = {
-            "Manhã - Conteúdo Informativo": f"""## {topic.title()}
+            "Manhã - Conteúdo Informativo": f"""<p class="dek">Começando o dia com informações importantes sobre {topic.lower()}, oferecendo uma visão completa dos desenvolvimentos mais relevantes para profissionais e interessados.</p>
 
-Começando o dia com informações importantes sobre {topic.lower()}.
+## {topic.title()}
+
+Começando o dia com informações importantes sobre {topic.lower()}. Este tema tem ganhado cada vez mais relevância no cenário nacional, merecendo atenção especial dos profissionais e interessados na área.
 
 ### Principais Destaques
 
-- Informação relevante 1
-- Informação relevante 2  
-- Informação relevante 3
+- Informação relevante 1: Desenvolvimentos recentes indicam crescimento significativo
+- Informação relevante 2: Impacto positivo na economia e sociedade brasileira  
+- Informação relevante 3: Perspectivas promissoras para os próximos meses
 
 ### Análise do Dia
 
-Uma análise detalhada sobre os aspectos mais importantes de {topic.lower()} para o dia de hoje.
+Uma análise detalhada sobre os aspectos mais importantes de {topic.lower()} para o dia de hoje. Os especialistas destacam que este tema tem ganhado cada vez mais relevância no cenário nacional. As mudanças observadas nos últimos meses indicam uma tendência consistente que merece atenção especial.
 
 ### Próximos Passos
 
-O que esperar e como se preparar para os desenvolvimentos em {topic.lower()}.
-""",
+O que esperar e como se preparar para os desenvolvimentos em {topic.lower()}. As projeções indicam que esta tendência deve se manter nos próximos anos, com possíveis desenvolvimentos que podem trazer benefícios adicionais para o país.
+
+## Análise Detalhada
+
+Os especialistas destacam que este tema tem ganhado cada vez mais relevância no cenário nacional. As mudanças observadas nos últimos meses indicam uma tendência consistente que merece atenção especial. Esta evolução tem sido acompanhada de perto por analistas e pesquisadores que estudam o impacto dessas transformações na sociedade brasileira.
+
+### Impacto na Sociedade Brasileira
+
+A população brasileira tem sentido diretamente os efeitos dessas transformações. Desde as grandes metrópoles até as cidades do interior, é possível observar mudanças significativas que afetam o dia a dia das pessoas. Estas alterações têm sido recebidas de forma positiva pela maioria da população, que vê nas mudanças uma oportunidade de melhoria na qualidade de vida.
+
+### Perspectivas para o Futuro
+
+As projeções indicam que esta tendência deve se manter nos próximos anos, com possíveis desenvolvimentos que podem trazer benefícios adicionais para o país. Os analistas são cautelosamente otimistas quanto ao futuro, destacando que o Brasil tem todas as condições necessárias para se consolidar como uma referência na área.
+
+## Dados e Estatísticas
+
+Os números mais recentes mostram uma evolução positiva em diversos indicadores relacionados ao tema. Esta melhoria tem sido observada de forma consistente ao longo dos últimos trimestres, demonstrando que não se trata de uma situação temporária, mas sim de uma tendência estrutural que deve perdurar.
+
+### Principais Indicadores
+
+- Crescimento sustentável nos principais setores relacionados ao tema
+- Melhoria significativa nos indicadores de qualidade e eficiência
+- Aumento consistente da confiança dos investidores nacionais e internacionais
+- Fortalecimento das instituições relacionadas ao setor
+- Crescimento do número de empresas que atuam na área
+- Aumento da demanda por profissionais especializados
+
+### Comparação Internacional
+
+Quando comparado com outros países da região, o Brasil tem se destacado positivamente. Esta posição de destaque tem sido reconhecida por organismos internacionais especializados, que destacam a qualidade das iniciativas implementadas no país. O Brasil tem conseguido superar expectativas e se posicionar como um exemplo a ser seguido por outras nações.
+
+## Impacto Econômico
+
+O impacto econômico dessas mudanças tem sido significativo, com aumento na geração de empregos e crescimento do PIB em setores relacionados. As empresas que investiram na área têm registrado resultados positivos, o que tem incentivado novos investimentos e parcerias estratégicas.
+
+### Geração de Empregos
+
+O setor tem sido responsável pela criação de milhares de novos postos de trabalho em todo o país. Profissionais de diversas áreas têm encontrado oportunidades de crescimento e desenvolvimento profissional, contribuindo para a redução do desemprego e melhoria da qualidade de vida das famílias brasileiras.
+
+### Investimentos e Parcerias
+
+O aumento da confiança dos investidores tem resultado em novos aportes financeiros e parcerias estratégicas entre empresas nacionais e internacionais. Estas parcerias têm contribuído para o desenvolvimento tecnológico e a modernização dos processos produtivos.
+
+## Perguntas Frequentes
+
+### Como isso afeta o brasileiro comum?
+
+O impacto na vida das pessoas é direto e positivo. As mudanças têm trazido benefícios concretos que podem ser observados no dia a dia da população, incluindo melhorias na qualidade dos serviços, redução de custos e aumento da eficiência em diversos setores.
+
+### O que esperar nos próximos meses?
+
+As projeções indicam continuidade da tendência positiva, com possíveis desenvolvimentos adicionais que podem trazer ainda mais benefícios. Os especialistas esperam que novos avanços sejam anunciados nos próximos meses, consolidando ainda mais a posição do Brasil na área.
+
+### Existem riscos envolvidos?
+
+Como em qualquer processo de transformação, existem desafios a serem enfrentados, mas os especialistas consideram que os benefícios superam significativamente os riscos. O país tem demonstrado capacidade de adaptação e superação dos obstáculos encontrados.
+
+### Como o governo tem apoiado essas iniciativas?
+
+O governo federal tem implementado políticas públicas que incentivam o desenvolvimento da área, incluindo programas de financiamento, redução de impostos e facilitação de processos burocráticos. Estas medidas têm contribuído para acelerar o crescimento do setor.
+
+## Conclusão
+
+Esta matéria foi desenvolvida com base em informações atualizadas e análises de especialistas da área. O RadarBR continua acompanhando os desdobramentos desta notícia e manterá os leitores informados sobre novos desenvolvimentos.
+
+O cenário atual é promissor e indica que o Brasil está no caminho certo para se consolidar como uma referência na área. A continuidade das políticas públicas e o engajamento do setor privado serão fundamentais para manter o ritmo de crescimento observado.
+
+Para mais informações sobre este e outros assuntos relevantes, acompanhe nossas atualizações diárias e mantenha-se sempre bem informado sobre os temas que mais importam para o Brasil.""",
             
             "Tarde - Conteúdo Diversificado": f"""## {topic.title()}
 
@@ -280,24 +348,92 @@ As consequências e impactos de {topic.lower()} na sociedade atual.
 Pontos para reflexão e discussão sobre {topic.lower()}.
 """,
             
-            "Madrugada - Conteúdo Preparatório": f"""## {topic.title()}
+            "Madrugada - Conteúdo Preparatório": f"""<p class="dek">Preparação estratégica para o dia com foco em {topic.lower()}, oferecendo insights valiosos para profissionais e interessados no tema.</p>
 
-Preparação para o dia com foco em {topic.lower()}.
+## {topic.title()}
+
+Preparação para o dia com foco em {topic.lower()}. Este tema tem ganhado cada vez mais relevância no cenário nacional, merecendo atenção especial dos profissionais e interessados na área.
 
 ### Resumo Executivo
 
-- Ponto principal 1
-- Ponto principal 2
-- Ponto principal 3
+- Ponto principal 1: Desenvolvimentos recentes indicam crescimento significativo
+- Ponto principal 2: Impacto positivo na economia e sociedade brasileira  
+- Ponto principal 3: Perspectivas promissoras para os próximos meses
 
 ### Preparação
 
-Como se preparar para os desenvolvimentos em {topic.lower()}.
+Como se preparar para os desenvolvimentos em {topic.lower()}. Os especialistas recomendam acompanhar de perto as mudanças que estão ocorrendo no setor, pois elas podem influenciar diretamente o dia a dia das pessoas e empresas.
 
 ### Expectativas
 
-O que esperar dos próximos desenvolvimentos em {topic.lower()}.
-"""
+O que esperar dos próximos desenvolvimentos em {topic.lower()}. As projeções indicam que esta tendência deve se manter nos próximos anos, com possíveis desenvolvimentos que podem trazer benefícios adicionais para o país.
+
+## Análise Detalhada
+
+Os especialistas destacam que este tema tem ganhado cada vez mais relevância no cenário nacional. As mudanças observadas nos últimos meses indicam uma tendência consistente que merece atenção especial. Esta evolução tem sido acompanhada de perto por analistas e pesquisadores que estudam o impacto dessas transformações na sociedade brasileira.
+
+### Impacto na Sociedade Brasileira
+
+A população brasileira tem sentido diretamente os efeitos dessas transformações. Desde as grandes metrópoles até as cidades do interior, é possível observar mudanças significativas que afetam o dia a dia das pessoas. Estas alterações têm sido recebidas de forma positiva pela maioria da população, que vê nas mudanças uma oportunidade de melhoria na qualidade de vida.
+
+### Perspectivas para o Futuro
+
+As projeções indicam que esta tendência deve se manter nos próximos anos, com possíveis desenvolvimentos que podem trazer benefícios adicionais para o país. Os analistas são cautelosamente otimistas quanto ao futuro, destacando que o Brasil tem todas as condições necessárias para se consolidar como uma referência na área.
+
+## Dados e Estatísticas
+
+Os números mais recentes mostram uma evolução positiva em diversos indicadores relacionados ao tema. Esta melhoria tem sido observada de forma consistente ao longo dos últimos trimestres, demonstrando que não se trata de uma situação temporária, mas sim de uma tendência estrutural que deve perdurar.
+
+### Principais Indicadores
+
+- Crescimento sustentável nos principais setores relacionados ao tema
+- Melhoria significativa nos indicadores de qualidade e eficiência
+- Aumento consistente da confiança dos investidores nacionais e internacionais
+- Fortalecimento das instituições relacionadas ao setor
+- Crescimento do número de empresas que atuam na área
+- Aumento da demanda por profissionais especializados
+
+### Comparação Internacional
+
+Quando comparado com outros países da região, o Brasil tem se destacado positivamente. Esta posição de destaque tem sido reconhecida por organismos internacionais especializados, que destacam a qualidade das iniciativas implementadas no país. O Brasil tem conseguido superar expectativas e se posicionar como um exemplo a ser seguido por outras nações.
+
+## Impacto Econômico
+
+O impacto econômico dessas mudanças tem sido significativo, com aumento na geração de empregos e crescimento do PIB em setores relacionados. As empresas que investiram na área têm registrado resultados positivos, o que tem incentivado novos investimentos e parcerias estratégicas.
+
+### Geração de Empregos
+
+O setor tem sido responsável pela criação de milhares de novos postos de trabalho em todo o país. Profissionais de diversas áreas têm encontrado oportunidades de crescimento e desenvolvimento profissional, contribuindo para a redução do desemprego e melhoria da qualidade de vida das famílias brasileiras.
+
+### Investimentos e Parcerias
+
+O aumento da confiança dos investidores tem resultado em novos aportes financeiros e parcerias estratégicas entre empresas nacionais e internacionais. Estas parcerias têm contribuído para o desenvolvimento tecnológico e a modernização dos processos produtivos.
+
+## Perguntas Frequentes
+
+### Como isso afeta o brasileiro comum?
+
+O impacto na vida das pessoas é direto e positivo. As mudanças têm trazido benefícios concretos que podem ser observados no dia a dia da população, incluindo melhorias na qualidade dos serviços, redução de custos e aumento da eficiência em diversos setores.
+
+### O que esperar nos próximos meses?
+
+As projeções indicam continuidade da tendência positiva, com possíveis desenvolvimentos adicionais que podem trazer ainda mais benefícios. Os especialistas esperam que novos avanços sejam anunciados nos próximos meses, consolidando ainda mais a posição do Brasil na área.
+
+### Existem riscos envolvidos?
+
+Como em qualquer processo de transformação, existem desafios a serem enfrentados, mas os especialistas consideram que os benefícios superam significativamente os riscos. O país tem demonstrado capacidade de adaptação e superação dos obstáculos encontrados.
+
+### Como o governo tem apoiado essas iniciativas?
+
+O governo federal tem implementado políticas públicas que incentivam o desenvolvimento da área, incluindo programas de financiamento, redução de impostos e facilitação de processos burocráticos. Estas medidas têm contribuído para acelerar o crescimento do setor.
+
+## Conclusão
+
+Esta matéria foi desenvolvida com base em informações atualizadas e análises de especialistas da área. O RadarBR continua acompanhando os desdobramentos desta notícia e manterá os leitores informados sobre novos desenvolvimentos.
+
+O cenário atual é promissor e indica que o Brasil está no caminho certo para se consolidar como uma referência na área. A continuidade das políticas públicas e o engajamento do setor privado serão fundamentais para manter o ritmo de crescimento observado.
+
+Para mais informações sobre este e outros assuntos relevantes, acompanhe nossas atualizações diárias e mantenha-se sempre bem informado sobre os temas que mais importam para o Brasil."""
         }
         
         return content_templates.get(strategy_name, f"""## {topic.title()}
@@ -332,16 +468,16 @@ Conteúdo sobre {topic.lower()} gerado pelo sistema inteligente de automação.
                 noticia.imagem_fonte_url = image_info.get("fonte_url", image_info["url"])
                 noticia.save()
                 
-                self.stdout.write(f"✓ Imagem adicionada: {topic}")
+                self.stdout.write(f"OK Imagem adicionada: {topic}")
             else:
-                self.stdout.write(f"⚠ Nenhuma imagem encontrada para: {topic}")
+                self.stdout.write(f"AVISO Nenhuma imagem encontrada para: {topic}")
                 
         except Exception as e:
-            self.stdout.write(f"⚠ Erro ao buscar imagem para {topic}: {e}")
+            self.stdout.write(f"AVISO Erro ao buscar imagem para {topic}: {e}")
 
     def _post_execution_analysis(self, created_count, audience_data):
         """Análise pós-execução para otimização futura"""
-        self.stdout.write(f"\n📈 ANÁLISE PÓS-EXECUÇÃO:")
+        self.stdout.write(f"\nANALISE POS-EXECUCAO:")
         self.stdout.write(f"Notícias criadas: {created_count}")
         
         # Estatísticas gerais
@@ -366,7 +502,7 @@ Conteúdo sobre {topic.lower()} gerado pelo sistema inteligente de automação.
                 self.stdout.write("⚠ Erro ao fazer ping do sitemap")
         
         # Recomendações para próxima execução
-        self.stdout.write(f"\n💡 RECOMENDAÇÕES:")
+        self.stdout.write(f"\nRECOMENDACOES:")
         if audience_data["best_category"] != "Geral":
             self.stdout.write(f"- Focar mais em: {audience_data['best_category']}")
         if audience_data["best_hours"]:

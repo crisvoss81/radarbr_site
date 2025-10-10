@@ -485,6 +485,9 @@ img{ display:block; max-width:100%; height:auto }
     overflow-y:auto;
     -webkit-overflow-scrolling:touch;
     padding-bottom:16px;
+    /* Garantir que o menu não seja cortado */
+    min-height:auto;
+    height:auto;
   }
 
   @keyframes dropdownSlide{
@@ -520,6 +523,15 @@ img{ display:block; max-width:100%; height:auto }
     padding:8px 16px;
     z-index:1;
     box-shadow:0 1px 0 rgba(0,0,0,0.08);
+  }
+  
+  /* Garantir que todas as categorias sejam visíveis */
+  .menu-panel ul{
+    margin-bottom:20px;
+  }
+  
+  .menu-panel li:last-child{
+    margin-bottom:0;
   }
 }
 
