@@ -55,18 +55,23 @@ class Command(BaseCommand):
             # Escolher tópico aleatório
             topico = random.choice(topicos)
             
-            # Gerar título único
-            timestamp = timezone.now().strftime('%d/%m %H:%M')
-            title = f"{topico} - {timestamp}"
+            # Gerar conteúdo com IA otimizada
+            try:
+                from rb_ingestor.ai import generate_article
+                ai_content = generate_article(topico)
+                title = ai_content.get("title", topico)
+                conteudo = ai_content.get("html", f"## {topico}\n\nConteúdo sobre {topico.lower()}.")
+            except Exception as e:
+                self.stdout.write(f"⚠ Erro na IA, usando fallback: {e}")
+                title = f"{topico} - Análise Completa"
+                conteudo = self._gerar_conteudo_simples(topico)
+            
             slug = slugify(title)[:180]
             
             # Verificar se já existe
             if not options["force"] and Noticia.objects.filter(slug=slug).exists():
                 self.stdout.write(f"⚠ Pulando: {title} (já existe)")
                 continue
-            
-            # Gerar conteúdo simples
-            conteudo = self._gerar_conteudo_simples(topico)
             
             # Criar notícia
             try:

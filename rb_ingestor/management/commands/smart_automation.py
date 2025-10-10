@@ -177,17 +177,22 @@ class Command(BaseCommand):
         for i in range(strategy["limit"]):
             topic = random.choice(strategy["topics"])
             
-            # Gerar título otimizado
-            timestamp = timezone.now().strftime('%d/%m %H:%M')
-            title = f"{topic.title()} - {timestamp}"
+            # Gerar conteúdo com IA otimizada
+            try:
+                from rb_ingestor.ai import generate_article
+                ai_content = generate_article(topic)
+                title = ai_content.get("title", topic.title())
+                content = ai_content.get("html", f"## {topic.title()}\n\nConteúdo sobre {topic.lower()}.")
+            except Exception as e:
+                self.stdout.write(f"⚠ Erro na IA, usando fallback: {e}")
+                title = f"{topic.title()} - Análise Completa"
+                content = self._generate_optimized_content(topic, strategy["name"])
+            
             slug = slugify(title)[:180]
             
             # Verificar se já existe
             if Noticia.objects.filter(slug=slug).exists():
                 continue
-            
-            # Gerar conteúdo otimizado
-            content = self._generate_optimized_content(topic, strategy["name"])
             
             # Criar notícia
             try:
