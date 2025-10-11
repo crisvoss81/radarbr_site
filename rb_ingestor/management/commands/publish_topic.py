@@ -53,13 +53,19 @@ class Command(BaseCommand):
         # Buscar notícias específicas sobre o tópico
         news_article = self._search_specific_news(topic)
         
-        # Gerar título e conteúdo baseado na notícia encontrada
+        # Gerar título e conteúdo baseado na estratégia inteligente
         if custom_title:
             title = custom_title
         else:
             title = self._generate_title_from_news(topic, news_article)
         
-        content = self._generate_content_from_news(topic, news_article, category, min_words)
+        # Nova lógica: criar conteúdo baseado em referência ou do zero
+        if news_article:
+            self.stdout.write(f"📰 Notícia encontrada: {news_article.get('title', '')[:50]}...")
+            content = self._generate_content_based_on_reference(topic, news_article, category, min_words)
+        else:
+            self.stdout.write(f"⚠ Nenhuma notícia específica encontrada para '{topic}' - criando do zero")
+            content = self._generate_content_from_scratch(topic, category, min_words)
         
         # Verificar qualidade do conteúdo
         word_count = len(strip_tags(content).split())
@@ -594,6 +600,11 @@ class Command(BaseCommand):
         if word_count >= min_words:
             return content
         
+        # Verificar se o tópico é adequado para expansão
+        if not self._should_expand_content(topic, content):
+            self.stdout.write(f"⚠ Tópico '{topic}' não adequado para expansão genérica")
+            return content
+        
         # Adicionar seções adicionais
         additional_sections = self._generate_additional_sections(topic, category)
         
@@ -749,6 +760,228 @@ class Command(BaseCommand):
 """
         
         return sections
+
+    def _should_expand_content(self, topic, content):
+        """Verifica se o conteúdo deve ser expandido (evita expansão inadequada)"""
+        topic_lower = topic.lower()
+        content_lower = strip_tags(content).lower()
+        
+        # Palavras-chave que indicam conteúdo que NÃO deve ser expandido
+        no_expand_keywords = [
+            'lotofácil', 'lotofacil', 'mega sena', 'megasena', 'quina', 'dupla sena',
+            'resultado', 'sorteio', 'dezenas', 'números', 'concurso', 'prêmio',
+            'temperatura', 'clima', 'chuva', 'sol', 'previsão do tempo',
+            'cotação', 'dólar', 'real', 'euro', 'bitcoin', 'crypto',
+            'placar', 'gol', 'jogo', 'partida', 'campeonato'
+        ]
+        
+        # Verificar se o tópico contém palavras que não devem ser expandidas
+        for keyword in no_expand_keywords:
+            if keyword in topic_lower or keyword in content_lower:
+                return False
+        
+        return True
+
+    def _generate_content_based_on_reference(self, topic, news_article, category, min_words):
+        """Gera conteúdo baseado em artigo de referência com margem de ±15%"""
+        try:
+            # Usar IA melhorada com contexto específico da notícia
+            from rb_ingestor.ai_enhanced import generate_enhanced_article
+            
+            # Calcular margem de palavras (±15%)
+            margin = int(min_words * 0.15)
+            target_words_min = min_words - margin
+            target_words_max = min_words + margin
+            
+            ai_content = generate_enhanced_article(topic, news_article, target_words_min)
+            
+            if ai_content:
+                content = f'<p class="dek">{strip_tags(ai_content.get("dek", news_article.get('description', '') if news_article else ""))[:220]}</p>\n{ai_content.get("html", "<p></p>")}'
+                
+                word_count = ai_content.get('word_count', 0)
+                quality_score = ai_content.get('quality_score', 0)
+                
+                # Verificar se está dentro da margem aceitável
+                if target_words_min <= word_count <= target_words_max and quality_score >= 60:
+                    self.stdout.write(f"✅ Conteúdo baseado em referência: {word_count} palavras (qualidade: {quality_score}%)")
+                    return content
+                else:
+                    self.stdout.write(f"⚠ IA fora da margem ({word_count} palavras), ajustando...")
+                
+        except Exception as e:
+            self.stdout.write(f"⚠ IA falhou: {e}")
+        
+        # Fallback: criar conteúdo baseado na referência manualmente
+        return self._create_content_from_reference(topic, news_article, category, min_words)
+
+    def _create_content_from_reference(self, topic, news_article, category, min_words):
+        """Cria conteúdo baseado na referência encontrada"""
+        title = news_article.get('title', '')
+        description = news_article.get('description', '')
+        source = news_article.get('source', '')
+        
+        # Calcular margem de palavras (±15%)
+        margin = int(min_words * 0.15)
+        target_words_min = min_words - margin
+        
+        content = f"""<p class="dek">{description}</p>
+
+<h2>Análise da Notícia</h2>
+
+<p>Esta notícia tem ganhado destaque e merece análise detalhada. {description}</p>
+
+<h3>Contexto e Desenvolvimentos</h3>
+
+<p>Os fatos relacionados a esta notícia indicam uma evolução significativa no cenário atual. A situação tem sido acompanhada de perto por especialistas e analistas que estudam o impacto dessas transformações.</p>
+
+<p>Segundo informações da {source}, os desenvolvimentos mais recentes mostram uma evolução positiva em diversos indicadores relacionados ao tema.</p>
+
+<h3>Análise Detalhada</h3>
+
+<p>Analisando os dados disponíveis, é possível identificar padrões importantes que merecem atenção. A notícia sobre "{title}" representa um marco significativo no contexto atual.</p>
+
+<p>Especialistas têm destacado a importância deste desenvolvimento para o futuro do setor. As implicações são amplas e afetam diversos aspectos da sociedade.</p>
+
+<h3>Impacto no Brasil</h3>
+
+<p>No contexto brasileiro, esta notícia tem repercussões importantes. O país tem acompanhado de perto os desenvolvimentos relacionados a este tema.</p>
+
+<p>As autoridades brasileiras têm se posicionado de forma clara sobre o assunto, demonstrando preocupação com os impactos potenciais.</p>
+
+<h3>Perspectivas Futuras</h3>
+
+<p>Olhando para o futuro, espera-se que novos desenvolvimentos surjam nos próximos dias. A situação está em constante evolução.</p>
+
+<p>Especialistas preveem que os próximos passos serão cruciais para determinar o rumo dos acontecimentos.</p>
+
+<h3>Conclusão</h3>
+
+<p>Esta notícia representa um momento importante na evolução do tema. É fundamental acompanhar os próximos desenvolvimentos para entender completamente o impacto.</p>
+
+<p>O RadarBR continuará acompanhando esta história e trará atualizações conforme novos fatos surjam.</p>"""
+        
+        # Verificar se precisa expandir para atingir a margem
+        word_count = len(strip_tags(content).split())
+        if word_count < target_words_min:
+            # Adicionar seções específicas baseadas na categoria
+            additional_content = self._generate_category_specific_content(topic, category)
+            content += additional_content
+        
+        return content
+
+    def _generate_content_from_scratch(self, topic, category, min_words):
+        """Gera conteúdo do zero quando não há referências"""
+        try:
+            # Usar IA melhorada sem contexto de notícia
+            from rb_ingestor.ai_enhanced import generate_enhanced_article
+            
+            ai_content = generate_enhanced_article(topic, None, min_words)
+            
+            if ai_content:
+                content = f'<p class="dek">{strip_tags(ai_content.get("dek", f"Análise completa sobre {topic.lower()}"))[:220]}</p>\n{ai_content.get("html", "<p></p>")}'
+                
+                word_count = ai_content.get('word_count', 0)
+                quality_score = ai_content.get('quality_score', 0)
+                
+                if word_count >= min_words and quality_score >= 60:
+                    self.stdout.write(f"✅ Conteúdo criado do zero: {word_count} palavras (qualidade: {quality_score}%)")
+                    return content
+                else:
+                    self.stdout.write(f"⚠ IA gerou {word_count} palavras, usando fallback")
+                
+        except Exception as e:
+            self.stdout.write(f"⚠ IA falhou: {e}")
+        
+        # Fallback: conteúdo genérico estruturado
+        return self._generate_structured_content(topic, category, min_words)
+
+    def _generate_category_specific_content(self, topic, category):
+        """Gera conteúdo específico baseado na categoria"""
+        topic_lower = topic.lower()
+        
+        if category.lower() == "economia":
+            return f"""
+
+<h3>Análise Econômica</h3>
+
+<p>Do ponto de vista econômico, {topic_lower} apresenta implicações importantes para o mercado brasileiro. Os indicadores econômicos têm mostrado evolução positiva relacionada a este tema.</p>
+
+<p>Especialistas em economia destacam que esta situação pode gerar oportunidades de investimento e crescimento para o país.</p>
+
+<h3>Impacto no Mercado</h3>
+
+<p>O impacto no mercado brasileiro tem sido significativo, com empresas e investidores acompanhando de perto os desenvolvimentos relacionados a {topic_lower}.</p>
+
+<p>As perspectivas para os próximos meses são positivas, com expectativa de crescimento sustentável.</p>"""
+        
+        elif category.lower() == "política":
+            return f"""
+
+<h3>Análise Política</h3>
+
+<p>No cenário político brasileiro, {topic_lower} tem gerado debates importantes entre diferentes correntes políticas. O tema tem sido objeto de discussão no Congresso Nacional.</p>
+
+<p>As autoridades políticas têm se posicionado de forma clara sobre o assunto, buscando soluções que beneficiem a população.</p>
+
+<h3>Impacto na Sociedade</h3>
+
+<p>O impacto na sociedade brasileira tem sido significativo, afetando diretamente a vida dos cidadãos. As políticas públicas relacionadas a este tema têm sido acompanhadas de perto.</p>"""
+        
+        elif category.lower() == "tecnologia":
+            return f"""
+
+<h3>Inovação Tecnológica</h3>
+
+<p>No campo da tecnologia, {topic_lower} representa uma oportunidade de inovação para o Brasil. Empresas brasileiras têm desenvolvido soluções inovadoras relacionadas a este tema.</p>
+
+<p>A tecnologia tem sido fundamental para impulsionar o desenvolvimento desta área, criando novas oportunidades de negócios.</p>
+
+<h3>Futuro Digital</h3>
+
+<p>As perspectivas para o futuro digital são promissoras, com novas tecnologias sendo desenvolvidas constantemente para melhorar a eficiência e a qualidade dos serviços.</p>"""
+        
+        else:
+            return f"""
+
+<h3>Desenvolvimento Nacional</h3>
+
+<p>No contexto nacional, {topic_lower} tem se mostrado um tema de grande relevância para o desenvolvimento do Brasil. As iniciativas relacionadas a este assunto têm ganhado destaque.</p>
+
+<p>O país tem demonstrado capacidade de liderança nesta área, com resultados positivos que beneficiam toda a sociedade.</p>"""
+
+    def _generate_structured_content(self, topic, category, min_words):
+        """Gera conteúdo estruturado genérico"""
+        topic_lower = topic.lower()
+        
+        content = f"""<p class="dek">Análise completa e atualizada sobre {topic_lower} no Brasil</p>
+
+<h2>Introdução</h2>
+
+<p>{topic.title()} é um tema de grande relevância no cenário atual brasileiro. Este assunto tem ganhado destaque nos últimos tempos e merece análise detalhada.</p>
+
+<h3>Contexto Atual</h3>
+
+<p>O contexto atual relacionado a {topic_lower} apresenta características únicas que merecem atenção especial. A situação tem evoluído de forma positiva, com indicadores que demonstram progresso significativo.</p>
+
+<h3>Desenvolvimentos Recentes</h3>
+
+<p>Os desenvolvimentos mais recentes relacionados a {topic_lower} mostram uma evolução consistente e positiva. Especialistas têm acompanhado de perto essas transformações.</p>
+
+<h3>Impacto no Brasil</h3>
+
+<p>No Brasil, {topic_lower} tem implicações importantes que afetam diversos setores da sociedade. O país tem se posicionado de forma estratégica em relação a este tema.</p>
+
+<h3>Perspectivas Futuras</h3>
+
+<p>As perspectivas para o futuro são promissoras, com expectativa de crescimento sustentável e desenvolvimento contínuo nesta área.</p>
+
+<h3>Conclusão</h3>
+
+<p>{topic.title()} representa uma oportunidade importante para o Brasil. É fundamental acompanhar os desenvolvimentos e manter-se informado sobre as novidades relacionadas a este tema.</p>
+
+<p>O RadarBR continuará acompanhando esta história e trará atualizações conforme novos fatos surjam.</p>"""
+        
+        return content
 
     def _get_category(self, topic, category, Categoria):
         """Obtém ou cria categoria"""
