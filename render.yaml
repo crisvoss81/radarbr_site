@@ -40,13 +40,13 @@
     region: oregon
     plan: free
     branch: main
-    schedule: "0 */6 * * *"  # A cada 6 horas
+    schedule: "0 */4 * * *"  # A cada 4 horas
     buildCommand: |
       chmod +x build.sh
       ./build.sh
     startCommand: |
-      chmod +x scripts/automation.sh
-      ./scripts/automation.sh
+      chmod +x scripts/automacao_render.sh
+      ./scripts/automacao_render.sh
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: core.settings
@@ -61,36 +61,9 @@
       - key: CLOUDINARY_API_SECRET
         sync: false
 
-  # Sistema inteligente de automação - execução principal
+  # Sistema de backup - execução diária às 6h
   - type: cron
-    name: radarbr-smart-automation
-    runtime: python
-    region: oregon
-    plan: free
-    branch: main
-    schedule: "0 8,12,15,18,20 * * *"  # Horários otimizados: 8h, 12h, 15h, 18h, 20h
-    buildCommand: |
-      chmod +x build.sh
-      ./build.sh
-    startCommand: |
-      python manage.py smart_automation --mode auto
-    envVars:
-      - key: DJANGO_SETTINGS_MODULE
-        value: core.settings
-      - key: PYTHON_VERSION
-        value: 3.13.0
-      - key: OPENAI_API_KEY
-        sync: false
-      - key: CLOUDINARY_CLOUD_NAME
-        sync: false
-      - key: CLOUDINARY_API_KEY
-        sync: false
-      - key: CLOUDINARY_API_SECRET
-        sync: false
-
-  # Monitor de performance - execução diária
-  - type: cron
-    name: radarbr-performance-monitor
+    name: radarbr-backup-automation
     runtime: python
     region: oregon
     plan: free
@@ -100,55 +73,7 @@
       chmod +x build.sh
       ./build.sh
     startCommand: |
-      python manage.py monitor_performance --period 24h --export
-    envVars:
-      - key: DJANGO_SETTINGS_MODULE
-        value: core.settings
-      - key: PYTHON_VERSION
-        value: 3.13.0
-
-  # Sistema de fallback - execução a cada 2 horas
-  - type: cron
-    name: radarbr-fallback-automation
-    runtime: python
-    region: oregon
-    plan: free
-    branch: main
-    schedule: "0 */2 * * *"  # A cada 2 horas
-    buildCommand: |
-      chmod +x build.sh
-      ./build.sh
-    startCommand: |
-      chmod +x scripts/smart_scheduler.sh
-      ./scripts/smart_scheduler.sh
-    envVars:
-      - key: DJANGO_SETTINGS_MODULE
-        value: core.settings
-      - key: PYTHON_VERSION
-        value: 3.13.0
-      - key: OPENAI_API_KEY
-        sync: false
-      - key: CLOUDINARY_CLOUD_NAME
-        sync: false
-      - key: CLOUDINARY_API_KEY
-        sync: false
-      - key: CLOUDINARY_API_SECRET
-        sync: false
-
-  # Serviço de teste para verificar Django
-  - type: cron
-    name: radarbr-test
-    runtime: python
-    region: oregon
-    plan: free
-    branch: main
-    schedule: "0 12 * * *"  # Uma vez por dia às 12h
-    buildCommand: |
-      chmod +x build.sh
-      ./build.sh
-    startCommand: |
-      chmod +x scripts/test_render.sh
-      ./scripts/test_render.sh
+      python manage.py automacao_render --limit 2 --force
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: core.settings
