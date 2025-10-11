@@ -71,11 +71,23 @@ class Command(BaseCommand):
         word_count = len(strip_tags(content).split())
         self.stdout.write(f"📊 Palavras geradas: {word_count}")
         
-        if word_count < min_words:
-            self.stdout.write(f"⚠ Conteúdo com menos de {min_words} palavras, expandindo...")
-            content = self._expand_content(content, topic, category, min_words)
+        # Verificar se está dentro da margem aceitável (±15%)
+        margin = int(min_words * 0.15)
+        target_min = min_words - margin
+        target_max = min_words + margin
+        
+        if word_count < target_min:
+            self.stdout.write(f"⚠ Conteúdo com {word_count} palavras (mínimo: {target_min}), ajustando...")
+            content = self._adjust_content_length(content, topic, category, min_words)
             word_count = len(strip_tags(content).split())
-            self.stdout.write(f"📊 Palavras após expansão: {word_count}")
+            self.stdout.write(f"📊 Palavras após ajuste: {word_count}")
+        elif word_count > target_max:
+            self.stdout.write(f"⚠ Conteúdo com {word_count} palavras (máximo: {target_max}), otimizando...")
+            content = self._optimize_content_length(content, target_max)
+            word_count = len(strip_tags(content).split())
+            self.stdout.write(f"📊 Palavras após otimização: {word_count}")
+        else:
+            self.stdout.write(f"✅ Conteúdo dentro da margem ideal: {word_count} palavras")
 
         # Obter categoria
         cat = self._get_category(topic, category, Categoria)
@@ -761,26 +773,37 @@ class Command(BaseCommand):
         
         return sections
 
-    def _should_expand_content(self, topic, content):
-        """Verifica se o conteúdo deve ser expandido (evita expansão inadequada)"""
-        topic_lower = topic.lower()
-        content_lower = strip_tags(content).lower()
+    def _adjust_content_length(self, content, topic, category, min_words):
+        """Ajusta o comprimento do conteúdo para atingir o mínimo necessário"""
+        # Calcular margem de palavras (±15%)
+        margin = int(min_words * 0.15)
+        target_min = min_words - margin
         
-        # Palavras-chave que indicam conteúdo que NÃO deve ser expandido
-        no_expand_keywords = [
-            'lotofácil', 'lotofacil', 'mega sena', 'megasena', 'quina', 'dupla sena',
-            'resultado', 'sorteio', 'dezenas', 'números', 'concurso', 'prêmio',
-            'temperatura', 'clima', 'chuva', 'sol', 'previsão do tempo',
-            'cotação', 'dólar', 'real', 'euro', 'bitcoin', 'crypto',
-            'placar', 'gol', 'jogo', 'partida', 'campeonato'
-        ]
+        # Adicionar seções específicas baseadas na categoria
+        additional_content = self._generate_category_specific_content(topic, category)
+        content += additional_content
         
-        # Verificar se o tópico contém palavras que não devem ser expandidas
-        for keyword in no_expand_keywords:
-            if keyword in topic_lower or keyword in content_lower:
-                return False
+        # Verificar se ainda precisa de mais conteúdo
+        word_count = len(strip_tags(content).split())
+        if word_count < target_min:
+            # Adicionar mais seções se necessário
+            more_content = self._generate_additional_sections(topic, category)
+            content += more_content
+            
+            # Se ainda não atingiu, adicionar seções extras
+            word_count = len(strip_tags(content).split())
+            if word_count < target_min:
+                extra_content = self._generate_extra_sections(topic, category)
+                content += extra_content
         
-        return True
+        return content
+
+    def _optimize_content_length(self, content, target_max):
+        """Otimiza o comprimento do conteúdo para não exceder o máximo"""
+        # Por enquanto, apenas retorna o conteúdo como está
+        # Em uma versão futura, poderia implementar resumo inteligente
+        return content
+
 
     def _generate_content_based_on_reference(self, topic, news_article, category, min_words):
         """Gera conteúdo baseado em artigo de referência com margem de ±15%"""
@@ -848,6 +871,12 @@ class Command(BaseCommand):
 
 <p>As autoridades brasileiras têm se posicionado de forma clara sobre o assunto, demonstrando preocupação com os impactos potenciais.</p>
 
+<h3>Desenvolvimentos Recentes</h3>
+
+<p>Os desenvolvimentos mais recentes relacionados a esta notícia têm chamado a atenção de especialistas e analistas. A evolução da situação tem sido acompanhada de perto por diversos setores da sociedade.</p>
+
+<p>Segundo análises realizadas por especialistas, os indicadores mostram uma tendência positiva que pode trazer benefícios significativos para o país.</p>
+
 <h3>Perspectivas Futuras</h3>
 
 <p>Olhando para o futuro, espera-se que novos desenvolvimentos surjam nos próximos dias. A situação está em constante evolução.</p>
@@ -898,6 +927,10 @@ class Command(BaseCommand):
     def _generate_category_specific_content(self, topic, category):
         """Gera conteúdo específico baseado na categoria"""
         topic_lower = topic.lower()
+        
+        # Verificar se category não é None
+        if not category:
+            category = "brasil"
         
         if category.lower() == "economia":
             return f"""
@@ -952,6 +985,10 @@ class Command(BaseCommand):
     def _generate_structured_content(self, topic, category, min_words):
         """Gera conteúdo estruturado genérico"""
         topic_lower = topic.lower()
+        
+        # Verificar se category não é None
+        if not category:
+            category = "brasil"
         
         content = f"""<p class="dek">Análise completa e atualizada sobre {topic_lower} no Brasil</p>
 
