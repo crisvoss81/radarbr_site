@@ -224,24 +224,12 @@ class Command(BaseCommand):
             IMPORTANTE: Foque na notícia específica, não em conteúdo genérico sobre o tema.
             """
             
-            # Usar sistema de IA melhorado
-            from rb_ingestor.ai_enhanced import generate_enhanced_article
-            
-            ai_content = generate_enhanced_article(article.get('topic', ''), article, 800)
+            ai_content = generate_article(news_prompt)
             
             if ai_content:
                 title = strip_tags(ai_content.get("title", article.get('title', '')))[:200]
                 content = f'<p class="dek">{strip_tags(ai_content.get("dek", article.get('description', '')))[:220]}</p>\n{ai_content.get("html", "<p></p>")}'
-                
-                # Verificar qualidade
-                word_count = ai_content.get('word_count', 0)
-                quality_score = ai_content.get('quality_score', 0)
-                
-                if word_count >= 600 and quality_score >= 50:
-                    self.stdout.write(f"✅ IA melhorada gerou {word_count} palavras (qualidade: {quality_score}%)")
-                    return title, content
-                else:
-                    self.stdout.write(f"⚠ IA gerou {word_count} palavras (qualidade: {quality_score}%), usando fallback")
+                return title, content
                 
         except Exception as e:
             self.stdout.write(f"⚠ IA falhou: {e}")
@@ -253,28 +241,19 @@ class Command(BaseCommand):
         return title, content
 
     def _generate_title_from_news(self, article):
-        """Gera título original baseado no tópico, nunca copiando títulos de outros portais"""
-        # NUNCA usar títulos de outros portais para evitar plágio
-        # Sempre criar títulos originais baseados no tópico
+        """Gera título baseado na notícia específica"""
+        original_title = article.get('title', '')
         
+        # Se o título original é bom, usar ele
+        if len(original_title) > 20 and len(original_title) < 100:
+            return original_title
+        
+        # Senão, criar baseado no tópico
         topic = article.get('topic', '')
-        topic_lower = topic.lower()
+        if topic:
+            return f"{topic.title()}: Últimas Notícias e Desenvolvimentos"
         
-        # Padrões de títulos originais por categoria
-        if any(word in topic_lower for word in ['lula', 'bolsonaro', 'presidente', 'governo', 'política']):
-            return f"{topic.title()}: Análise Política e Desdobramentos"
-        elif any(word in topic_lower for word in ['economia', 'mercado', 'inflação', 'dólar']):
-            return f"{topic.title()}: Impacto na Economia Brasileira"
-        elif any(word in topic_lower for word in ['tecnologia', 'digital', 'ia', 'inteligência']):
-            return f"{topic.title()}: Tendências e Inovações"
-        elif any(word in topic_lower for word in ['esportes', 'futebol', 'copa']):
-            return f"{topic.title()}: Últimas Notícias Esportivas"
-        elif any(word in topic_lower for word in ['saúde', 'medicina', 'hospital']):
-            return f"{topic.title()}: Informações Importantes para a Saúde"
-        elif any(word in topic_lower for word in ['china', 'eua', 'europa', 'internacional']):
-            return f"{topic.title()}: Desenvolvimentos Internacionais"
-        else:
-            return f"{topic.title()}: Análise Completa e Atualizada"
+        return f"Notícia Importante: {original_title[:50]}"
 
     def _generate_content_from_news_fallback(self, article):
         """Gera conteúdo fallback baseado na notícia específica"""

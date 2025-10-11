@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radar Game - Jogo de Ação</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="startScreen" class="screen">
+            <div class="title">
+                <h1>RADAR GAME</h1>
+                <p>Defenda a Terra dos invasores alienígenas!</p>
+            </div>
+            <div class="controls">
+                <button id="startBtn" class="btn btn-primary">INICIAR JOGO</button>
+                <button id="instructionsBtn" class="btn btn-secondary">INSTRUÇÕES</button>
+            </div>
+        </div>
+
+        <div id="instructionsScreen" class="screen hidden">
+            <div class="title">
+                <h2>COMO JOGAR</h2>
+            </div>
+            <div class="instructions">
+                <div class="instruction-item">
+                    <span class="key">WASD</span>
+                    <span class="desc">Mover a nave</span>
+                </div>
+                <div class="instruction-item">
+                    <span class="key">ESPAÇO</span>
+                    <span class="desc">Atirar</span>
+                </div>
+                <div class="instruction-item">
+                    <span class="key">ESC</span>
+                    <span class="desc">Pausar</span>
+                </div>
+                <p class="objective">Objetivo: Destrua todos os inimigos antes que cheguem à Terra!</p>
+            </div>
+            <button id="backBtn" class="btn btn-secondary">VOLTAR</button>
+        </div>
+
+        <div id="gameScreen" class="screen hidden">
+            <div id="hud">
+                <div class="hud-item">
+                    <span>SCORE: </span>
+                    <span id="score">0</span>
+                </div>
+                <div class="hud-item">
+                    <span>VIDAS: </span>
+                    <span id="lives">3</span>
+                </div>
+                <div class="hud-item">
+                    <span>NÍVEL: </span>
+                    <span id="level">1</span>
+                </div>
+            </div>
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
+            <div id="gameOverlay" class="hidden">
+                <div id="pauseMenu" class="overlay-menu hidden">
+                    <h2>JOGO PAUSADO</h2>
+                    <button id="resumeBtn" class="btn btn-primary">CONTINUAR</button>
+                    <button id="restartBtn" class="btn btn-secondary">REINICIAR</button>
+                    <button id="quitBtn" class="btn btn-secondary">SAIR</button>
+                </div>
+                <div id="gameOverMenu" class="overlay-menu hidden">
+                    <h2>GAME OVER</h2>
+                    <p>Score Final: <span id="finalScore">0</span></p>
+                    <button id="playAgainBtn" class="btn btn-primary">JOGAR NOVAMENTE</button>
+                    <button id="mainMenuBtn" class="btn btn-secondary">MENU PRINCIPAL</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

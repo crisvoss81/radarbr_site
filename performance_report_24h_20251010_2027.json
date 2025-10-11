@@ -1,0 +1,40 @@
+{
+  "timestamp": "2025-10-10T20:27:54.571211+00:00",
+  "period": "24h",
+  "analysis": {
+    "period": {
+      "start": "2025-10-09 20:27:54.547896+00:00",
+      "end": "2025-10-10 20:27:54.563589+00:00",
+      "duration": "1 day, 0:00:00.015680"
+    },
+    "metrics": {
+      "total_news": 3,
+      "period_news": 3,
+      "avg_per_hour": 0.12
+    },
+    "category_stats": {
+      "Economia": {
+        "count": 1,
+        "titles": [
+          "Entendendo a Inflação no Brasil: Causas e Consequências"
+        ]
+      },
+      "Geral": {
+        "count": 2,
+        "titles": [
+          "Copa do Mundo 2026: Expectativas e Preparativos",
+          "Eleições 2026: O Que Esperar para o Futuro do Brasil"
+        ]
+      }
+    },
+    "hour_stats": {
+      "20": 3
+    },
+    "weekday_stats": {
+      "Sexta": 3
+    },
+    "source_stats": {
+      "RadarBR Smart Trends": 3
+    }
+  }
+}

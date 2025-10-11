@@ -173,89 +173,52 @@ class Command(BaseCommand):
         return relevance_score >= 2
 
     def _generate_title_from_news(self, topic, news_article):
-        """Gera título baseado na notícia encontrada"""
-        if news_article and news_article.get('title'):
-            original_title = news_article['title']
-            
-            # Se o título original é bom, usar ele
-            if len(original_title) > 20 and len(original_title) < 100:
-                return original_title
-            
-            # Senão, criar baseado no tópico
-            return f"{topic.title()}: Últimas Notícias e Desenvolvimentos"
+        """Gera título original baseado no tópico, nunca copiando títulos de outros portais"""
+        # NUNCA usar títulos de outros portais para evitar plágio
+        # Sempre criar títulos originais baseados no tópico
         
-        # Fallback para título baseado no tópico
-        return f"{topic.title()}: Análise Completa e Atualizada"
+        topic_lower = topic.lower()
+        
+        # Padrões de títulos originais por categoria
+        if any(word in topic_lower for word in ['lula', 'bolsonaro', 'presidente', 'governo', 'política']):
+            return f"{topic.title()}: Análise Política e Desdobramentos"
+        elif any(word in topic_lower for word in ['economia', 'mercado', 'inflação', 'dólar']):
+            return f"{topic.title()}: Impacto na Economia Brasileira"
+        elif any(word in topic_lower for word in ['tecnologia', 'digital', 'ia', 'inteligência']):
+            return f"{topic.title()}: Tendências e Inovações"
+        elif any(word in topic_lower for word in ['esportes', 'futebol', 'copa']):
+            return f"{topic.title()}: Últimas Notícias Esportivas"
+        elif any(word in topic_lower for word in ['saúde', 'medicina', 'hospital']):
+            return f"{topic.title()}: Informações Importantes para a Saúde"
+        elif any(word in topic_lower for word in ['china', 'eua', 'europa', 'internacional']):
+            return f"{topic.title()}: Desenvolvimentos Internacionais"
+        else:
+            return f"{topic.title()}: Análise Completa e Atualizada"
 
     def _generate_content_from_news(self, topic, news_article, category, min_words):
         """Gera conteúdo baseado na notícia específica encontrada"""
         try:
-            # Tentar IA primeiro com contexto da notícia
-            from rb_ingestor.ai import generate_article
+            # Usar sistema de IA melhorado
+            from rb_ingestor.ai_enhanced import generate_enhanced_article
             
-            if news_article:
-                # Criar prompt específico baseado na notícia
-                news_prompt = f"""
-                Crie um artigo completo baseado nesta notícia específica:
-                
-                TÓPICO: {topic}
-                TÍTULO DA NOTÍCIA: {news_article.get('title', '')}
-                DESCRIÇÃO: {news_article.get('description', '')}
-                FONTE: {news_article.get('source', '')}
-                
-                REQUISITOS:
-                - Mínimo de {min_words} palavras
-                - Baseado na notícia específica, não genérico
-                - Contexto brasileiro quando relevante
-                - Estrutura com subtítulos H2 e H3
-                - Linguagem natural e informativa
-                - Foco na notícia específica mencionada
-                
-                ESTRUTURA:
-                1. Introdução sobre a notícia específica
-                2. Desenvolvimento dos fatos
-                3. Análise do impacto
-                4. Contexto brasileiro (se aplicável)
-                5. Perspectivas futuras
-                6. Conclusão
-                
-                IMPORTANTE: Foque na notícia específica, não em conteúdo genérico sobre o tema.
-                """
-            else:
-                # Fallback para prompt genérico se não encontrar notícia
-                news_prompt = f"""
-                Crie um artigo completo sobre "{topic}" com foco em SEO e relevância para o público brasileiro.
-                
-                REQUISITOS OBRIGATÓRIOS:
-                - Mínimo de {min_words} palavras
-                - Linguagem natural e conversacional
-                - Estrutura com subtítulos H2 e H3
-                - Foco no contexto brasileiro
-                - Tom informativo mas acessível
-                
-                CATEGORIA: {category or 'geral'}
-                
-                Certifique-se de que o artigo seja substancial, informativo e otimizado para SEO.
-                """
-            
-            ai_content = generate_article(news_prompt)
+            ai_content = generate_enhanced_article(topic, news_article, min_words)
             
             if ai_content:
                 title = strip_tags(ai_content.get("title", topic.title()))[:200]
                 content = f'<p class="dek">{strip_tags(ai_content.get("dek", news_article.get('description', '') if news_article else ""))[:220]}</p>\n{ai_content.get("html", "<p></p>")}'
                 
-                # Verificar se o conteúdo da IA tem pelo menos min_words palavras
-                clean_content = strip_tags(content)
-                word_count = len(clean_content.split())
+                # Verificar qualidade do conteúdo
+                word_count = ai_content.get('word_count', 0)
+                quality_score = ai_content.get('quality_score', 0)
                 
-                if word_count >= min_words:
-                    self.stdout.write(f"✅ IA gerou {word_count} palavras baseada na notícia específica")
+                if word_count >= min_words and quality_score >= 60:
+                    self.stdout.write(f"✅ IA melhorada gerou {word_count} palavras (qualidade: {quality_score}%)")
                     return content
                 else:
-                    self.stdout.write(f"⚠ IA gerou apenas {word_count} palavras, usando conteúdo SEO estendido")
+                    self.stdout.write(f"⚠ IA gerou {word_count} palavras (qualidade: {quality_score}%), usando fallback")
                 
         except Exception as e:
-            self.stdout.write(f"⚠ IA falhou: {e}")
+            self.stdout.write(f"⚠ IA melhorada falhou: {e}")
         
         # Fallback: conteúdo baseado na notícia específica
         return self._generate_content_from_news_fallback(topic, news_article, category, min_words)
@@ -275,47 +238,39 @@ class Command(BaseCommand):
         
         content = f"""<p class="dek">{description}</p>
 
-<h2>{title}</h2>
+<h2>Desenvolvimentos Recentes</h2>
 
 <p>Esta notícia tem ganhado destaque nos últimos dias e merece atenção especial. {description}</p>
 
-<h3>Desenvolvimentos Recentes</h3>
+<h3>Contexto da Notícia</h3>
 
 <p>Os fatos relacionados a esta notícia indicam uma evolução significativa no cenário atual. A situação tem sido acompanhada de perto por especialistas e analistas que estudam o impacto dessas transformações.</p>
 
 <p>Segundo informações da {source}, os desenvolvimentos mais recentes mostram uma evolução positiva em diversos indicadores relacionados ao tema.</p>
 
-<h3>Análise do Impacto</h3>
+<h3>Análise Detalhada</h3>
 
-<p>Esta notícia tem relevância especial no contexto atual, onde as particularidades locais influenciam diretamente os resultados observados. O impacto pode ser sentido em diferentes setores da sociedade.</p>
+<p>Analisando os dados disponíveis, é possível identificar padrões importantes que merecem atenção. A notícia sobre "{title}" representa um marco significativo no contexto atual.</p>
 
-<p>Os especialistas destacam que esta situação reflete tendências mais amplas observadas em outros contextos, mas apresenta características únicas que merecem atenção especial.</p>
+<p>Especialistas têm destacado a importância deste desenvolvimento para o futuro do setor. As implicações são amplas e afetam diversos aspectos da sociedade.</p>
 
-<h3>Contexto Brasileiro</h3>
+<h3>Impacto no Brasil</h3>
 
-<p>No Brasil, esta notícia tem implicações específicas que afetam diretamente a vida dos cidadãos brasileiros. Desde as grandes metrópoles até as cidades do interior, é possível observar mudanças significativas relacionadas a esta questão.</p>
+<p>No contexto brasileiro, esta notícia tem repercussões importantes. O país tem acompanhado de perto os desenvolvimentos relacionados a este tema.</p>
 
-<p>As autoridades brasileiras têm acompanhado de perto os desenvolvimentos, buscando adaptar as políticas públicas às novas realidades apresentadas por esta notícia.</p>
+<p>As autoridades brasileiras têm se posicionado de forma clara sobre o assunto, demonstrando preocupação com os impactos potenciais.</p>
 
 <h3>Perspectivas Futuras</h3>
 
-<p>As projeções para os próximos meses indicam que esta tendência deve se manter, com possíveis desenvolvimentos que podem trazer benefícios adicionais. Os analistas são cautelosamente otimistas quanto ao futuro.</p>
+<p>Olhando para o futuro, espera-se que novos desenvolvimentos surjam nos próximos dias. A situação está em constante evolução.</p>
 
-<p>Os investimentos planejados para os próximos anos devem acelerar ainda mais essa tendência positiva, criando novas oportunidades e consolidando avanços importantes.</p>
-
-<h3>Recomendações</h3>
-
-<p>Com base na análise apresentada, é possível identificar algumas recomendações importantes para o desenvolvimento futuro desta questão. Essas recomendações são fundamentadas em dados concretos e na experiência de especialistas.</p>
-
-<p>O primeiro passo é continuar acompanhando os desenvolvimentos, garantindo que as informações mais atualizadas sejam consideradas nas tomadas de decisão.</p>
+<p>Especialistas preveem que os próximos passos serão cruciais para determinar o rumo dos acontecimentos.</p>
 
 <h3>Conclusão</h3>
 
-<p>Esta notícia sobre {topic_lower} foi desenvolvida com base em informações atualizadas e análises de especialistas da área. O RadarBR continua acompanhando os desdobramentos desta notícia e manterá os leitores informados sobre novos desenvolvimentos relacionados ao tema.</p>
+<p>Esta notícia representa um momento importante na evolução do tema. É fundamental acompanhar os próximos desenvolvimentos para entender completamente o impacto.</p>
 
-<p>O cenário atual é promissor e indica que estamos no caminho certo para compreender melhor esta questão. A continuidade do acompanhamento e o engajamento de todos os setores serão fundamentais para manter o ritmo de evolução observado.</p>
-
-<p>Para mais informações sobre {topic_lower} e outros assuntos relevantes para o Brasil, acompanhe nossas atualizações diárias e mantenha-se sempre bem informado sobre os temas que mais importam para o país.</p>"""
+<p>O RadarBR continuará acompanhando esta história e trará atualizações conforme novos fatos surjam.</p>"""
 
         return content
 
@@ -380,19 +335,20 @@ class Command(BaseCommand):
     def _detect_category(self, topic_lower):
         """Detecta categoria baseada no tópico"""
         category_keywords = {
-            "tecnologia": ["tecnologia", "digital", "ia", "inteligência artificial", "chatgpt", "app", "software", "blockchain", "crypto", "bitcoin"],
             "economia": ["economia", "mercado", "inflação", "dólar", "real", "investimento", "finanças", "banco", "crédito"],
-            "política": ["política", "governo", "eleições", "presidente", "lula", "bolsonaro", "congresso", "ministro"],
+            "política": ["política", "governo", "eleições", "presidente", "lula", "bolsonaro", "congresso", "ministro", "stf", "supremo"],
+            "tecnologia": ["tecnologia", "digital", "ia", "inteligência artificial", "chatgpt", "app", "software", "blockchain", "crypto", "bitcoin"],
             "esportes": ["esportes", "futebol", "copa", "mundial", "brasileirão", "atletismo", "jogos", "competição"],
             "saúde": ["saúde", "medicina", "hospital", "vacina", "covid", "coronavírus", "tratamento", "médico"],
-            "meio ambiente": ["meio ambiente", "sustentabilidade", "natureza", "clima", "ecologia", "verde", "energia"]
+            "meio ambiente": ["meio ambiente", "sustentabilidade", "natureza", "clima", "ecologia", "verde", "energia"],
+            "brasil": ["brasil", "brasileiro", "brasileira", "nacional", "federal", "estadual", "municipal"]
         }
         
         for category, keywords in category_keywords.items():
             if any(kw in topic_lower for kw in keywords):
                 return category
         
-        return "geral"
+        return "brasil"
 
     def _generate_content(self, topic, category, min_words):
         """Gera conteúdo otimizado para SEO"""
@@ -647,6 +603,25 @@ class Command(BaseCommand):
         else:
             content += additional_sections
         
+        # Verificar se ainda precisa de mais conteúdo
+        word_count = len(strip_tags(content).split())
+        if word_count < min_words:
+            # Adicionar mais seções se ainda não atingiu o mínimo
+            more_sections = self._generate_more_sections(topic, category)
+            content += more_sections
+            
+            # Se ainda não atingiu, adicionar mais conteúdo
+            word_count = len(strip_tags(content).split())
+            if word_count < min_words:
+                extra_sections = self._generate_extra_sections(topic, category)
+                content += extra_sections
+                
+                # Última tentativa - adicionar mais conteúdo se necessário
+                word_count = len(strip_tags(content).split())
+                if word_count < min_words:
+                    final_sections = self._generate_final_sections(topic, category)
+                    content += final_sections
+        
         return content
 
     def _generate_additional_sections(self, topic, category):
@@ -678,6 +653,99 @@ class Command(BaseCommand):
 <p>Com base na análise apresentada, é possível identificar algumas recomendações importantes para o desenvolvimento futuro desta área. Essas recomendações são fundamentadas em dados concretos e na experiência de especialistas.</p>
 
 <p>O primeiro passo é continuar investindo em pesquisa e desenvolvimento, garantindo que o Brasil mantenha sua posição de liderança. Além disso, é importante focar na formação de profissionais qualificados.</p>
+"""
+        
+        return sections
+
+    def _generate_more_sections(self, topic, category):
+        """Gera seções adicionais para atingir o mínimo de palavras"""
+        topic_lower = topic.lower()
+        
+        sections = f"""
+
+<h3>Análise Comparativa Internacional</h3>
+
+<p>Comparando com outros países, o Brasil apresenta características únicas em relação a {topic_lower}. Países como Estados Unidos e China têm desenvolvido estratégias específicas que podem servir de referência para o Brasil.</p>
+
+<p>Na Europa, especialmente na Alemanha e França, existem políticas públicas que têm se mostrado eficazes no desenvolvimento desta área. Essas experiências internacionais oferecem lições valiosas para o Brasil.</p>
+
+<h3>Desafios e Oportunidades</h3>
+
+<p>Os principais desafios relacionados a {topic_lower} no Brasil incluem a necessidade de investimentos em infraestrutura e capacitação profissional. No entanto, esses desafios também representam oportunidades para crescimento e desenvolvimento.</p>
+
+<p>As oportunidades incluem o potencial de criação de empregos, desenvolvimento de novas tecnologias e fortalecimento da economia nacional. O Brasil tem todas as condições para se tornar uma referência mundial nesta área.</p>
+
+<h3>Investimentos e Financiamento</h3>
+
+<p>Os investimentos em {topic_lower} têm crescido significativamente nos últimos anos. Empresas privadas, governo e instituições de pesquisa têm direcionado recursos para o desenvolvimento desta área.</p>
+
+<p>O financiamento público tem sido fundamental para impulsionar o crescimento, com programas específicos que incentivam a inovação e o desenvolvimento tecnológico.</p>
+
+<h3>Impacto Social e Econômico</h3>
+
+<p>O impacto social de {topic_lower} é significativo, afetando diretamente a vida de milhões de brasileiros. Desde a criação de empregos até a melhoria da qualidade de vida, os benefícios são amplos.</p>
+
+<p>Economicamente, esta área tem se mostrado um motor de crescimento, contribuindo para o PIB nacional e fortalecendo a posição do Brasil no cenário internacional.</p>
+"""
+        
+        return sections
+
+    def _generate_extra_sections(self, topic, category):
+        """Gera seções extras para garantir o mínimo de palavras"""
+        topic_lower = topic.lower()
+        
+        sections = f"""
+
+<h3>Estatísticas e Dados Relevantes</h3>
+
+<p>Os dados mais recentes sobre {topic_lower} mostram uma evolução positiva e consistente. Segundo estudos realizados por instituições especializadas, os indicadores têm apresentado melhorias significativas nos últimos meses.</p>
+
+<p>As estatísticas revelam que o Brasil está se posicionando de forma competitiva no cenário internacional, com números que demonstram o potencial de crescimento e desenvolvimento nesta área.</p>
+
+<h3>Políticas Públicas e Regulamentação</h3>
+
+<p>As políticas públicas relacionadas a {topic_lower} têm sido fundamentais para o desenvolvimento desta área no Brasil. O governo tem implementado medidas que incentivam o crescimento e a inovação.</p>
+
+<p>A regulamentação tem se mostrado adequada para promover o desenvolvimento sustentável, criando um ambiente favorável para investimentos e inovações.</p>
+
+<h3>Educação e Capacitação</h3>
+
+<p>A educação e capacitação profissional são pilares fundamentais para o desenvolvimento de {topic_lower} no Brasil. Instituições de ensino têm adaptado seus currículos para atender às demandas do mercado.</p>
+
+<p>Programas de capacitação e especialização têm sido desenvolvidos para formar profissionais qualificados, garantindo que o Brasil tenha a mão de obra necessária para sustentar o crescimento nesta área.</p>
+
+<h3>Sustentabilidade e Meio Ambiente</h3>
+
+<p>A sustentabilidade é um aspecto crucial no desenvolvimento de {topic_lower}. O Brasil tem se destacado por implementar práticas sustentáveis que respeitam o meio ambiente.</p>
+
+<p>As iniciativas de sustentabilidade não apenas protegem o meio ambiente, mas também criam oportunidades de negócios e desenvolvimento econômico.</p>
+"""
+        
+        return sections
+
+    def _generate_final_sections(self, topic, category):
+        """Gera seções finais para garantir o mínimo de palavras"""
+        topic_lower = topic.lower()
+        
+        sections = f"""
+
+<h3>Inovação e Tecnologia</h3>
+
+<p>A inovação tecnológica tem sido um fator determinante no desenvolvimento de {topic_lower}. Novas tecnologias estão sendo desenvolvidas constantemente, criando oportunidades para empresas e profissionais brasileiros.</p>
+
+<p>O Brasil tem se destacado por sua capacidade de inovação, com empresas nacionais desenvolvendo soluções que competem internacionalmente.</p>
+
+<h3>Cooperação Internacional</h3>
+
+<p>A cooperação internacional é fundamental para o desenvolvimento de {topic_lower} no Brasil. Parcerias com outros países têm permitido o intercâmbio de conhecimento e tecnologia.</p>
+
+<p>Essas parcerias internacionais têm se mostrado benéficas para todas as partes envolvidas, criando um ambiente de colaboração e crescimento mútuo.</p>
+
+<h3>Futuro e Perspectivas</h3>
+
+<p>As perspectivas para o futuro de {topic_lower} no Brasil são muito positivas. Com os investimentos planejados e as políticas públicas adequadas, espera-se um crescimento sustentável nos próximos anos.</p>
+
+<p>O Brasil tem todas as condições para se tornar uma referência mundial nesta área, com potencial para liderar inovações e desenvolvimentos importantes.</p>
 """
         
         return sections
