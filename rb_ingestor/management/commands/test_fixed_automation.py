@@ -17,8 +17,8 @@ class Command(BaseCommand):
         self.stdout.write("=== TESTE AUTOMACAO CORRIGIDA ===")
         self.stdout.write(f"Executado em: {timezone.now()}")
         
-        # Importar o comando corrigido
-        from rb_ingestor.management.commands.automacao_render_fixed import Command as FixedCommand
+        # Importar o comando corrigido (agora é o arquivo principal)
+        from rb_ingestor.management.commands.automacao_render import Command as FixedCommand
         
         # Criar instância e executar
         fixed_cmd = FixedCommand()
