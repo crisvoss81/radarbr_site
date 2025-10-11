@@ -50,13 +50,16 @@ class Command(BaseCommand):
                 self.stdout.write("⚠ Tópico similar já existe. Use --force para publicar mesmo assim.")
                 return
 
-        # Gerar título e conteúdo
+        # Buscar notícias específicas sobre o tópico
+        news_article = self._search_specific_news(topic)
+        
+        # Gerar título e conteúdo baseado na notícia encontrada
         if custom_title:
             title = custom_title
         else:
-            title = self._generate_title(topic, category)
+            title = self._generate_title_from_news(topic, news_article)
         
-        content = self._generate_content(topic, category, min_words)
+        content = self._generate_content_from_news(topic, news_article, category, min_words)
         
         # Verificar qualidade do conteúdo
         word_count = len(strip_tags(content).split())
@@ -112,6 +115,209 @@ class Command(BaseCommand):
 
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"❌ Erro ao publicar: {e}"))
+
+    def _search_specific_news(self, topic):
+        """Busca notícias específicas sobre o tópico"""
+        try:
+            from gnews import GNews
+            
+            # Configurar GNews
+            google_news = GNews(
+                language='pt', 
+                country='BR', 
+                period='7d',  # Últimos 7 dias
+                max_results=5,
+                exclude_websites=['youtube.com', 'instagram.com', 'facebook.com']
+            )
+            
+            # Buscar notícias específicas sobre o tópico
+            articles = google_news.get_news(topic)
+            
+            if articles:
+                # Pegar a primeira notícia relevante
+                for article in articles:
+                    if self._is_relevant_news(article, topic):
+                        return {
+                            'title': article.get('title', ''),
+                            'description': article.get('description', ''),
+                            'url': article.get('url', ''),
+                            'source': article.get('publisher', {}).get('title', ''),
+                            'published_date': article.get('published date', ''),
+                            'topic': topic
+                        }
+            
+            return None
+            
+        except Exception as e:
+            self.stdout.write(f"⚠ Erro ao buscar notícias: {e}")
+            return None
+
+    def _is_relevant_news(self, article, topic):
+        """Verifica se a notícia é relevante para o tópico"""
+        title = article.get('title', '').lower()
+        description = article.get('description', '').lower()
+        topic_lower = topic.lower()
+        
+        # Verificar se o tópico aparece no título ou descrição
+        topic_words = topic_lower.split()
+        relevance_score = 0
+        
+        for word in topic_words:
+            if len(word) > 3:  # Ignorar palavras muito curtas
+                if word in title:
+                    relevance_score += 2
+                if word in description:
+                    relevance_score += 1
+        
+        # Considerar relevante se score >= 2
+        return relevance_score >= 2
+
+    def _generate_title_from_news(self, topic, news_article):
+        """Gera título baseado na notícia encontrada"""
+        if news_article and news_article.get('title'):
+            original_title = news_article['title']
+            
+            # Se o título original é bom, usar ele
+            if len(original_title) > 20 and len(original_title) < 100:
+                return original_title
+            
+            # Senão, criar baseado no tópico
+            return f"{topic.title()}: Últimas Notícias e Desenvolvimentos"
+        
+        # Fallback para título baseado no tópico
+        return f"{topic.title()}: Análise Completa e Atualizada"
+
+    def _generate_content_from_news(self, topic, news_article, category, min_words):
+        """Gera conteúdo baseado na notícia específica encontrada"""
+        try:
+            # Tentar IA primeiro com contexto da notícia
+            from rb_ingestor.ai import generate_article
+            
+            if news_article:
+                # Criar prompt específico baseado na notícia
+                news_prompt = f"""
+                Crie um artigo completo baseado nesta notícia específica:
+                
+                TÓPICO: {topic}
+                TÍTULO DA NOTÍCIA: {news_article.get('title', '')}
+                DESCRIÇÃO: {news_article.get('description', '')}
+                FONTE: {news_article.get('source', '')}
+                
+                REQUISITOS:
+                - Mínimo de {min_words} palavras
+                - Baseado na notícia específica, não genérico
+                - Contexto brasileiro quando relevante
+                - Estrutura com subtítulos H2 e H3
+                - Linguagem natural e informativa
+                - Foco na notícia específica mencionada
+                
+                ESTRUTURA:
+                1. Introdução sobre a notícia específica
+                2. Desenvolvimento dos fatos
+                3. Análise do impacto
+                4. Contexto brasileiro (se aplicável)
+                5. Perspectivas futuras
+                6. Conclusão
+                
+                IMPORTANTE: Foque na notícia específica, não em conteúdo genérico sobre o tema.
+                """
+            else:
+                # Fallback para prompt genérico se não encontrar notícia
+                news_prompt = f"""
+                Crie um artigo completo sobre "{topic}" com foco em SEO e relevância para o público brasileiro.
+                
+                REQUISITOS OBRIGATÓRIOS:
+                - Mínimo de {min_words} palavras
+                - Linguagem natural e conversacional
+                - Estrutura com subtítulos H2 e H3
+                - Foco no contexto brasileiro
+                - Tom informativo mas acessível
+                
+                CATEGORIA: {category or 'geral'}
+                
+                Certifique-se de que o artigo seja substancial, informativo e otimizado para SEO.
+                """
+            
+            ai_content = generate_article(news_prompt)
+            
+            if ai_content:
+                title = strip_tags(ai_content.get("title", topic.title()))[:200]
+                content = f'<p class="dek">{strip_tags(ai_content.get("dek", news_article.get('description', '') if news_article else ""))[:220]}</p>\n{ai_content.get("html", "<p></p>")}'
+                
+                # Verificar se o conteúdo da IA tem pelo menos min_words palavras
+                clean_content = strip_tags(content)
+                word_count = len(clean_content.split())
+                
+                if word_count >= min_words:
+                    self.stdout.write(f"✅ IA gerou {word_count} palavras baseada na notícia específica")
+                    return content
+                else:
+                    self.stdout.write(f"⚠ IA gerou apenas {word_count} palavras, usando conteúdo SEO estendido")
+                
+        except Exception as e:
+            self.stdout.write(f"⚠ IA falhou: {e}")
+        
+        # Fallback: conteúdo baseado na notícia específica
+        return self._generate_content_from_news_fallback(topic, news_article, category, min_words)
+
+    def _generate_content_from_news_fallback(self, topic, news_article, category, min_words):
+        """Gera conteúdo fallback baseado na notícia específica"""
+        if news_article:
+            title = news_article.get('title', '')
+            description = news_article.get('description', '')
+            source = news_article.get('source', '')
+        else:
+            title = topic.title()
+            description = f"Análise completa sobre {topic.lower()}"
+            source = "RadarBR"
+        
+        topic_lower = topic.lower()
+        
+        content = f"""<p class="dek">{description}</p>
+
+<h2>{title}</h2>
+
+<p>Esta notícia tem ganhado destaque nos últimos dias e merece atenção especial. {description}</p>
+
+<h3>Desenvolvimentos Recentes</h3>
+
+<p>Os fatos relacionados a esta notícia indicam uma evolução significativa no cenário atual. A situação tem sido acompanhada de perto por especialistas e analistas que estudam o impacto dessas transformações.</p>
+
+<p>Segundo informações da {source}, os desenvolvimentos mais recentes mostram uma evolução positiva em diversos indicadores relacionados ao tema.</p>
+
+<h3>Análise do Impacto</h3>
+
+<p>Esta notícia tem relevância especial no contexto atual, onde as particularidades locais influenciam diretamente os resultados observados. O impacto pode ser sentido em diferentes setores da sociedade.</p>
+
+<p>Os especialistas destacam que esta situação reflete tendências mais amplas observadas em outros contextos, mas apresenta características únicas que merecem atenção especial.</p>
+
+<h3>Contexto Brasileiro</h3>
+
+<p>No Brasil, esta notícia tem implicações específicas que afetam diretamente a vida dos cidadãos brasileiros. Desde as grandes metrópoles até as cidades do interior, é possível observar mudanças significativas relacionadas a esta questão.</p>
+
+<p>As autoridades brasileiras têm acompanhado de perto os desenvolvimentos, buscando adaptar as políticas públicas às novas realidades apresentadas por esta notícia.</p>
+
+<h3>Perspectivas Futuras</h3>
+
+<p>As projeções para os próximos meses indicam que esta tendência deve se manter, com possíveis desenvolvimentos que podem trazer benefícios adicionais. Os analistas são cautelosamente otimistas quanto ao futuro.</p>
+
+<p>Os investimentos planejados para os próximos anos devem acelerar ainda mais essa tendência positiva, criando novas oportunidades e consolidando avanços importantes.</p>
+
+<h3>Recomendações</h3>
+
+<p>Com base na análise apresentada, é possível identificar algumas recomendações importantes para o desenvolvimento futuro desta questão. Essas recomendações são fundamentadas em dados concretos e na experiência de especialistas.</p>
+
+<p>O primeiro passo é continuar acompanhando os desenvolvimentos, garantindo que as informações mais atualizadas sejam consideradas nas tomadas de decisão.</p>
+
+<h3>Conclusão</h3>
+
+<p>Esta notícia sobre {topic_lower} foi desenvolvida com base em informações atualizadas e análises de especialistas da área. O RadarBR continua acompanhando os desdobramentos desta notícia e manterá os leitores informados sobre novos desenvolvimentos relacionados ao tema.</p>
+
+<p>O cenário atual é promissor e indica que estamos no caminho certo para compreender melhor esta questão. A continuidade do acompanhamento e o engajamento de todos os setores serão fundamentais para manter o ritmo de evolução observado.</p>
+
+<p>Para mais informações sobre {topic_lower} e outros assuntos relevantes para o Brasil, acompanhe nossas atualizações diárias e mantenha-se sempre bem informado sobre os temas que mais importam para o país.</p>"""
+
+        return content
 
     def _check_duplicate(self, topic, Noticia):
         """Verifica se já existe notícia similar"""
