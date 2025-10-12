@@ -6,7 +6,7 @@ from django.core.paginator import Paginator
 from rb_noticias.models import Noticia, Categoria
 
 def home(request):
-    qs = Noticia.objects.order_by("-publicado_em")
+    qs = Noticia.objects.filter(status=Noticia.Status.PUBLICADO).order_by("-publicado_em")
 
     featured = qs.first()
     others = list(qs[1:3])
@@ -28,10 +28,10 @@ def test_images(request):
     from rb_noticias.models import Noticia
     
     # Notícias com imagens
-    noticias_com_imagem = Noticia.objects.exclude(imagem__isnull=True).exclude(imagem='')[:10]
+    noticias_com_imagem = Noticia.objects.filter(status=Noticia.Status.PUBLICADO).exclude(imagem__isnull=True).exclude(imagem='')[:10]
     
     # Últimas 5 notícias
-    ultimas_noticias = Noticia.objects.all().order_by('-publicado_em')[:5]
+    ultimas_noticias = Noticia.objects.filter(status=Noticia.Status.PUBLICADO).order_by('-publicado_em')[:5]
     
     ctx = {
         "noticias_com_imagem": noticias_com_imagem,
@@ -41,9 +41,9 @@ def test_images(request):
 
 
 def post_detail(request, slug):
-    obj = get_object_or_404(Noticia, slug=slug)
+    obj = get_object_or_404(Noticia, slug=slug, status=Noticia.Status.PUBLICADO)
     relacionados = (
-        Noticia.objects.filter(categoria=obj.categoria)
+        Noticia.objects.filter(categoria=obj.categoria, status=Noticia.Status.PUBLICADO)
         .exclude(pk=obj.pk)
         .order_by("-publicado_em")[:6]
     )
@@ -57,7 +57,7 @@ def post_detail(request, slug):
 
 def category_list(request, slug):
     categoria = get_object_or_404(Categoria, slug=slug)
-    qs = Noticia.objects.filter(categoria=categoria).order_by("-publicado_em")
+    qs = Noticia.objects.filter(categoria=categoria, status=Noticia.Status.PUBLICADO).order_by("-publicado_em")
     paginator = Paginator(qs, 12)
     page_obj = paginator.get_page(request.GET.get("page") or 1)
 
