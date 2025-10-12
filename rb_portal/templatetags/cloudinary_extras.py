@@ -100,27 +100,33 @@ def cloudinary_placeholder(width=400, height=300, text="RadarBR"):
     {% cloudinary_placeholder width=800 height=600 text="Carregando..." %}
     """
     try:
-        cloudinary.config(
-            cloud_name=settings.CLOUDINARY_STORAGE['CLOUD_NAME'],
-            api_key=settings.CLOUDINARY_STORAGE['API_KEY'],
-            api_secret=settings.CLOUDINARY_STORAGE['API_SECRET'],
-        )
-        
-        # Gerar URL de placeholder
-        url = cloudinary.utils.cloudinary_url(
-            f"sample.jpg",
-            width=width,
-            height=height,
-            crop="fill",
-            quality="auto",
-            format="auto",
-            effect="blur:300",
-            overlay=f"text:Arial_24:{text}",
-            gravity="center",
-            color="white"
-        )[0]
-        
-        return url
+        # Configurar Cloudinary se as variáveis estiverem disponíveis
+        if hasattr(settings, 'CLOUDINARY_CLOUD_NAME') and settings.CLOUDINARY_CLOUD_NAME:
+            cloudinary.config(
+                cloud_name=settings.CLOUDINARY_CLOUD_NAME,
+                api_key=settings.CLOUDINARY_API_KEY,
+                api_secret=settings.CLOUDINARY_API_SECRET,
+            )
+            
+            # Gerar URL de placeholder
+            url = cloudinary.utils.cloudinary_url(
+                f"sample.jpg",
+                width=width,
+                height=height,
+                crop="fill",
+                quality="auto",
+                format="auto",
+                effect="blur:300",
+                overlay=f"text:Arial_24:{text}",
+                gravity="center",
+                color="white"
+            )[0]
+            
+            return url
+        else:
+            # Fallback se Cloudinary não estiver configurado
+            raise Exception("Cloudinary not configured")
+            
     except:
         # Fallback para placeholder simples
         return f"data:image/svg+xml;base64,PHN2ZyB3aWR0aD0i{width}IiBoZWlnaHQ9I{height}IiB2aWV3Qm94PSIwIDAg{width}IHtoZWlnaHR9IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSI{width}IiBoZWlnaHQ9I{height}IiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzZjNzI4MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPnt0ZXh0fTwvdGV4dD48L3N2Zz4="
