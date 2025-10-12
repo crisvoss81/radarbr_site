@@ -79,11 +79,21 @@ TEMPLATES = [
 WSGI_APPLICATION = "core.wsgi.application"
 
 # --- BANCO DE DADOS ---
-DATABASES = {
-    'default': dj_database_url.config(
-        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}'
-    )
-}
+# Configuração específica para Render
+if os.getenv('RENDER'):
+    # Render automaticamente cria DATABASE_URL
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.getenv('DATABASE_URL')
+        )
+    }
+else:
+    # Desenvolvimento local
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=f'sqlite:///{BASE_DIR / "db.sqlite3"}'
+        )
+    }
 
 # --- INTERNACIONALIZAÇÃO ---
 LANGUAGE_CODE = "pt-br"
