@@ -335,22 +335,22 @@ class Command(BaseCommand):
         description = article.get('description', '').lower()
         topic = article.get('topic', '').lower()
         
-        # Mapeamento de palavras-chave para categorias
+        # Mapeamento de palavras-chave para categorias (ordem de prioridade)
         category_keywords = {
+            "política": ["política", "governo", "eleições", "presidente", "lula", "bolsonaro", "congresso", "ministro", "democracia", "eleitoral", "partido", "candidato"],
+            "economia": ["economia", "mercado", "inflação", "dólar", "real", "investimento", "finanças", "banco", "crédito", "bolsa", "ações", "pib", "desemprego"],
+            "esportes": ["esportes", "futebol", "copa", "mundial", "brasileirão", "atletismo", "jogos", "competição", "campeonato", "jogador", "time"],
+            "saúde": ["saúde", "medicina", "hospital", "vacina", "covid", "coronavírus", "tratamento", "médico", "doença", "epidemia", "pandemia"],
+            "meio ambiente": ["meio ambiente", "sustentabilidade", "natureza", "clima", "ecologia", "verde", "energia", "poluição", "desmatamento", "aquecimento"],
             "tecnologia": ["tecnologia", "digital", "ia", "inteligência artificial", "chatgpt", "app", "software", "blockchain", "crypto", "bitcoin", "startup", "inovação"],
-            "economia": ["economia", "mercado", "inflação", "dólar", "real", "investimento", "finanças", "banco", "crédito", "bolsa", "ações"],
-            "política": ["política", "governo", "eleições", "presidente", "lula", "bolsonaro", "congresso", "ministro", "democracia", "eleitoral"],
-            "esportes": ["esportes", "futebol", "copa", "mundial", "brasileirão", "atletismo", "jogos", "competição", "campeonato"],
-            "saúde": ["saúde", "medicina", "hospital", "vacina", "covid", "coronavírus", "tratamento", "médico", "doença"],
-            "meio ambiente": ["meio ambiente", "sustentabilidade", "natureza", "clima", "ecologia", "verde", "energia", "poluição"],
-            "mundo": ["china", "eua", "europa", "internacional", "global", "mundial", "país", "nação", "estrangeiro"],
+            "mundo": ["china", "eua", "europa", "internacional", "global", "mundial", "país", "nação", "estrangeiro", "guerra", "conflito"],
             "brasil": ["brasil", "brasileiro", "nacional", "federal", "estadual", "municipal", "governo federal"]
         }
         
         # Verificar todas as fontes de texto
         all_text = f"{title} {description} {topic}"
         
-        # Encontrar categoria mais relevante
+        # Encontrar categoria mais relevante (primeira que encontrar)
         for category, keywords in category_keywords.items():
             if any(kw in all_text for kw in keywords):
                 cat = Categoria.objects.filter(nome=category.title()).first()

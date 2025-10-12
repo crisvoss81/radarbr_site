@@ -353,12 +353,13 @@ class Command(BaseCommand):
     def _detect_category(self, topic_lower):
         """Detecta categoria baseada no tópico"""
         category_keywords = {
-            "economia": ["economia", "mercado", "inflação", "dólar", "real", "investimento", "finanças", "banco", "crédito"],
-            "política": ["política", "governo", "eleições", "presidente", "lula", "bolsonaro", "congresso", "ministro", "stf", "supremo"],
+            "política": ["política", "governo", "eleições", "presidente", "lula", "bolsonaro", "congresso", "ministro", "stf", "supremo", "partido", "candidato"],
+            "economia": ["economia", "mercado", "inflação", "dólar", "real", "investimento", "finanças", "banco", "crédito", "pib", "desemprego"],
+            "esportes": ["esportes", "futebol", "copa", "mundial", "brasileirão", "atletismo", "jogos", "competição", "jogador", "time"],
+            "saúde": ["saúde", "medicina", "hospital", "vacina", "covid", "coronavírus", "tratamento", "médico", "doença", "epidemia"],
+            "meio ambiente": ["meio ambiente", "sustentabilidade", "natureza", "clima", "ecologia", "verde", "energia", "poluição", "desmatamento"],
             "tecnologia": ["tecnologia", "digital", "ia", "inteligência artificial", "chatgpt", "app", "software", "blockchain", "crypto", "bitcoin"],
-            "esportes": ["esportes", "futebol", "copa", "mundial", "brasileirão", "atletismo", "jogos", "competição"],
-            "saúde": ["saúde", "medicina", "hospital", "vacina", "covid", "coronavírus", "tratamento", "médico"],
-            "meio ambiente": ["meio ambiente", "sustentabilidade", "natureza", "clima", "ecologia", "verde", "energia"],
+            "mundo": ["china", "eua", "europa", "internacional", "global", "mundial", "país", "nação", "estrangeiro", "guerra"],
             "brasil": ["brasil", "brasileiro", "brasileira", "nacional", "federal", "estadual", "municipal"]
         }
         
