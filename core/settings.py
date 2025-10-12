@@ -84,7 +84,9 @@ if os.getenv('RENDER'):
     # Render automaticamente cria DATABASE_URL
     DATABASES = {
         'default': dj_database_url.config(
-            default=os.getenv('DATABASE_URL')
+            default=os.getenv('DATABASE_URL'),
+            conn_max_age=600,
+            conn_health_checks=True,
         )
     }
 else:
@@ -100,6 +102,16 @@ LANGUAGE_CODE = "pt-br"
 TIME_ZONE = "America/Sao_Paulo"
 USE_I18N = True
 USE_TZ = True
+
+# --- CONFIGURAÇÕES DE SEGURANÇA PARA PRODUÇÃO ---
+if os.getenv('RENDER'):
+    # Configurações específicas para Render
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
 # --- ARQUIVOS ESTÁTICOS E DE MÍDIA ---
 STATIC_URL = "/static/"
