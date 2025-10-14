@@ -1,6 +1,7 @@
 # rb_noticias/models.py
 from django.db import models
 from django.urls import reverse
+from slugify import slugify
 
 class Categoria(models.Model):
     nome = models.CharField(max_length=120)
@@ -15,6 +16,13 @@ class Categoria(models.Model):
         return self.nome
 
     def get_absolute_url(self):
+        if not self.slug:
+            # Garante slug válido para evitar NoReverseMatch
+            self.slug = slugify(self.nome)[:140]
+            try:
+                self.save(update_fields=["slug"])
+            except Exception:
+                pass
         return reverse("categoria", args=[self.slug])
 
 
