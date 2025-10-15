@@ -6,7 +6,7 @@
 {% load adsense_extras %}
 
 {% block title %}{{ object.titulo|striptags }} | RadarBR{% endblock %}
-{% block meta_description %}{{ object.conteudo|meta_description_from_highlights:160 }}{% endblock %}
+{% block meta_description %}{{ object.conteudo|meta_description_from_highlights }}{% endblock %}
 <meta name="author" content="RadarBR">
 <meta name="keywords" content="{% if object.categoria %}{{ object.categoria.nome }}, {% endif %}notícias, Brasil, {{ object.titulo|striptags|truncatechars:50 }}">
 {% block canonical %}{{ SITE_BASE_URL }}{{ object.get_absolute_url }}{% endblock %}
@@ -137,8 +137,13 @@
     </figure>
   {% endif %}
 
+  <!-- AdSense Banner após imagem (responsivo) -->
+  <div class="ad-slot ad-slot--post-image">
+    {% adsense_banner_auto "4840700734" %}
+  </div>
+
   <div class="post-content">
-    {{ object.conteudo|split_content_sections }}
+    {{ object.conteudo|split_content_sections|render_markdown }}
   </div>
 
   <!-- AdSense Banner após conteúdo (responsivo) -->
