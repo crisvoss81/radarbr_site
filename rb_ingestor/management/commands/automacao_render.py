@@ -156,6 +156,11 @@ class Command(BaseCommand):
         
         for i, article in enumerate(news_articles[:limit]):
             try:
+                # Resolver URL original do Google News (se for link do GN)
+                original_url = self._resolve_original_url(article.get('url', ''))
+                if original_url:
+                    article['url'] = original_url
+                    article['original_url'] = original_url
                 # Gerar conteúdo baseado na notícia específica
                 title, content = self._generate_content_from_news(article)
                 
@@ -168,13 +173,20 @@ class Command(BaseCommand):
                     continue
                 
                 # Criar notícia
+                # Garantir unicidade de slug e fonte_url
+                ts = timezone.now().strftime('%Y%m%d%H%M%S')
+                fonte_url_value = article.get('url') or f"render-automation-{ts}-{i}"
+                # Se já existir, anexar sufixo único
+                if Noticia.objects.filter(fonte_url=fonte_url_value).exists():
+                    fonte_url_value = f"{fonte_url_value}?t={ts}{i}"
+
                 noticia = Noticia.objects.create(
                     titulo=title,
-                    slug=slugify(title)[:180],
+                    slug=f"{slugify(title)[:120]}-{ts}",
                     conteudo=content,
                     publicado_em=timezone.now(),
                     categoria=categoria,
-                    fonte_url=article.get('url', f"render-automation-{timezone.now().strftime('%Y%m%d-%H%M')}-{i}"),
+                    fonte_url=fonte_url_value,
                     fonte_nome=article.get('source', 'RadarBR Automation'),
                     status=1  # PUBLICADO
                 )
@@ -191,90 +203,188 @@ class Command(BaseCommand):
         
         return created_count
 
+    def _resolve_original_url(self, url: str) -> str:
+        """Resolve URL do Google News para o link do veículo original."""
+        try:
+            if not url:
+                return ""
+            if 'news.google.' not in url:
+                return url
+            import requests
+            from urllib.parse import urlparse, parse_qs
+            # 1) Query param "url"
+            try:
+                parsed = urlparse(url)
+                qs = parse_qs(parsed.query)
+                if 'url' in qs and qs['url']:
+                    candidate = qs['url'][0]
+                    if candidate and 'news.google.' not in candidate:
+                        return candidate
+            except Exception:
+                pass
+            # 2) Follow redirects
+            session = requests.Session()
+            session.headers.update({
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            })
+            resp = session.get(url, timeout=20, allow_redirects=True)
+            resp.raise_for_status()
+            final_url = resp.url
+            if final_url and 'news.google.' not in final_url:
+                return final_url
+        except Exception:
+            return ""
+        return ""
+
     def _generate_content_from_news(self, article):
         """Gera conteúdo baseado na notícia específica"""
         try:
-            # Tentar IA primeiro com contexto da notícia
-            from rb_ingestor.ai import generate_article
-            
-            # Criar prompt específico baseado na notícia
-            news_prompt = f"""
-            Crie um artigo completo baseado nesta notícia específica:
-            
-            TÍTULO: {article.get('title', '')}
-            DESCRIÇÃO: {article.get('description', '')}
-            FONTE: {article.get('source', '')}
-            
-            REQUISITOS:
-            - Mínimo de 800 palavras
-            - Baseado na notícia específica, não genérico
-            - Contexto brasileiro quando relevante
-            - Estrutura com subtítulos H2 e H3
-            - Linguagem natural e informativa
-            - Foco na notícia específica mencionada
-            
-            ESTRUTURA:
-            1. Introdução sobre a notícia específica
-            2. Desenvolvimento dos fatos
-            3. Análise do impacto
-            4. Contexto brasileiro (se aplicável)
-            5. Perspectivas futuras
-            6. Conclusão
-            
-            IMPORTANTE: Foque na notícia específica, não em conteúdo genérico sobre o tema.
-            """
-            
-            # Usar sistema de IA melhorado
+            # 1) Extrair texto base do publisher para calcular alvo por margem de 15%
+            base_words = None
+            try:
+                from rb_ingestor.news_content_extractor import NewsContentExtractor
+                extractor = NewsContentExtractor()
+                data = extractor.extract_content_from_url(article.get('original_url') or article.get('url') or '')
+                if data and data.get('content'):
+                    base_words = len((data['content'] or '').split())
+                    self.stdout.write(f"🔍 Conteúdo completo extraído: {base_words} palavras")
+            except Exception as e:
+                self.stdout.write(f"⚠ Falha ao extrair conteúdo base: {e}")
+
+            # 2) Definir alvo dinâmico
+            if base_words and base_words >= 80:
+                target_min = int(round(base_words * 0.85))
+                target_max = int(round(base_words * 1.15))
+                self.stdout.write(f"📊 Notícia base completa: {base_words} palavras")
+                self.stdout.write(f"🎯 Margem 15%: {target_min}-{target_max} palavras")
+            else:
+                target_min = 800
+                target_max = 1100
+                self.stdout.write("📊 Base insuficiente; usando alvo padrão 800-1100 palavras")
+
+            # 3) Gerar com IA melhorada com retry
             from rb_ingestor.ai_enhanced import generate_enhanced_article
-            
-            ai_content = generate_enhanced_article(article.get('topic', ''), article, 800)
-            
-            if ai_content:
+
+            def _attempt_generate() -> dict | None:
+                return generate_enhanced_article(article.get('topic', ''), article, max(target_min, 600))
+
+            for attempt in (1, 2):
+                ai_content = _attempt_generate()
+                if not ai_content:
+                    self.stdout.write(f"⚠ Tentativa {attempt}: IA não retornou conteúdo")
+                    continue
+
                 title = strip_tags(ai_content.get("title", article.get('title', '')))[:200]
-                content = f'<p class="dek">{strip_tags(ai_content.get("dek", article.get('description', '')))[:220]}</p>\n{ai_content.get("html", "<p></p>")}'
-                
-                # Verificar qualidade
-                word_count = ai_content.get('word_count', 0)
+                html = ai_content.get("html", "<p></p>")
+                content = f'<p class="dek">{strip_tags(ai_content.get("dek", article.get('description', '')))[:220]}</p>\n{html}'
+
+                # Contar palavras reais do corpo
+                try:
+                    from django.utils.html import strip_tags as dj_strip
+                    word_count = len(dj_strip(content).split())
+                except Exception:
+                    word_count = ai_content.get('word_count', 0)
+
                 quality_score = ai_content.get('quality_score', 0)
-                
-                if word_count >= 600 and quality_score >= 50:
-                    self.stdout.write(f"✅ IA melhorada gerou {word_count} palavras (qualidade: {quality_score}%)")
-                    return title, content
+
+                # 4) Validação: faixa alvo; tolerância 80% apenas se base muito grande
+                accept = False
+                if word_count >= target_min and word_count <= target_max:
+                    accept = True
                 else:
-                    self.stdout.write(f"⚠ IA gerou {word_count} palavras (qualidade: {quality_score}%), usando fallback")
-                
+                    if base_words and base_words >= 1200 and word_count >= int(target_min * 0.8):
+                        accept = True
+
+                if accept and quality_score >= 40:
+                    self.stdout.write(f"✅ IA gerou {word_count} palavras (qualidade: {quality_score}%) — aceito")
+                    return title, content
+
+                self.stdout.write(f"⚠ IA gerou {word_count} palavras (qualidade: {quality_score}%), fora dos critérios — retry {attempt}/2")
+
+            # 5) Se falhar após duas tentativas, pular publicação (sem fallback)
+            raise RuntimeError("IA não atingiu critérios de palavras/qualidade após retries")
+
         except Exception as e:
-            self.stdout.write(f"⚠ IA falhou: {e}")
-        
-        # Fallback: conteúdo baseado na notícia específica
-        title = self._generate_title_from_news(article)
-        content = self._generate_content_from_news_fallback(article)
-        
-        return title, content
+            self.stdout.write(f"❌ Publicação cancelada: {e}")
+            # Propagar exceção para que o caller pule este artigo
+            raise
 
     def _generate_title_from_news(self, article):
-        """Gera título original baseado no tópico, nunca copiando títulos de outros portais"""
-        # NUNCA usar títulos de outros portais para evitar plágio
-        # Sempre criar títulos originais baseados no tópico
+        """Título PRÓPRIO otimizado para SEO, inspirado no original sem copiar."""
+        import re
+        topic = article.get('topic', '') or ''
+        original = (article.get('title') or '').strip()
+        description = (article.get('description') or '').strip()
+
+        # Limpeza de marcas/portais
+        portals = ['G1','Globo','Folha','Estadão','UOL','Terra','R7','IG','Exame','Metrópoles','O Globo','CNN','BBC','Reuters']
+        clean = original
+        for p in portals:
+            clean = clean.replace(f' - {p}', '').replace(f' | {p}', '').replace(f' ({p})', '')
+
+        # Palavras‑chave
+        stop = {'de','da','do','das','dos','para','por','com','sem','uma','um','o','a','os','as','e','ou','no','na','nos','nas','em','ao','aos','à','às','que','sobre','após','contra','entre','como','mais','menos','hoje'}
+        text_ref = f"{clean} {description}".lower()
+        words = [w.strip(',.:;!?"()') for w in text_ref.split()]
+        keys = []
+        seen = set()
+        for w in words:
+            if len(w) > 2 and w not in stop and w not in seen:
+                seen.add(w); keys.append(w)
+        keys = keys[:6]
+
+        base_topic = topic.title().strip() or 'Notícia'
         
-        topic = article.get('topic', '')
-        topic_lower = topic.lower()
+        # Estruturas de título mais naturais e variadas
+        estruturas = []
         
-        # Padrões de títulos originais por categoria
-        if any(word in topic_lower for word in ['lula', 'bolsonaro', 'presidente', 'governo', 'política']):
-            return f"{topic.title()}: Análise Política e Desdobramentos"
-        elif any(word in topic_lower for word in ['economia', 'mercado', 'inflação', 'dólar']):
-            return f"{topic.title()}: Impacto na Economia Brasileira"
-        elif any(word in topic_lower for word in ['tecnologia', 'digital', 'ia', 'inteligência']):
-            return f"{topic.title()}: Tendências e Inovações"
-        elif any(word in topic_lower for word in ['esportes', 'futebol', 'copa']):
-            return f"{topic.title()}: Últimas Notícias Esportivas"
-        elif any(word in topic_lower for word in ['saúde', 'medicina', 'hospital']):
-            return f"{topic.title()}: Informações Importantes para a Saúde"
-        elif any(word in topic_lower for word in ['china', 'eua', 'europa', 'internacional']):
-            return f"{topic.title()}: Desenvolvimentos Internacionais"
-        else:
-            return f"{topic.title()}: Análise Completa e Atualizada"
+        # Estrutura 1: Declaração direta (sem dois pontos)
+        if any(word in text_ref for word in ['dividendos', 'juros', 'impostos']):
+            estruturas.append(f"{base_topic} {keys[0].title()} — valores e datas" if keys else None)
+            estruturas.append(f"{base_topic} {keys[0].title()} para acionistas" if keys else None)
+        
+        # Estrutura 2: Com dois pontos (apenas para explicações)
+        if any(word in text_ref for word in ['acordo', 'parceria', 'medidas']):
+            estruturas.append(f"{base_topic} {keys[0].title()}: entenda os detalhes" if keys else None)
+            estruturas.append(f"{base_topic} {keys[0].title()}: o que muda" if keys else None)
+        
+        # Estrutura 3: Interrogativa (para engajamento)
+        if any(word in text_ref for word in ['anuncia', 'divulga', 'confirma']):
+            estruturas.append(f"O que {base_topic} anuncia sobre {keys[0].title()}?" if keys else None)
+            estruturas.append(f"Como {base_topic} atua em {keys[0].title()}?" if keys else None)
+        
+        # Estrutura 4: Declaração simples (mais natural)
+        estruturas.append(f"{base_topic} {keys[0].title()}" if keys else None)
+        estruturas.append(f"{base_topic} {keys[0].title()} hoje" if keys else None)
+        
+        # Estrutura 5: Com traço (mais elegante)
+        estruturas.append(f"{base_topic} {keys[0].title()} — análise completa" if keys else None)
+        estruturas.append(f"{base_topic} {keys[0].title()} — impactos e próximos passos" if keys else None)
+        
+        # Padrões originais como fallback
+        patterns = [
+            lambda ks: f"{base_topic}: {ks[0].title()} e {ks[1].title()} — entenda" if len(ks) >= 2 else None,
+            lambda ks: f"{base_topic} hoje: {ks[0].title()} em foco" if ks else None,
+            lambda ks: f"{clean} — impactos e próximos passos"[:140],
+        ]
+        
+        # Adicionar padrões originais às estruturas
+        for pattern in patterns:
+            estruturas.append(pattern(keys))
+
+        def norm(s):
+            return re.sub(r'\s+', ' ', s.lower()).strip()
+        orig_n = norm(original)
+        
+        # Testar todas as estruturas
+        for estrutura in estruturas:
+            if not estrutura:
+                continue
+            if 20 <= len(estrutura) <= 140 and norm(estrutura) != orig_n:
+                return estrutura
+                
+        fallback = f"{clean} — análise" if clean else f"{base_topic}: Últimas Notícias"
+        return fallback[:140]
 
     def _generate_content_from_news_fallback(self, article):
         """Gera conteúdo fallback baseado na notícia específica"""
@@ -330,50 +440,174 @@ class Command(BaseCommand):
         return content
 
     def _get_category_from_news(self, article, Categoria):
-        """Categoriza baseado no conteúdo da notícia"""
+        """Categoriza baseado no site de origem, notícia encontrada ou sistema inteligente"""
+        # 1. PRIORIDADE MÁXIMA: Extrair categoria do site de origem
+        try:
+            from rb_ingestor.site_categorizer import SiteCategorizer
+            site_categorizer = SiteCategorizer()
+            
+            # Escolher URL a usar: original se disponível
+            url_to_use = article.get('original_url') or article.get('url') or ''
+            # Evitar analisar Google News
+            if url_to_use and 'news.google.' not in url_to_use:
+                # Tentar extrair categoria do site
+                site_category = site_categorizer.categorize_article({'url': url_to_use})
+            else:
+                site_category = None
+            
+            if site_category:
+                self.stdout.write(f"🌐 Categoria do site: {site_category}")
+                
+                # Buscar categoria existente
+                cat = Categoria.objects.filter(nome=site_category.title()).first()
+                if cat:
+                    self.stdout.write(f"✅ Usando categoria existente: {site_category}")
+                    return cat
+                
+                # Criar nova categoria se não existir
+                cat, created = Categoria.objects.get_or_create(
+                    slug=slugify(site_category)[:140],
+                    defaults={"nome": site_category.title()}
+                )
+                if created:
+                    self.stdout.write(f"🆕 Nova categoria criada: {site_category}")
+                else:
+                    self.stdout.write(f"✅ Categoria encontrada: {site_category}")
+                return cat
+            
+        except Exception as e:
+            self.stdout.write(f"⚠ Erro no categorizador de site: {e}")
+        
+        # 2. FALLBACK: Tentar usar categoria da notícia encontrada
+        news_category = article.get('category', '').strip()
+        if news_category:
+            # Limpar e normalizar categoria da notícia
+            clean_category = news_category.title().strip()
+            self.stdout.write(f"📰 Categoria da notícia: {clean_category}")
+            
+            # Buscar categoria existente
+            cat = Categoria.objects.filter(nome=clean_category).first()
+            if cat:
+                self.stdout.write(f"✅ Usando categoria existente: {clean_category}")
+                return cat
+            
+            # Criar nova categoria se não existir
+            cat, created = Categoria.objects.get_or_create(
+                slug=slugify(clean_category)[:140],
+                defaults={"nome": clean_category}
+            )
+            if created:
+                self.stdout.write(f"🆕 Nova categoria criada: {clean_category}")
+            else:
+                self.stdout.write(f"✅ Categoria encontrada: {clean_category}")
+            return cat
+        
+        # 3. FALLBACK FINAL: Sistema inteligente de análise de conteúdo
+        self.stdout.write("🧠 Usando sistema inteligente de categorização...")
+        title = article.get('title', '')
+        description = article.get('description', '')
+        topic = article.get('topic', '')
+        
+        try:
+            from rb_ingestor.smart_categorizer import SmartCategorizer
+            categorizer = SmartCategorizer()
+            
+            # Categorizar baseado no conteúdo completo
+            category_name = categorizer.categorize_content(title, description, topic)
+            confidence = categorizer.get_category_confidence(title, description, topic)
+            
+            self.stdout.write(f"🧠 Categoria detectada: {category_name} (confiança: {confidence:.2f})")
+            
+            # Buscar ou criar categoria
+            cat = Categoria.objects.filter(nome=category_name.title()).first()
+            if cat:
+                return cat
+            
+            # Criar nova categoria se não existir
+            cat, created = Categoria.objects.get_or_create(
+                slug=slugify(category_name)[:140],
+                defaults={"nome": category_name.title()}
+            )
+            return cat
+            
+        except Exception as e:
+            self.stdout.write(f"⚠ Erro no categorizador inteligente: {e}")
+            # Fallback final para sistema simples
+            return self._get_category_fallback(article, Categoria)
+    
+    def _get_category_fallback(self, article, Categoria):
+        """Fallback para categorização simples"""
         title = article.get('title', '').lower()
         description = article.get('description', '').lower()
         topic = article.get('topic', '').lower()
         
-        # Mapeamento de palavras-chave para categorias (ordem de prioridade)
-        category_keywords = {
-            "política": ["política", "governo", "eleições", "presidente", "lula", "bolsonaro", "congresso", "ministro", "democracia", "eleitoral", "partido", "candidato"],
-            "economia": ["economia", "mercado", "inflação", "dólar", "real", "investimento", "finanças", "banco", "crédito", "bolsa", "ações", "pib", "desemprego"],
-            "esportes": ["esportes", "futebol", "copa", "mundial", "brasileirão", "atletismo", "jogos", "competição", "campeonato", "jogador", "time"],
-            "saúde": ["saúde", "medicina", "hospital", "vacina", "covid", "coronavírus", "tratamento", "médico", "doença", "epidemia", "pandemia"],
-            "meio ambiente": ["meio ambiente", "sustentabilidade", "natureza", "clima", "ecologia", "verde", "energia", "poluição", "desmatamento", "aquecimento"],
-            "tecnologia": ["tecnologia", "digital", "ia", "inteligência artificial", "chatgpt", "app", "software", "blockchain", "crypto", "bitcoin", "startup", "inovação"],
-            "mundo": ["china", "eua", "europa", "internacional", "global", "mundial", "país", "nação", "estrangeiro", "guerra", "conflito"],
-            "brasil": ["brasil", "brasileiro", "nacional", "federal", "estadual", "municipal", "governo federal"]
-        }
-        
-        # Verificar todas as fontes de texto
         all_text = f"{title} {description} {topic}"
         
-        # Encontrar categoria mais relevante (primeira que encontrar)
-        for category, keywords in category_keywords.items():
-            if any(kw in all_text for kw in keywords):
-                cat = Categoria.objects.filter(nome=category.title()).first()
-                if cat:
-                    return cat
+        # Mapeamento simples de fallback
+        if any(word in all_text for word in ['política', 'governo', 'presidente', 'eleições']):
+            category_name = "Política"
+        elif any(word in all_text for word in ['economia', 'mercado', 'inflação', 'dólar']):
+            category_name = "Economia"
+        elif any(word in all_text for word in ['esportes', 'futebol', 'copa']):
+            category_name = "Esportes"
+        elif any(word in all_text for word in ['saúde', 'medicina', 'hospital']):
+            category_name = "Saúde"
+        elif any(word in all_text for word in ['tecnologia', 'digital', 'ia']):
+            category_name = "Tecnologia"
+        else:
+            category_name = "Brasil"
         
-        # Fallback para Brasil
-        cat = Categoria.objects.filter(nome="Brasil").first()
+        cat = Categoria.objects.filter(nome=category_name).first()
         if cat:
             return cat
         
-        # Criar categoria Brasil se não existir
         cat, created = Categoria.objects.get_or_create(
-            slug=slugify("Brasil")[:140],
-            defaults={"nome": "Brasil"}
+            slug=slugify(category_name)[:140],
+            defaults={"nome": category_name}
         )
         return cat
 
     def _add_specific_image(self, noticia, article):
-        """Adiciona imagem específica baseada na notícia"""
+        """Adiciona imagem específica baseada na notícia com sistema inteligente melhorado"""
         try:
+            # LÓGICA INTELIGENTE MELHORADA:
+            # 1. Figuras públicas: Detecção inteligente → Instagram oficial → Bancos gratuitos
+            # 2. Artigos gerais: Bancos gratuitos
+            
+            # NOVA PRIORIDADE 1: Detecção inteligente de figuras públicas
+            from rb_ingestor.smart_public_figure_detector import SmartPublicFigureDetector
+            smart_detector = SmartPublicFigureDetector()
+            
+            full_text = f"{noticia.titulo} {noticia.conteudo}"
+            if article:
+                full_text += f" {article.get('title', '')} {article.get('description', '')}"
+            
+            # Detectar figura pública usando sistema inteligente
+            public_figure = smart_detector.detect_public_figure(full_text)
+            
+            if public_figure:
+                # É figura pública - seguir lógica específica
+                self.stdout.write(f"🎭 Figura pública detectada: {public_figure['figure']}")
+                
+                # PRIORIDADE 1: Instagram oficial da figura (usando sistema inteligente)
+                instagram_image = smart_detector.get_instagram_image_for_figure(public_figure)
+                
+                if instagram_image and instagram_image.get("url"):
+                    self.stdout.write(f"📱 Imagem do Instagram oficial encontrada: {public_figure['instagram_handle']}")
+                    noticia.imagem = instagram_image["url"]
+                    noticia.imagem_alt = instagram_image.get("alt", f"Imagem de {public_figure['figure']}")
+                    noticia.imagem_credito = instagram_image.get("credit", f"Foto: Instagram {public_figure['instagram_handle']}")
+                    noticia.imagem_licenca = "Figura Pública - Unsplash"
+                    noticia.imagem_fonte_url = instagram_image.get("instagram_url", "")
+                    noticia.save()
+                    
+                    self.stdout.write("✅ Imagem do Instagram oficial adicionada com sucesso")
+                    return
+            
+            # FALLBACK: Bancos de imagens gratuitos
+            self.stdout.write("🖼️ Usando banco de imagens gratuitos...")
             from rb_ingestor.image_search import ImageSearchEngine
-
+            
             search_engine = ImageSearchEngine()
             
             # Usar o tópico da notícia para buscar imagem específica
@@ -397,10 +631,13 @@ class Command(BaseCommand):
                 noticia.imagem_fonte_url = image_url
                 noticia.save()
 
-                self.stdout.write(f"🖼️  Imagem específica adicionada: {search_term}")
+                self.stdout.write(f"✅ Imagem gratuita adicionada: {search_term}")
+                return
+            
+            self.stdout.write("⚠️ Nenhuma imagem encontrada")
 
         except Exception as e:
-            self.stdout.write(f"⚠ Erro ao adicionar imagem específica: {e}")
+            self.stdout.write(f"⚠️ Erro ao adicionar imagem específica: {e}")
 
     def _check_duplicate(self, title, Noticia):
         """Verifica se já existe notícia similar"""
