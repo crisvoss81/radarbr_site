@@ -67,28 +67,6 @@ class SmartCategorizer:
                 ],
                 "weight": 1.0
             },
-            "educação": {
-                "keywords": [
-                    "educação", "educador", "professor", "professora", "escola", "universidade", 
-                    "ensino", "aprendizado", "estudante", "aluno", "aluna", "docente", "pedagogia",
-                    "curso", "disciplina", "matéria", "aula", "sala de aula", "educacional",
-                    "formação", "capacitação", "treinamento", "conhecimento", "saber", "aprender",
-                    "ensinar", "estudar", "acadêmico", "escolar", "universitário", "faculdade",
-                    "colégio", "instituição", "educativa", "didática", "metodologia", "currículo",
-                    "dia do professor", "comemoração", "homenagem", "educadores", "docentes"
-                ],
-                "context_patterns": [
-                    r"(educação|ensino)\s+(pública|brasileira)",
-                    r"(professor|professora|educador)\s+(brasileiro|da rede pública)",
-                    r"(escola|universidade)\s+(pública|municipal|estadual)",
-                    r"(dia do professor|dia dos professores)",
-                    r"(sistema educacional|educação básica)",
-                    r"(formação de professores|capacitação docente)",
-                    r"(ensino fundamental|ensino médio|ensino superior)",
-                    r"(rede pública|rede privada)\s+(de ensino|educacional)"
-                ],
-                "weight": 1.2
-            },
             "saúde": {
                 "keywords": [
                     "saúde", "medicina", "hospital", "vacina", "covid", "coronavírus", 
@@ -177,29 +155,6 @@ class SmartCategorizer:
                     r"(férias|ferias)\s+(brasileiras|no brasil)"
                 ],
                 "weight": 1.0
-            },
-            "ciência": {
-                "keywords": [
-                    "ciência", "científico", "científica", "pesquisa", "estudo", "descoberta",
-                    "asteroide", "asteroides", "meteorito", "meteoritos", "cometa", "cometas",
-                    "espaço", "espacial", "nasa", "agência espacial", "astronomia", "astronômico",
-                    "planeta", "planetas", "sistema solar", "galáxia", "universo", "cosmos",
-                    "observatório", "telescópio", "satélite", "satélites", "missão espacial",
-                    "exploração espacial", "cosmonauta", "astronauta", "foguete", "lançamento",
-                    "órbita", "trajetória", "colisão", "impacto", "terra", "lua", "marte",
-                    "júpiter", "saturno", "venus", "mercurio", "plutão", "neptuno"
-                ],
-                "context_patterns": [
-                    r"(asteroide|meteorito|cometa)\s+(.*)",
-                    r"(nasa|agência espacial)\s+(.*)",
-                    r"(observatório|telescópio)\s+(.*)",
-                    r"(missão|exploração)\s+(espacial)",
-                    r"(sistema solar|universo|cosmos)",
-                    r"(órbita|trajetória)\s+(da|do|de)",
-                    r"(colisão|impacto)\s+(com|na|no)",
-                    r"(descoberta|pesquisa)\s+(científica|astronômica)"
-                ],
-                "weight": 1.3
             },
             "brasil": {
                 "keywords": [

@@ -83,7 +83,8 @@ class Command(BaseCommand):
             # Buscar notícias específicas
             articles = google_news.get_top_news()
             if not articles:
-                return []
+                self.stdout.write("⚠ GNews retornou vazio — usando fallback RSS")
+                return self._get_specific_news_fallback_rss()
             
             # Filtrar e processar notícias
             processed_news = []
@@ -101,7 +102,41 @@ class Command(BaseCommand):
             return processed_news
             
         except Exception as e:
-            self.stdout.write(f"⚠ Erro Google News: {e}")
+            self.stdout.write(f"⚠ Erro Google News: {e} — usando fallback RSS")
+            return self._get_specific_news_fallback_rss()
+
+    def _get_specific_news_fallback_rss(self):
+        """Fallback: usa RSS do Google News via NewsContentExtractor para montar artigos específicos."""
+        try:
+            from rb_ingestor.news_content_extractor import NewsContentExtractor
+            extractor = NewsContentExtractor()
+            topics = [
+                'economia', 'política', 'tecnologia', 'brasil', 'mundo', 'esportes', 'saúde', 'ciência'
+            ]
+            processed = []
+            for topic in topics:
+                items = extractor.get_rss_items_for_topic(topic, max_items=3) or []
+                for item in items:
+                    title = item.get('title') or ''
+                    desc = item.get('description') or ''
+                    url = item.get('link') or ''
+                    if not title or not url:
+                        continue
+                    processed.append({
+                        'title': title,
+                        'description': desc,
+                        'url': url,
+                        'published_date': '',
+                        'source': '',
+                        'topic': self._extract_main_topic(title)
+                    })
+                    if len(processed) >= 10:
+                        break
+                if len(processed) >= 10:
+                    break
+            return processed
+        except Exception as e:
+            self.stdout.write(f"⚠ Erro no fallback RSS: {e}")
             return []
 
     def _is_valid_news_article(self, article):
@@ -237,77 +272,82 @@ class Command(BaseCommand):
         return ""
 
     def _generate_content_from_news(self, article):
-        """Gera conteúdo baseado na notícia específica"""
+        """Gera conteúdo usando a mesma lógica do comando manual validado"""
         try:
-            # 1) Extrair texto base do publisher para calcular alvo por margem de 15%
-            base_words = None
-            try:
-                from rb_ingestor.news_content_extractor import NewsContentExtractor
-                extractor = NewsContentExtractor()
-                data = extractor.extract_content_from_url(article.get('original_url') or article.get('url') or '')
-                if data and data.get('content'):
-                    base_words = len((data['content'] or '').split())
-                    self.stdout.write(f"🔍 Conteúdo completo extraído: {base_words} palavras")
-            except Exception as e:
-                self.stdout.write(f"⚠ Falha ao extrair conteúdo base: {e}")
-
-            # 2) Definir alvo dinâmico
-            if base_words and base_words >= 80:
-                target_min = int(round(base_words * 0.85))
-                target_max = int(round(base_words * 1.15))
-                self.stdout.write(f"📊 Notícia base completa: {base_words} palavras")
-                self.stdout.write(f"🎯 Margem 15%: {target_min}-{target_max} palavras")
-            else:
-                target_min = 800
-                target_max = 1100
-                self.stdout.write("📊 Base insuficiente; usando alvo padrão 800-1100 palavras")
-
-            # 3) Gerar com IA melhorada com retry
+            # Usar a mesma lógica do publish_topic que está funcionando
             from rb_ingestor.ai_enhanced import generate_enhanced_article
-
-            def _attempt_generate() -> dict | None:
-                return generate_enhanced_article(article.get('topic', ''), article, max(target_min, 600))
-
-            for attempt in (1, 2):
-                ai_content = _attempt_generate()
-                if not ai_content:
-                    self.stdout.write(f"⚠ Tentativa {attempt}: IA não retornou conteúdo")
-                    continue
-
-                title = strip_tags(ai_content.get("title", article.get('title', '')))[:200]
-                html = ai_content.get("html", "<p></p>")
-                content = f'<p class="dek">{strip_tags(ai_content.get("dek", article.get('description', '')))[:220]}</p>\n{html}'
-
-                # Contar palavras reais do corpo
-                try:
-                    from django.utils.html import strip_tags as dj_strip
-                    word_count = len(dj_strip(content).split())
-                except Exception:
-                    word_count = ai_content.get('word_count', 0)
-
-                quality_score = ai_content.get('quality_score', 0)
-
-                # 4) Validação: faixa alvo; tolerância 80% apenas se base muito grande
-                accept = False
-                if word_count >= target_min and word_count <= target_max:
-                    accept = True
-                else:
-                    if base_words and base_words >= 1200 and word_count >= int(target_min * 0.8):
-                        accept = True
-
-                if accept and quality_score >= 40:
-                    self.stdout.write(f"✅ IA gerou {word_count} palavras (qualidade: {quality_score}%) — aceito")
-                    return title, content
-
-                self.stdout.write(f"⚠ IA gerou {word_count} palavras (qualidade: {quality_score}%), fora dos critérios — retry {attempt}/2")
-
-            # 5) Se falhar após duas tentativas, pular publicação (sem fallback)
-            raise RuntimeError("IA não atingiu critérios de palavras/qualidade após retries")
-
+            
+            # Definir palavras mínimas baseado no artigo
+            min_words = 700  # Padrão que funciona bem no manual
+            
+            # Gerar conteúdo com IA melhorada (mesmo método do manual)
+            ai_content = generate_enhanced_article(article.get('topic', ''), article, min_words)
+            
+            if not ai_content:
+                self.stdout.write("⚠ IA não retornou conteúdo")
+                raise RuntimeError("IA não retornou conteúdo")
+            
+            # Processar resultado (mesmo que o manual)
+            title = strip_tags(ai_content.get("title", article.get('title', '')))[:200]
+            html = ai_content.get("html", "<p></p>")
+            content = f'<p class="dek">{strip_tags(ai_content.get("dek", article.get('description', '')))[:220]}</p>\n{html}'
+            
+            # Contar palavras (mesmo método do manual)
+            from django.utils.html import strip_tags as dj_strip
+            word_count = len(dj_strip(content).split())
+            quality_score = ai_content.get('quality_score', 0)
+            
+            self.stdout.write(f"✅ IA gerou {word_count} palavras (qualidade: {quality_score}%)")
+            
+            # Verificar margem (mesmo critério do manual)
+            if min_words * 0.85 <= word_count <= min_words * 1.15:
+                self.stdout.write(f"✅ Conteúdo dentro da margem ideal: {word_count} palavras")
+            else:
+                self.stdout.write(f"⚠ Conteúdo fora da margem ideal: {word_count} palavras")
+            
+            return title, content
+            
         except Exception as e:
             self.stdout.write(f"❌ Publicação cancelada: {e}")
             # Propagar exceção para que o caller pule este artigo
             raise
+
+    def _normalize_two_h2_sections(self, html: str) -> str:
+        """Garante exatamente 2 H2: mantém os dois primeiros; H2 adicionais viram H3.
+        Se não houver 2 H2, insere subtítulos padrão após o primeiro parágrafo.
+        """
+        try:
+            if not html:
+                return html
+            import re
+            # Demover H2 extras para H3, preservando os 2 primeiros
+            positions = [m.start() for m in re.finditer(r"<h2\b", html, flags=re.IGNORECASE)]
+            if len(positions) >= 2:
+                # Substituir a partir do 3º <h2 ...> por <h3 ...>
+                def replacer(match, _state={"count": 0}):
+                    _state["count"] += 1
+                    if _state["count"] <= 2:
+                        return match.group(0)
+                    return match.group(0).replace("<h2", "<h3").replace("</h2>", "</h3>")
+                # Primeiro, marcar blocos de fechamento também
+                html = re.sub(r"</h2>", "</h2>", html, flags=re.IGNORECASE)
+                html = re.sub(r"<h2(?=[^>]*>)", replacer, html, flags=re.IGNORECASE)
+                # Corrigir fechamentos residuais de H2 extras
+                html = re.sub(r"</h2>(?=(?:[^<]|<(?!/?h2))*$)", "</h3>", html, flags=re.IGNORECASE)
+                return html
+
+            # Se houver 0 ou 1 H2, inserir dois subtítulos padrão após o primeiro </p>
+            insert_at = html.lower().find("</p>")
+            insert_at = (insert_at + 4) if insert_at != -1 else 0
+            h2_block = (
+                "\n<h2>Contexto e Principais Pontos</h2>\n"
+                "<p>Entenda os elementos centrais do caso com fatos e informações claras ao leitor.</p>\n"
+                "<h2>Desdobramentos e Impactos</h2>\n"
+                "<p>Resumo dos efeitos práticos, reações e próximos passos relacionados ao tema.</p>\n"
+            )
+            return html[:insert_at] + h2_block + html[insert_at:]
+        except Exception:
+            return html
 
     def _generate_title_from_news(self, article):
         """Título PRÓPRIO otimizado para SEO, inspirado no original sem copiar."""
@@ -544,7 +584,9 @@ class Command(BaseCommand):
         all_text = f"{title} {description} {topic}"
         
         # Mapeamento simples de fallback
-        if any(word in all_text for word in ['política', 'governo', 'presidente', 'eleições']):
+        if any(word in all_text for word in ['prisão','preso','pf','polícia','delegado','crime','criminoso','latrocínio','assalto','tráfico','trafico','lavagem','pcc','milícia','milicia','tiroteio','homicídio','homicidio']):
+            category_name = "Brasil"
+        elif any(word in all_text for word in ['política', 'governo', 'presidente', 'eleições']):
             category_name = "Política"
         elif any(word in all_text for word in ['economia', 'mercado', 'inflação', 'dólar']):
             category_name = "Economia"
@@ -568,59 +610,22 @@ class Command(BaseCommand):
         return cat
 
     def _add_specific_image(self, noticia, article):
-        """Adiciona imagem específica baseada na notícia com sistema inteligente melhorado"""
+        """Adiciona imagem apenas de bancos gratuitos (sem Instagram)."""
         try:
-            # LÓGICA INTELIGENTE MELHORADA:
-            # 1. Figuras públicas: Detecção inteligente → Instagram oficial → Bancos gratuitos
-            # 2. Artigos gerais: Bancos gratuitos
-            
-            # NOVA PRIORIDADE 1: Detecção inteligente de figuras públicas
-            from rb_ingestor.smart_public_figure_detector import SmartPublicFigureDetector
-            smart_detector = SmartPublicFigureDetector()
-            
-            full_text = f"{noticia.titulo} {noticia.conteudo}"
-            if article:
-                full_text += f" {article.get('title', '')} {article.get('description', '')}"
-            
-            # Detectar figura pública usando sistema inteligente
-            public_figure = smart_detector.detect_public_figure(full_text)
-            
-            if public_figure:
-                # É figura pública - seguir lógica específica
-                self.stdout.write(f"🎭 Figura pública detectada: {public_figure['figure']}")
-                
-                # PRIORIDADE 1: Instagram oficial da figura (usando sistema inteligente)
-                instagram_image = smart_detector.get_instagram_image_for_figure(public_figure)
-                
-                if instagram_image and instagram_image.get("url"):
-                    self.stdout.write(f"📱 Imagem do Instagram oficial encontrada: {public_figure['instagram_handle']}")
-                    noticia.imagem = instagram_image["url"]
-                    noticia.imagem_alt = instagram_image.get("alt", f"Imagem de {public_figure['figure']}")
-                    noticia.imagem_credito = instagram_image.get("credit", f"Foto: Instagram {public_figure['instagram_handle']}")
-                    noticia.imagem_licenca = "Figura Pública - Unsplash"
-                    noticia.imagem_fonte_url = instagram_image.get("instagram_url", "")
-                    noticia.save()
-                    
-                    self.stdout.write("✅ Imagem do Instagram oficial adicionada com sucesso")
-                    return
-            
-            # FALLBACK: Bancos de imagens gratuitos
-            self.stdout.write("🖼️ Usando banco de imagens gratuitos...")
+            self.stdout.write("🖼️ Buscando imagem em bancos gratuitos (Unsplash/Pexels)...")
             from rb_ingestor.image_search import ImageSearchEngine
-            
+
             search_engine = ImageSearchEngine()
-            
-            # Usar o tópico da notícia para buscar imagem específica
-            topic = article.get('topic', '')
-            title = article.get('title', '')
-            
-            # Criar termo de busca específico
+
+            topic = (article.get('topic', '') if article else '')
+            title = (article.get('title', '') if article else '')
+
             search_term = topic if topic else title[:50]
-            
+
             image_url = search_engine.search_image(
                 search_term,
                 noticia.conteudo,
-                noticia.categoria.nome if noticia.categoria else "geral"
+                (noticia.categoria.nome if noticia.categoria else "geral")
             )
 
             if image_url:
@@ -633,11 +638,11 @@ class Command(BaseCommand):
 
                 self.stdout.write(f"✅ Imagem gratuita adicionada: {search_term}")
                 return
-            
-            self.stdout.write("⚠️ Nenhuma imagem encontrada")
+
+            self.stdout.write("⚠️ Nenhuma imagem encontrada nos bancos gratuitos")
 
         except Exception as e:
-            self.stdout.write(f"⚠️ Erro ao adicionar imagem específica: {e}")
+            self.stdout.write(f"⚠️ Erro ao adicionar imagem: {e}")
 
     def _check_duplicate(self, title, Noticia):
         """Verifica se já existe notícia similar"""

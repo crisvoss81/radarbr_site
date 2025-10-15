@@ -143,7 +143,7 @@
   </div>
 
   <div class="post-content">
-    {{ object.conteudo|split_content_sections|render_markdown }}
+    {{ object.conteudo|split_content_sections|safe }}
   </div>
 
   <!-- AdSense Banner após conteúdo (responsivo) -->

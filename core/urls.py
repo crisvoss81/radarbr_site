@@ -11,6 +11,7 @@ from rb_portal import views as portal_views
 from core.views import robots_txt
 from rb_noticias.sitemaps import NoticiasSitemap, CategoriaSitemap, StaticViewsSitemap
 from rb_noticias.feeds import UltimasNoticiasFeed
+from rb_ingestor.management.commands.automacao_webhook import automacao_webhook_view
 
 sitemaps = {
     "noticias": NoticiasSitemap,
@@ -40,6 +41,9 @@ urlpatterns = [
         TemplateView.as_view(template_name="rb_portal/googlefcd08be596689a50.html"),
         name="google_verification"
     ),
+
+    # Webhook para automação
+    path("webhook/automacao/", automacao_webhook_view, name="automacao_webhook"),
 
 ]
 

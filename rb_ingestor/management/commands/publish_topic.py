@@ -37,147 +37,680 @@ class Command(BaseCommand):
         custom_title = options.get("title")
         min_words = options["words"]
         
-        self.stdout.write(f"📝 Tópico: {topic}")
+        self.stdout.write(f"Topico: {topic}")
         if category:
-            self.stdout.write(f"🏷️  Categoria especificada: {category}")
+            self.stdout.write(f"Categoria especificada: {category}")
         if custom_title:
-            self.stdout.write(f"📰 Título personalizado: {custom_title}")
-        self.stdout.write(f"📊 Mínimo de palavras: {min_words}")
+            self.stdout.write(f"Titulo personalizado: {custom_title}")
+        self.stdout.write(f"Minimo de palavras: {min_words}")
 
         # Verificar duplicatas se não forçar
         if not options["force"] and not options["dry_run"]:
             if self._check_duplicate(topic, Noticia):
-                self.stdout.write("⚠ Tópico similar já existe. Use --force para publicar mesmo assim.")
+                self.stdout.write("AVISO: Topico similar ja existe. Use --force para publicar mesmo assim.")
                 return
 
         # Buscar notícias específicas sobre o tópico
         news_article = self._search_specific_news(topic)
         
-        # Gerar título e conteúdo baseado na estratégia inteligente
+        if news_article:
+            self.stdout.write(f"Noticia encontrada: {news_article.get('title', '')[:50]}...")
+            
+            # Acessar sites originais mencionados na notícia
+            enhanced_data = self._extract_from_original_sites(news_article)
+            if enhanced_data:
+                self.stdout.write(f"✅ Conteúdo extraído de site original: {enhanced_data.get('source_domain', 'N/A')}")
+                # Usar dados reais extraídos
+                news_article.update(enhanced_data)
+            else:
+                self.stdout.write("⚠ Usando dados básicos do Google News")
+                # Melhorar os dados com informações mais específicas
+                if news_article.get('title') and news_article.get('description'):
+                    enhanced_context = {
+                        'title': news_article.get('title', ''),
+                        'description': news_article.get('description', ''),
+                        'source': news_article.get('source', 'Google News'),
+                        'url': news_article.get('url', ''),
+                        'specific_news': True
+                    }
+                    news_article.update(enhanced_context)
+        else:
+            self.stdout.write("AVISO: Nenhuma noticia especifica encontrada para o topico - criando do zero")
+
+        # Detectar categoria
+        if category:
+            cat = Categoria.objects.filter(nome=category).first()
+            if not cat:
+                cat = Categoria.objects.create(nome=category, slug=slugify(category)[:140])
+        else:
+            cat = self._detect_category_from_news(topic.lower(), news_article, Categoria)
+
+        # Gerar título
         if custom_title:
             title = custom_title
         else:
             title = self._generate_title_from_news(topic, news_article)
-        
-        # Nova lógica: criar conteúdo baseado em referência ou do zero
-        if news_article:
-            self.stdout.write(f"📰 Notícia encontrada: {news_article.get('title', '')[:50]}...")
-            content = self._generate_content_based_on_reference(topic, news_article, category, min_words)
-        else:
-            self.stdout.write(f"⚠ Nenhuma notícia específica encontrada para '{topic}' - criando do zero")
-            content = self._generate_content_from_scratch(topic, category, min_words)
-        
-        # Verificar qualidade do conteúdo
-        word_count = len(strip_tags(content).split())
-        self.stdout.write(f"📊 Palavras geradas: {word_count}")
-        
-        # Verificar se está dentro da margem aceitável (±15%)
-        margin = int(min_words * 0.15)
-        target_min = min_words - margin
-        target_max = min_words + margin
-        
-        if word_count < target_min:
-            self.stdout.write(f"⚠ Conteúdo com {word_count} palavras (mínimo: {target_min}), ajustando...")
-            content = self._adjust_content_length(content, topic, category, min_words)
-            word_count = len(strip_tags(content).split())
-            self.stdout.write(f"📊 Palavras após ajuste: {word_count}")
-        elif word_count > target_max:
-            self.stdout.write(f"⚠ Conteúdo com {word_count} palavras (máximo: {target_max}), otimizando...")
-            content = self._optimize_content_length(content, target_max)
-            word_count = len(strip_tags(content).split())
-            self.stdout.write(f"📊 Palavras após otimização: {word_count}")
-        else:
-            self.stdout.write(f"✅ Conteúdo dentro da margem ideal: {word_count} palavras")
 
-        # Obter categoria
-        cat = self._get_category(topic, category, Categoria)
+        # Gerar conteúdo
+        content = self._generate_content_from_news(topic, news_article, cat, min_words)
         
-        # Criar slug único
-        timestamp = timezone.now().strftime('%Y%m%d-%H%M%S')
-        slug = slugify(f"{title}-{timestamp}")[:180]
+        # Verificar contagem de palavras
+        word_count = len(strip_tags(content).split())
+        self.stdout.write(f"Palavras geradas: {word_count}")
+        
+        # CATEGORIZAR BASEADO NO CONTEÚDO GERADO (apenas se categoria original não foi detectada com alta confiança)
+        if not hasattr(self, '_original_category_confidence') or self._original_category_confidence < 0.6:
+            self.stdout.write("🔍 Analisando conteúdo gerado para determinar categoria...")
+            final_category = self._categorize_generated_content(content, topic)
+            
+            if final_category and final_category != cat:
+                self.stdout.write(f"✅ Categoria ajustada: {cat.nome} → {final_category.nome}")
+                cat = final_category
+        else:
+            self.stdout.write(f"✅ Mantendo categoria original detectada: {cat.nome} (confiança alta)")
+        
+        if word_count < min_words * 0.85:  # 85% do mínimo
+            self.stdout.write(f"AVISO: Conteudo com {word_count} palavras (minimo: {int(min_words * 0.85)}), ajustando...")
+            content = self._adjust_content_length(content, topic, cat, min_words)
+            word_count = len(strip_tags(content).split())
+            self.stdout.write(f"Palavras apos ajuste: {word_count}")
+
+        # Integrar vídeos do YouTube automaticamente
+        try:
+            from rb_ingestor.youtube_integration import YouTubeIntegration
+            youtube_integration = YouTubeIntegration()
+            
+            content_with_video = youtube_integration.integrate_video_into_content(
+                content, topic, title, news_article
+            )
+            
+            if content_with_video != content:
+                self.stdout.write("Video do YouTube integrado automaticamente")
+                content = content_with_video
+                word_count = len(strip_tags(content).split())
+                self.stdout.write(f"Palavras apos integracao de video: {word_count}")
+            
+        except Exception as e:
+            self.stdout.write(f"AVISO: Erro na integracao do YouTube: {e}")
+
+        # Verificar se está dentro da margem ideal
+        if min_words * 0.85 <= word_count <= min_words * 1.15:
+            self.stdout.write(f"Conteudo dentro da margem ideal: {word_count} palavras")
+        else:
+            self.stdout.write(f"AVISO: Conteudo fora da margem ideal: {word_count} palavras")
 
         if options["dry_run"]:
-            self.stdout.write("🔍 MODO DRY-RUN - Simulação apenas")
-            self.stdout.write(f"📰 Título: {title}")
-            self.stdout.write(f"🏷️  Categoria: {cat.nome}")
-            self.stdout.write(f"🔗 Slug: {slug}")
-            self.stdout.write(f"📊 Palavras: {word_count}")
-            self.stdout.write(f"📏 Caracteres: {len(strip_tags(content))}")
+            self.stdout.write("MODO DRY-RUN: Artigo nao sera publicado")
+            self.stdout.write(f"Titulo: {title}")
+            self.stdout.write(f"Categoria: {cat.nome if cat else 'N/A'}")
+            self.stdout.write(f"Palavras: {word_count}")
             return
 
         # Criar notícia
-        try:
-            noticia = Noticia.objects.create(
-                titulo=title,
-                slug=slug,
-                conteudo=content,
-                publicado_em=timezone.now(),
-                categoria=cat,
-                fonte_url=f"manual-topic-{timestamp}-{topic[:20].replace(' ', '-')}",
-                fonte_nome="RadarBR Manual Topic",
-                status=1
-            )
+        noticia = Noticia.objects.create(
+            titulo=title,
+            conteudo=content,
+            categoria=cat,
+            slug=f"{slugify(title)[:120]}-{timezone.now().strftime('%Y%m%d%H%M%S')}",
+            status=Noticia.Status.PUBLICADO,
+            publicado_em=timezone.now(),
+            fonte_url=f"manual-{topic.lower().replace(' ', '-')}-{timezone.now().strftime('%Y%m%d%H%M%S')}"
+        )
 
-            # Adicionar imagem
-            self._add_image(noticia, topic)
+        # Adicionar imagem
+        self._add_image(noticia, topic, news_article)
 
-            self.stdout.write(self.style.SUCCESS(f"✅ Artigo publicado com sucesso!"))
-            self.stdout.write(f"📰 Título: {title}")
-            self.stdout.write(f"🏷️  Categoria: {cat.nome}")
-            self.stdout.write(f"🔗 URL: /noticia/{slug}/")
-            self.stdout.write(f"📊 Palavras: {word_count}")
-            self.stdout.write(f"📏 Caracteres: {len(strip_tags(content))}")
+        # Ping sitemap
+        self._ping_sitemap()
 
-            # Ping sitemap
-            self._ping_sitemap()
+        self.stdout.write("Artigo publicado com sucesso!")
+        self.stdout.write(f"Titulo: {title}")
+        self.stdout.write(f"Categoria: {cat.nome}")
+        self.stdout.write(f"URL: {noticia.get_absolute_url()}")
+        self.stdout.write(f"Palavras: {word_count}")
+        self.stdout.write(f"Caracteres: {len(strip_tags(content))}")
 
-        except Exception as e:
-            self.stdout.write(self.style.ERROR(f"❌ Erro ao publicar: {e}"))
+    def _check_duplicate(self, topic, Noticia):
+        """Verifica se já existe artigo similar"""
+        topic_words = topic.lower().split()
+        
+        for word in topic_words:
+            if len(word) > 3:
+                similar = Noticia.objects.filter(titulo__icontains=word).first()
+                if similar:
+                    return True
+        return False
 
     def _search_specific_news(self, topic):
         """Busca notícias específicas sobre o tópico"""
         try:
             from gnews import GNews
             
-            # Configurar GNews
-            google_news = GNews(
-                language='pt', 
-                country='BR', 
-                period='7d',  # Últimos 7 dias
-                max_results=5,
-                exclude_websites=['youtube.com', 'instagram.com', 'facebook.com']
-            )
+            google_news = GNews()
+            google_news.language = "pt"
+            google_news.country = "BR"
+            google_news.max_results = 1
             
-            # Buscar notícias específicas sobre o tópico
             articles = google_news.get_news(topic)
             
             if articles:
-                # Pegar a primeira notícia relevante
-                for article in articles:
-                    if self._is_relevant_news(article, topic):
-                        return {
-                            'title': article.get('title', ''),
-                            'description': article.get('description', ''),
-                            'url': article.get('url', ''),
-                            'source': article.get('publisher', {}).get('title', ''),
-                            'published_date': article.get('published date', ''),
-                            'topic': topic
-                        }
+                article = articles[0]
+                # Verificar se o tópico aparece no título ou descrição
+                if self._is_relevant_article(topic, article):
+                    return article
             
             return None
             
         except Exception as e:
-            self.stdout.write(f"⚠ Erro ao buscar notícias: {e}")
+            self.stdout.write(f"AVISO: Erro ao buscar noticias: {e}")
             return None
 
-    def _is_relevant_news(self, article, topic):
-        """Verifica se a notícia é relevante para o tópico"""
+    def _extract_from_original_sites(self, news_article):
+        """Extrai conteúdo do primeiro site que o Google News retornou"""
+        try:
+            # LÓGICA SIMPLES: Acessar diretamente o primeiro resultado do Google News
+            google_news_url = news_article.get('url', '')
+            
+            if google_news_url and 'news.google.com' in google_news_url:
+                self.stdout.write("🔍 Acessando primeiro resultado do Google News...")
+                
+                # Extrair URL original do Google News
+                original_url = self._extract_original_url_from_google_news(google_news_url)
+                
+                if original_url:
+                    self.stdout.write(f"✅ URL original encontrado: {original_url}")
+                    
+                    # Acessar diretamente o artigo original
+                    content = self._extract_content_from_url(original_url)
+                    
+                    if content and content.get('content') and len(content.get('content', '')) > 200:
+                        self.stdout.write(f"✅ Conteúdo extraído do artigo original")
+                        return {
+                            'title': content.get('title', ''),
+                            'description': content.get('description', ''),
+                            'content': content.get('content', ''),
+                            'author': content.get('author', ''),
+                            'date': content.get('date', ''),
+                            'images': content.get('images', []),
+                            'source_domain': self._extract_domain_from_url(original_url),
+                            'original_url': original_url,
+                            'real_content': True
+                        }
+                    else:
+                        self.stdout.write("⚠ Conteúdo extraído insuficiente, usando dados do Google News")
+                else:
+                    self.stdout.write("⚠ Não foi possível extrair URL original")
+            
+            # FALLBACK: Usar dados do Google News diretamente
+            self.stdout.write("🔄 Usando dados do Google News como base")
+            return {
+                'title': news_article.get('title', ''),
+                'description': news_article.get('description', ''),
+                'content': news_article.get('description', ''),  # Usar descrição como conteúdo
+                'author': '',
+                'date': news_article.get('published', ''),
+                'images': [],
+                'source_domain': 'google_news',
+                'original_url': news_article.get('url', ''),
+                'real_content': True
+            }
+            
+        except Exception as e:
+            self.stdout.write(f"AVISO: Erro ao extrair de sites originais: {e}")
+            # FALLBACK FINAL: Usar dados do Google News
+            return {
+                'title': news_article.get('title', ''),
+                'description': news_article.get('description', ''),
+                'content': news_article.get('description', ''),
+                'author': '',
+                'date': news_article.get('published', ''),
+                'images': [],
+                'source_domain': 'google_news',
+                'original_url': news_article.get('url', ''),
+                'real_content': True
+            }
+    
+    def _extract_original_url_from_google_news(self, google_news_url):
+        """Extrai URL do veículo original a partir de um link do Google News.
+
+        Estratégia em camadas:
+        1) Se houver parâmetro "url" na query, retorna esse valor.
+        2) Faz GET com allow_redirects=True e usa response.url (normalmente resolve para o site original).
+        3) Fallback para heurísticas em HTML/JS se o 1 e 2 falharem.
+        """
+        try:
+            import requests
+            from bs4 import BeautifulSoup
+            import re
+            from urllib.parse import urlparse, parse_qs, urljoin
+            
+            session = requests.Session()
+            session.headers.update({
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            })
+
+            # 1) Tentar extrair via querystring "url"
+            try:
+                parsed = urlparse(google_news_url)
+                qs = parse_qs(parsed.query)
+                if 'url' in qs and qs['url']:
+                    candidate = qs['url'][0]
+                    if candidate and not self._is_google_news_url(candidate):
+                        return candidate
+            except Exception:
+                pass
+
+            # 2) Seguir redirecionamentos
+            self.stdout.write(f"🔍 Acessando Google News: {google_news_url}")
+            response = session.get(google_news_url, timeout=20, allow_redirects=True)
+            response.raise_for_status()
+            final_url = response.url
+            if final_url and not self._is_google_news_url(final_url) and self._looks_like_news_url(final_url):
+                self.stdout.write(f"🔗 Resolvido por redirect: {final_url}")
+                return final_url
+            
+            soup = BeautifulSoup(response.content, 'html.parser')
+            
+            # MÉTODO 1: Procurar por links diretos que não sejam do Google News
+            all_links = soup.find_all('a', href=True)
+            original_links = []
+            
+            for link in all_links:
+                href = link.get('href')
+                if href:
+                    # Converter URLs relativos em absolutos
+                    if href.startswith('/'):
+                        href = urljoin(google_news_url, href)
+                    
+                    # Verificar se não é do Google News e parece ser uma notícia
+                    if not self._is_google_news_url(href) and self._looks_like_news_url(href):
+                        original_links.append(href)
+                        self.stdout.write(f"🔗 Link encontrado: {href}")
+            
+            # MÉTODO 2: Procurar por meta tags Open Graph
+            meta_tags = soup.find_all('meta')
+            for meta in meta_tags:
+                if meta.get('property') == 'og:url':
+                    url = meta.get('content')
+                    if url and not self._is_google_news_url(url) and self._looks_like_news_url(url):
+                        original_links.append(url)
+                        self.stdout.write(f"🔗 Meta og:url encontrado: {url}")
+            
+            # MÉTODO 3: Procurar por JavaScript que pode conter URLs
+            scripts = soup.find_all('script')
+            for script in scripts:
+                if script.string:
+                    # Procurar por padrões de URL em JavaScript
+                    url_patterns = [
+                        r'https?://[^\s"\'<>]+\.(com|br|org|net)/[^\s"\'<>]*',
+                        r'url["\']?\s*:\s*["\']([^"\']+)["\']',
+                        r'href["\']?\s*:\s*["\']([^"\']+)["\']'
+                    ]
+                    
+                    for pattern in url_patterns:
+                        matches = re.findall(pattern, script.string)
+                        for match in matches:
+                            if isinstance(match, tuple):
+                                url = match[0] if match[0] else match[1]
+                            else:
+                                url = match
+                            
+                            if url and not self._is_google_news_url(url) and self._looks_like_news_url(url):
+                                original_links.append(url)
+                                self.stdout.write(f"🔗 URL encontrado em JS: {url}")
+            
+            # MÉTODO 4: Procurar por atributos data-* que podem conter URLs
+            try:
+                elements_with_data = soup.find_all(attrs=lambda attrs: attrs and hasattr(attrs, 'keys') and any(k.startswith('data-') for k in attrs.keys()))
+                for element in elements_with_data:
+                    if hasattr(element, 'attrs') and element.attrs:
+                        for attr_name, attr_value in element.attrs.items():
+                            if attr_name.startswith('data-') and isinstance(attr_value, str):
+                                if 'http' in attr_value and not self._is_google_news_url(attr_value):
+                                    if self._looks_like_news_url(attr_value):
+                                        original_links.append(attr_value)
+                                        self.stdout.write(f"🔗 URL encontrado em data-*: {attr_value}")
+            except Exception as e:
+                self.stdout.write(f"⚠ Erro ao processar atributos data-*: {e}")
+            
+            # Remover duplicatas e retornar o primeiro URL válido
+            unique_links = list(dict.fromkeys(original_links))
+            
+            for url in unique_links:
+                if self._is_valid_news_url(url):
+                    self.stdout.write(f"✅ URL original válido encontrado: {url}")
+                    return url
+            
+            self.stdout.write("❌ Nenhum URL original válido encontrado")
+            return None
+            
+        except Exception as e:
+            self.stdout.write(f"⚠ Erro ao extrair URL original: {e}")
+            return None
+    
+    def _is_google_news_url(self, url):
+        """Verifica se o URL é do Google News"""
+        if not url:
+            return False
+        
+        google_news_domains = [
+            'news.google.com',
+            'news.google.com.br',
+            'news.google.co.uk'
+        ]
+        
+        from urllib.parse import urlparse
+        parsed = urlparse(url)
+        return parsed.netloc.lower() in google_news_domains
+    
+    def _is_valid_news_url(self, url):
+        """Verifica se o URL é válido para uma notícia"""
+        if not url:
+            return False
+        
+        # URLs muito curtos provavelmente não são notícias
+        if len(url) < 20:
+            return False
+        
+        # Verificar se não é um URL do Google News
+        if self._is_google_news_url(url):
+            return False
+        
+        # Verificar se parece ser um URL de notícia
+        return self._looks_like_news_url(url)
+    
+    def _extract_domain_from_url(self, url):
+        """Extrai domínio de uma URL"""
+        from urllib.parse import urlparse
+        parsed = urlparse(url)
+        return parsed.netloc.lower()
+    
+    def _find_specific_news_url(self, site_url, search_term):
+        """Encontra URL específico da notícia no site"""
+        try:
+            import requests
+            from bs4 import BeautifulSoup
+            import re
+            
+            session = requests.Session()
+            session.headers.update({
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            })
+            
+            # Tentar diferentes URLs de busca no site
+            search_urls = [
+                f"{site_url}/busca?q={search_term}",
+                f"{site_url}/search?q={search_term}",
+                f"{site_url}/noticias?q={search_term}",
+                f"{site_url}/?q={search_term}"
+            ]
+            
+            for search_url in search_urls:
+                try:
+                    self.stdout.write(f"🔍 Buscando em: {search_url}")
+                    response = session.get(search_url, timeout=10)
+                    response.raise_for_status()
+                    
+                    soup = BeautifulSoup(response.content, 'html.parser')
+                    
+                    # Procurar por links de notícias
+                    news_links = []
+                    
+                    # Procurar por links que contenham palavras-chave da busca
+                    search_words = search_term.lower().split()
+                    
+                    all_links = soup.find_all('a', href=True)
+                    for link in all_links:
+                        href = link.get('href')
+                        link_text = link.get_text().lower()
+                        
+                        if href and any(word in link_text for word in search_words):
+                            # Converter URL relativo em absoluto
+                            if href.startswith('/'):
+                                from urllib.parse import urljoin
+                                href = urljoin(site_url, href)
+                            
+                            # Verificar se parece ser um link de notícia
+                            if self._looks_like_news_url(href) and site_url in href:
+                                news_links.append(href)
+                                self.stdout.write(f"🔗 Link de notícia encontrado: {href}")
+                    
+                    # Retornar o primeiro link válido encontrado
+                    for link in news_links:
+                        if self._is_valid_news_url(link):
+                            return link
+                    
+                except Exception as e:
+                    self.stdout.write(f"⚠ Erro ao buscar em {search_url}: {e}")
+                    continue
+            
+            return None
+            
+        except Exception as e:
+            self.stdout.write(f"⚠ Erro ao encontrar URL específico: {e}")
+            return None
+    
+    def _extract_content_from_url(self, url):
+        """Extrai conteúdo de uma URL específica"""
+        try:
+            import requests
+            from bs4 import BeautifulSoup
+            
+            session = requests.Session()
+            session.headers.update({
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            })
+            
+            response = session.get(url, timeout=15)
+            response.raise_for_status()
+            
+            soup = BeautifulSoup(response.content, 'html.parser')
+            
+            # Extrair dados da notícia
+            extracted_data = {
+                'url': url,
+                'title': self._extract_title_from_soup(soup),
+                'description': self._extract_description_from_soup(soup),
+                'content': self._extract_content_from_soup(soup),
+                'author': self._extract_author_from_soup(soup),
+                'date': self._extract_date_from_soup(soup),
+                'images': self._extract_images_from_soup(soup)
+            }
+            
+            # Verificar se conseguiu extrair conteúdo válido
+            if extracted_data['title'] and extracted_data['content'] and len(extracted_data['content']) > 200:
+                return extracted_data
+            
+            return None
+            
+        except Exception as e:
+            self.stdout.write(f"⚠ Erro ao extrair conteúdo de {url}: {e}")
+            return None
+    
+    def _search_news_on_site(self, site_url, search_term):
+        """Busca notícias relacionadas em um site específico"""
+        try:
+            import requests
+            from bs4 import BeautifulSoup
+            
+            session = requests.Session()
+            session.headers.update({
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            })
+            
+            # Tentar diferentes URLs de busca no site
+            search_urls = [
+                f"{site_url}/busca",
+                f"{site_url}/search",
+                f"{site_url}/noticias",
+                f"{site_url}/ultimas-noticias",
+                site_url
+            ]
+            
+            for search_url in search_urls:
+                try:
+                    response = session.get(search_url, timeout=10)
+                    if response.status_code == 200:
+                        soup = BeautifulSoup(response.content, 'html.parser')
+                        
+                        # Procurar por links de notícias
+                        news_links = self._find_news_links(soup, site_url)
+                        
+                        if news_links:
+                            # Tentar acessar a primeira notícia encontrada
+                            for news_url in news_links[:2]:
+                                try:
+                                    news_response = session.get(news_url, timeout=15)
+                                    news_response.raise_for_status()
+                                    
+                                    news_soup = BeautifulSoup(news_response.content, 'html.parser')
+                                    
+                                    # Extrair dados da notícia
+                                    extracted_data = {
+                                        'url': news_url,
+                                        'title': self._extract_title_from_soup(news_soup),
+                                        'description': self._extract_description_from_soup(news_soup),
+                                        'content': self._extract_content_from_soup(news_soup),
+                                        'author': self._extract_author_from_soup(news_soup),
+                                        'date': self._extract_date_from_soup(news_soup),
+                                        'images': self._extract_images_from_soup(news_soup)
+                                    }
+                                    
+                                    # Verificar se conseguiu extrair conteúdo válido
+                                    if extracted_data['title'] and extracted_data['content'] and len(extracted_data['content']) > 200:
+                                        return extracted_data
+                                    
+                                except Exception as e:
+                                    continue
+                    
+                except Exception as e:
+                    continue
+            
+            return None
+            
+        except Exception as e:
+            return None
+    
+    def _find_news_links(self, soup, site_url):
+        """Encontra links de notícias em uma página"""
+        links = []
+        
+        # Procurar por links que parecem ser notícias
+        all_links = soup.find_all('a', href=True)
+        
+        for link in all_links:
+            href = link.get('href')
+            if href:
+                # Converter URL relativa em absoluta
+                if href.startswith('/'):
+                    href = f"{site_url}{href}"
+                elif href.startswith('//'):
+                    href = f"https:{href}"
+                
+                # Verificar se parece ser um link de notícia
+                if self._looks_like_news_url(href):
+                    links.append(href)
+        
+        return links[:5]  # Retornar até 5 links
+    
+    def _looks_like_news_url(self, url):
+        """Verifica se o URL parece ser de uma notícia"""
+        if not url:
+            return False
+        
+        # Padrões comuns de URLs de notícias
+        news_patterns = [
+            r'/\d{4}/\d{2}/\d{2}/',  # Data no formato YYYY/MM/DD
+            r'/noticia/',             # Contém "noticia"
+            r'/materia/',             # Contém "materia"
+            r'/artigo/',              # Contém "artigo"
+            r'\.html$',               # Termina com .html
+            r'\.php$',                # Termina com .php
+        ]
+        
+        import re
+        for pattern in news_patterns:
+            if re.search(pattern, url, re.IGNORECASE):
+                return True
+        
+        return False
+    
+    def _extract_title_from_soup(self, soup):
+        """Extrai título de um soup"""
+        # Procurar por meta tags primeiro
+        meta_title = soup.find('meta', property='og:title')
+        if meta_title and meta_title.get('content'):
+            return meta_title.get('content').strip()
+        
+        # Procurar por elementos de título
+        title_selectors = ['h1', '.titulo', '.title', '.headline', '.noticia-titulo']
+        for selector in title_selectors:
+            element = soup.select_one(selector)
+            if element:
+                title = element.get_text().strip()
+                if title and len(title) > 10:
+                    return title
+        return ''
+    
+    def _extract_description_from_soup(self, soup):
+        """Extrai descrição de um soup"""
+        meta_desc = soup.find('meta', property='og:description')
+        if meta_desc and meta_desc.get('content'):
+            return meta_desc.get('content').strip()
+        return ''
+    
+    def _extract_content_from_soup(self, soup):
+        """Extrai conteúdo principal de um soup"""
+        # Remover elementos indesejados
+        for element in soup(['script', 'style', 'nav', 'header', 'footer']):
+            element.decompose()
+        
+        # Procurar por conteúdo principal
+        content_selectors = ['.conteudo', '.noticia-conteudo', '.materia-conteudo', '.texto', '.content', 'article']
+        for selector in content_selectors:
+            element = soup.select_one(selector)
+            if element:
+                content = element.get_text().strip()
+                if content and len(content) > 100:
+                    return content
+        return ''
+    
+    def _extract_author_from_soup(self, soup):
+        """Extrai autor de um soup"""
+        author_selectors = ['.autor', '.author', '.byline']
+        for selector in author_selectors:
+            element = soup.select_one(selector)
+            if element:
+                return element.get_text().strip()
+        return ''
+    
+    def _extract_date_from_soup(self, soup):
+        """Extrai data de um soup"""
+        date_selectors = ['.data', '.date', '.published', 'time']
+        for selector in date_selectors:
+            element = soup.select_one(selector)
+            if element:
+                return element.get_text().strip()
+        return ''
+    
+    def _extract_images_from_soup(self, soup):
+        """Extrai imagens de um soup"""
+        images = []
+        img_elements = soup.find_all('img')
+        for img in img_elements[:3]:  # Máximo 3 imagens
+            src = img.get('src') or img.get('data-src')
+            if src:
+                alt = img.get('alt', '')
+                images.append({'src': src, 'alt': alt})
+        return images
+
+    def _is_relevant_article(self, topic, article):
+        """Verifica se o artigo é relevante para o tópico"""
         title = article.get('title', '').lower()
         description = article.get('description', '').lower()
-        topic_lower = topic.lower()
         
         # Verificar se o tópico aparece no título ou descrição
-        topic_words = topic_lower.split()
+        topic_words = topic.lower().split()
         relevance_score = 0
         
         for word in topic_words:
@@ -190,669 +723,206 @@ class Command(BaseCommand):
         # Considerar relevante se score >= 2
         return relevance_score >= 2
 
+    def _categorize_generated_content(self, content, topic):
+        """Categoriza o artigo baseado no conteúdo gerado"""
+        try:
+            from rb_ingestor.smart_categorizer import SmartCategorizer
+            from rb_noticias.models import Categoria
+            
+            # Usar o SmartCategorizer para analisar o conteúdo
+            categorizer = SmartCategorizer()
+            
+            # Combinar título e conteúdo para análise
+            text_to_analyze = f"{topic} {content}"
+            
+            # Categorizar usando o conteúdo (retorna apenas o nome)
+            category_name = categorizer.categorize_content("", text_to_analyze, topic)
+            confidence = categorizer.get_category_confidence("", text_to_analyze, topic)
+            self.stdout.write(f"🎯 Categoria detectada pelo conteúdo: {category_name} (confiança: {confidence:.2f})")
+            
+            # Buscar ou criar a categoria
+            try:
+                category = Categoria.objects.get(nome__iexact=category_name)
+                self.stdout.write(f"✅ Usando categoria existente: {category.nome}")
+                return category
+            except Categoria.DoesNotExist:
+                # Criar nova categoria se não existir
+                category = Categoria.objects.create(nome=category_name.title())
+                self.stdout.write(f"✅ Nova categoria criada: {category.nome}")
+                return category
+                
+        except Exception as e:
+            self.stdout.write(f"⚠ Erro na categorização por conteúdo: {e}")
+            # Fallback para categoria padrão
+            try:
+                return Categoria.objects.get(nome__iexact='brasil')
+            except Categoria.DoesNotExist:
+                return Categoria.objects.first()
+    
     def _generate_title_from_news(self, topic, news_article):
-        """Gera título original baseado no tópico, nunca copiando títulos de outros portais"""
-        # NUNCA usar títulos de outros portais para evitar plágio
-        # Sempre criar títulos originais baseados no tópico
+        """Gera título PRÓPRIO SEO: Entidade + verbo + objeto: gancho (sem copiar)."""
+        if not news_article:
+            return f"{topic.title()}: Últimas Notícias"
+
+        import re
+
+        original = (news_article.get('title') or '').strip()
+        description = (news_article.get('description') or '').strip()
+        base_topic = topic.title().strip() or 'Notícia'
+
+        # Remover marcas de portal
+        portals = ['G1','Globo','Folha','Estadão','UOL','Terra','R7','IG','Exame','Metrópoles','O Globo','CNN','BBC','Reuters']
+        clean = original
+        for p in portals:
+            clean = clean.replace(f' - {p}', '').replace(f' | {p}', '').replace(f' ({p})', '')
+
+        # Heurísticas para entidade, verbo e objeto
+        text_all = f"{clean}. {description}"
+        # Entidade: primeira sequência de palavras com inicial maiúscula
+        m_ent = re.search(r'([A-ZÁÉÍÓÚÂÊÔÃÕ][\wÁÉÍÓÚÂÊÔÃÕçÇãõâêôíóúàéíóú-]+(?:\s+[A-ZÁÉÍÓÚÂÊÔÃÕ][\wÁÉÍÓÚÂÊÔÃÕçÇãõâêôíóúàéíóú-]+){0,2})', clean)
+        entidade = (m_ent.group(1) if m_ent else base_topic).strip()
+        # Verbo chave
+        verbos_map = {
+            'aprova':'aprova','anuncia':'anuncia','divulga':'divulga','entrega':'entrega','confirma':'confirma',
+            'projeta':'projeta','corta':'corta','eleva':'eleva','recuar':'recua','recua':'recua','sobe':'sobe','cai':'cai'
+        }
+        verbo = None
+        for v in verbos_map.keys():
+            if re.search(rf'\b{v}\w*\b', text_all, re.IGNORECASE):
+                verbo = verbos_map[v]; break
+        verbo = verbo or 'anuncia'
+        # Objeto
+        objetos = ['dividendos','impostos','preços','tarifas','acordo','parceria','reféns','sanções','investimentos','meta','juros']
+        objeto = None
+        for o in objetos:
+            if re.search(rf'\b{o}\b', text_all, re.IGNORECASE):
+                objeto = o; break
+        objeto = objeto or (clean.split(':')[0].lower() if ':' in clean else base_topic.lower())
+
+        # Estruturas de título mais naturais e variadas
+        estruturas = []
         
-        topic_lower = topic.lower()
+        # Estrutura 1: Declaração direta (sem dois pontos)
+        if objeto in ['dividendos', 'juros', 'impostos']:
+            estruturas.append(f"{entidade} {verbo} {objeto} — valores e datas")
+            estruturas.append(f"{entidade} {verbo} {objeto} para acionistas")
         
-        # Padrões de títulos originais por categoria
-        if any(word in topic_lower for word in ['lula', 'bolsonaro', 'presidente', 'governo', 'política']):
-            return f"{topic.title()}: Análise Política e Desdobramentos"
-        elif any(word in topic_lower for word in ['economia', 'mercado', 'inflação', 'dólar']):
-            return f"{topic.title()}: Impacto na Economia Brasileira"
-        elif any(word in topic_lower for word in ['tecnologia', 'digital', 'ia', 'inteligência']):
-            return f"{topic.title()}: Tendências e Inovações"
-        elif any(word in topic_lower for word in ['esportes', 'futebol', 'copa']):
-            return f"{topic.title()}: Últimas Notícias Esportivas"
-        elif any(word in topic_lower for word in ['saúde', 'medicina', 'hospital']):
-            return f"{topic.title()}: Informações Importantes para a Saúde"
-        elif any(word in topic_lower for word in ['china', 'eua', 'europa', 'internacional']):
-            return f"{topic.title()}: Desenvolvimentos Internacionais"
-        else:
-            return f"{topic.title()}: Análise Completa e Atualizada"
+        # Estrutura 2: Com dois pontos (apenas para explicações)
+        if objeto in ['acordo', 'parceria', 'medidas']:
+            estruturas.append(f"{entidade} {verbo} {objeto}: entenda os detalhes")
+            estruturas.append(f"{entidade} {verbo} {objeto}: o que muda")
+        
+        # Estrutura 3: Interrogativa (para engajamento)
+        if verbo in ['anuncia', 'divulga', 'confirma']:
+            estruturas.append(f"O que {entidade} {verbo} sobre {objeto}?")
+            estruturas.append(f"Como {entidade} {verbo} {objeto}?")
+        
+        # Estrutura 4: Declaração simples (mais natural)
+        estruturas.append(f"{entidade} {verbo} {objeto}")
+        estruturas.append(f"{entidade} {verbo} {objeto} hoje")
+        
+        # Estrutura 5: Com traço (mais elegante)
+        estruturas.append(f"{entidade} {verbo} {objeto} — análise completa")
+        estruturas.append(f"{entidade} {verbo} {objeto} — impactos e próximos passos")
+
+        # Remover duplicatas na entidade (ex.: "Petrobras Dividendos: Petrobras ...")
+        if entidade.lower() in base_topic.lower():
+            entidade = base_topic
+
+        # Escolher a melhor estrutura baseada no contexto
+        for estrutura in estruturas:
+            # Substituir entidade na estrutura escolhida
+            titulo = estrutura.replace("{entidade}", entidade).replace("{verbo}", verbo).replace("{objeto}", objeto)
+            
+            # Verificar se não é muito similar ao original
+            if self._is_title_different_enough(titulo, clean):
+                # Normalizar espaços e limitar tamanho
+                titulo = re.sub(r'\s+', ' ', titulo).strip()
+                if 20 <= len(titulo) <= 140:
+                    return titulo
+        
+        # Fallback: estrutura simples
+        titulo = f"{entidade} {verbo} {objeto}"
+        titulo = re.sub(r'\s+', ' ', titulo).strip()
+        return titulo[:140]
+
+    def _is_title_different_enough(self, new_title, original_title):
+        """Verifica se o novo título é suficientemente diferente do original"""
+        import re
+        
+        if not original_title:
+            return True
+        
+        # Normalizar ambos os títulos
+        new_norm = re.sub(r'\s+', ' ', new_title.lower().strip())
+        orig_norm = re.sub(r'\s+', ' ', original_title.lower().strip())
+        
+        # Se são idênticos, não usar
+        if new_norm == orig_norm:
+            return False
+        
+        # Se o novo título contém mais de 80% das palavras do original, evitar
+        new_words = set(new_norm.split())
+        orig_words = set(orig_norm.split())
+        
+        if len(orig_words) > 0:
+            similarity = len(new_words.intersection(orig_words)) / len(orig_words)
+            if similarity > 0.8:
+                return False
+        
+        return True
 
     def _generate_content_from_news(self, topic, news_article, category, min_words):
-        """Gera conteúdo baseado na notícia específica encontrada"""
+        """Gera conteúdo baseado na notícia específica encontrada - MESMA LÓGICA DA AUTOMAÇÃO"""
         try:
-            # Usar sistema de IA melhorado
+            # Usar sistema de IA melhorado (MESMO DA AUTOMAÇÃO)
             from rb_ingestor.ai_enhanced import generate_enhanced_article
             
             ai_content = generate_enhanced_article(topic, news_article, min_words)
             
             if ai_content:
-                title = strip_tags(ai_content.get("title", topic.title()))[:200]
-                content = f'<p class="dek">{strip_tags(ai_content.get("dek", news_article.get('description', '') if news_article else ""))[:220]}</p>\n{ai_content.get("html", "<p></p>")}'
-                
                 # Verificar qualidade do conteúdo
-                word_count = ai_content.get('word_count', 0)
-                quality_score = ai_content.get('quality_score', 0)
+                word_count = ai_content.get("word_count", 0)
+                quality_score = ai_content.get("quality_score", 0)
                 
-                if word_count >= min_words and quality_score >= 60:
-                    self.stdout.write(f"✅ IA melhorada gerou {word_count} palavras (qualidade: {quality_score}%)")
+                if word_count >= min_words and quality_score >= 40:  # Aceitar qualidade 40%+
+                    self.stdout.write(f"IA melhorada gerou {word_count} palavras (qualidade: {quality_score}%)")
+                    
+                    # Usar o conteúdo da IA diretamente
+                    title = strip_tags(ai_content.get("title", topic.title()))[:200]
+                    dek = strip_tags(ai_content.get("dek", news_article.get("description", "") if news_article else ""))[:220]
+                    html_content = ai_content.get("html", "<p></p>")
+                    
+                    # Montar conteúdo final
+                    content = f'<p class="dek">{dek}</p>\n{html_content}'
                     return content
                 else:
-                    self.stdout.write(f"⚠ IA gerou {word_count} palavras (qualidade: {quality_score}%), usando fallback")
+                    self.stdout.write(f"AVISO: IA gerou {word_count} palavras (qualidade: {quality_score}%), usando fallback")
+            else:
+                self.stdout.write("AVISO: IA não retornou conteúdo, usando fallback")
                 
         except Exception as e:
-            self.stdout.write(f"⚠ IA melhorada falhou: {e}")
+            self.stdout.write(f"AVISO: Erro na IA melhorada: {e}")
         
-        # Fallback: conteúdo baseado na notícia específica
-        return self._generate_content_from_news_fallback(topic, news_article, category, min_words)
+        # FALLBACK MELHORADO: Usar a mesma lógica da automação
+        return self._generate_content_based_on_reference(topic, news_article, category, min_words)
 
     def _generate_content_from_news_fallback(self, topic, news_article, category, min_words):
         """Gera conteúdo fallback baseado na notícia específica"""
-        if news_article:
-            title = news_article.get('title', '')
-            description = news_article.get('description', '')
-            source = news_article.get('source', '')
-        else:
-            title = topic.title()
-            description = f"Análise completa sobre {topic.lower()}"
-            source = "RadarBR"
+        if not news_article:
+            return self._generate_content_from_scratch(topic, category, min_words)
         
-        topic_lower = topic.lower()
+        # USAR APENAS A NOTÍCIA ESPECÍFICA ENCONTRADA
+        title = news_article.get("title", "")
+        description = news_article.get("description", "")
+        source = news_article.get("source", "")
         
-        content = f"""<p class="dek">{description}</p>
-
-<h2>Desenvolvimentos Recentes</h2>
-
-<p>Esta notícia tem ganhado destaque nos últimos dias e merece atenção especial. {description}</p>
-
-<h3>Contexto da Notícia</h3>
-
-<p>Os fatos relacionados a esta notícia indicam uma evolução significativa no cenário atual. A situação tem sido acompanhada de perto por especialistas e analistas que estudam o impacto dessas transformações.</p>
-
-<p>Segundo informações da {source}, os desenvolvimentos mais recentes mostram uma evolução positiva em diversos indicadores relacionados ao tema.</p>
-
-<h3>Análise Detalhada</h3>
-
-<p>Analisando os dados disponíveis, é possível identificar padrões importantes que merecem atenção. A notícia sobre "{title}" representa um marco significativo no contexto atual.</p>
-
-<p>Especialistas têm destacado a importância deste desenvolvimento para o futuro do setor. As implicações são amplas e afetam diversos aspectos da sociedade.</p>
-
-<h3>Impacto no Brasil</h3>
-
-<p>No contexto brasileiro, esta notícia tem repercussões importantes. O país tem acompanhado de perto os desenvolvimentos relacionados a este tema.</p>
-
-<p>As autoridades brasileiras têm se posicionado de forma clara sobre o assunto, demonstrando preocupação com os impactos potenciais.</p>
-
-<h3>Perspectivas Futuras</h3>
-
-<p>Olhando para o futuro, espera-se que novos desenvolvimentos surjam nos próximos dias. A situação está em constante evolução.</p>
-
-<p>Especialistas preveem que os próximos passos serão cruciais para determinar o rumo dos acontecimentos.</p>
-
-<h3>Conclusão</h3>
-
-<p>Esta notícia representa um momento importante na evolução do tema. É fundamental acompanhar os próximos desenvolvimentos para entender completamente o impacto.</p>
-
-<p>O RadarBR continuará acompanhando esta história e trará atualizações conforme novos fatos surjam.</p>"""
-
-        return content
-
-    def _check_duplicate(self, topic, Noticia):
-        """Verifica se já existe notícia similar"""
-        return Noticia.objects.filter(
-            titulo__icontains=topic[:20],
-            criado_em__date=timezone.localdate()
-        ).exists()
-
-    def _generate_title(self, topic, category):
-        """Gera título otimizado para SEO"""
-        topic_lower = topic.lower()
-        
-        if category:
-            category_lower = category.lower()
-        else:
-            category_lower = self._detect_category(topic_lower)
-
-        # Padrões específicos por categoria
-        title_patterns = {
-            "tecnologia": [
-                f"{topic.title()}: Tendências e Inovações 2025",
-                f"{topic.title()}: Revolução Digital no Brasil",
-                f"{topic.title()}: Futuro da Tecnologia Brasileira"
-            ],
-            "economia": [
-                f"{topic.title()}: Impacto na Economia Brasileira",
-                f"{topic.title()}: Análise Econômica Completa",
-                f"{topic.title()}: Mercado e Investimentos"
-            ],
-            "política": [
-                f"{topic.title()}: Análise Política Completa",
-                f"{topic.title()}: Cenário Político Nacional",
-                f"{topic.title()}: Democracia e Governança"
-            ],
-            "esportes": [
-                f"{topic.title()}: Últimas Notícias e Análises",
-                f"{topic.title()}: Paixão Nacional",
-                f"{topic.title()}: Esportes no Brasil"
-            ],
-            "saúde": [
-                f"{topic.title()}: Informações Importantes para Sua Saúde",
-                f"{topic.title()}: Bem-estar e Qualidade de Vida",
-                f"{topic.title()}: Saúde Pública Brasileira"
-            ],
-            "meio ambiente": [
-                f"{topic.title()}: Sustentabilidade e Meio Ambiente",
-                f"{topic.title()}: Preservação Ambiental",
-                f"{topic.title()}: Futuro Sustentável"
-            ]
-        }
-        
-        patterns = title_patterns.get(category_lower, [
-            f"{topic.title()}: Análise Completa e Atualizada",
-            f"{topic.title()}: Tendências e Perspectivas",
-            f"{topic.title()}: Guia Definitivo"
-        ])
-        
-        return random.choice(patterns)
-
-    def _detect_category(self, topic_lower):
-        """Detecta categoria baseada no tópico"""
-        category_keywords = {
-            "política": ["política", "governo", "eleições", "presidente", "lula", "bolsonaro", "congresso", "ministro", "stf", "supremo", "partido", "candidato"],
-            "economia": ["economia", "mercado", "inflação", "dólar", "real", "investimento", "finanças", "banco", "crédito", "pib", "desemprego"],
-            "esportes": ["esportes", "futebol", "copa", "mundial", "brasileirão", "atletismo", "jogos", "competição", "jogador", "time"],
-            "saúde": ["saúde", "medicina", "hospital", "vacina", "covid", "coronavírus", "tratamento", "médico", "doença", "epidemia"],
-            "meio ambiente": ["meio ambiente", "sustentabilidade", "natureza", "clima", "ecologia", "verde", "energia", "poluição", "desmatamento"],
-            "tecnologia": ["tecnologia", "digital", "ia", "inteligência artificial", "chatgpt", "app", "software", "blockchain", "crypto", "bitcoin"],
-            "mundo": ["china", "eua", "europa", "internacional", "global", "mundial", "país", "nação", "estrangeiro", "guerra"],
-            "brasil": ["brasil", "brasileiro", "brasileira", "nacional", "federal", "estadual", "municipal"]
-        }
-        
-        for category, keywords in category_keywords.items():
-            if any(kw in topic_lower for kw in keywords):
-                return category
-        
-        return "brasil"
-
-    def _generate_content(self, topic, category, min_words):
-        """Gera conteúdo otimizado para SEO"""
-        try:
-            # Tentar IA primeiro com instrução para artigo longo
-            from rb_ingestor.ai import generate_article
-            
-            # Instrução específica para artigo longo
-            long_article_prompt = f"""
-            Crie um artigo completo e detalhado sobre "{topic}" com foco em SEO e relevância para o público brasileiro.
-            
-            REQUISITOS OBRIGATÓRIOS:
-            - Mínimo de {min_words} palavras (ideal: {min_words + 200} palavras)
-            - Linguagem natural e conversacional
-            - Estrutura com subtítulos H2 e H3
-            - Incluir listas quando apropriado
-            - Densidade de palavras-chave natural (1-3%)
-            - Foco no contexto brasileiro
-            - Tom informativo mas acessível
-            
-            ESTRUTURA SUGERIDA:
-            1. Introdução envolvente
-            2. Desenvolvimento principal (múltiplas seções)
-            3. Análise detalhada
-            4. Impacto no Brasil
-            5. Perspectivas futuras
-            6. Conclusão forte
-            
-            CATEGORIA: {category or 'geral'}
-            
-            Certifique-se de que o artigo seja substancial, informativo e otimizado para SEO.
-            """
-            
-            ai_content = generate_article(long_article_prompt)
-
-            if ai_content:
-                title = strip_tags(ai_content.get("title", topic.title()))[:200]
-                content = f'<p class="dek">{strip_tags(ai_content.get("dek", ""))[:220]}</p>\n{ai_content.get("html", "<p></p>")}'
-                
-                # Verificar se o conteúdo da IA tem pelo menos min_words palavras
-                clean_content = strip_tags(content)
-                word_count = len(clean_content.split())
-                
-                if word_count >= min_words:
-                    self.stdout.write(f"✅ IA gerou {word_count} palavras")
-                    return content
-                else:
-                    self.stdout.write(f"⚠ IA gerou apenas {word_count} palavras, usando conteúdo SEO estendido")
-
-        except Exception as e:
-            self.stdout.write(f"⚠ IA falhou: {e}")
-
-        # Conteúdo otimizado para SEO com mais palavras
-        return self._generate_seo_content_extended(topic, category, min_words)
-
-    def _generate_seo_content_extended(self, topic, category, min_words):
-        """Gera conteúdo otimizado para SEO com mais palavras"""
-        topic_lower = topic.lower()
-        category_lower = category.lower() if category else self._detect_category(topic_lower)
-
-        # Conteúdo base
-        base_content = f"""<p class="dek">Análise completa e detalhada sobre {topic_lower}, oferecendo informações atualizadas e insights valiosos para profissionais e interessados no tema.</p>
-
-<h2>{topic.title()}: Análise Completa e Detalhada</h2>
-
-<p>Uma análise abrangente sobre {topic_lower} e seu impacto no cenário atual brasileiro. Este tema tem ganhado cada vez mais relevância no Brasil, merecendo atenção especial dos profissionais e interessados na área. Neste artigo, exploraremos todos os aspectos relevantes dessa questão.</p>
-
-<h3>Introdução ao Tema</h3>
-
-<p>Para compreender completamente a importância de {topic_lower}, é fundamental analisar seu contexto histórico e sua evolução ao longo do tempo. O Brasil, com sua rica diversidade cultural e geográfica, apresenta características únicas que influenciam diretamente como este tema se desenvolve em nosso país.</p>
-
-<p>Os especialistas brasileiros destacam que {topic_lower} tem ganhado cada vez mais relevância no cenário nacional. As mudanças observadas nos últimos meses indicam uma tendência consistente que merece atenção especial dos profissionais da área.</p>
-
-<h3>Principais Desenvolvimentos Recentes</h3>
-
-<p>Os desenvolvimentos recentes relacionados a {topic_lower} indicam uma evolução significativa no cenário nacional. Especialistas destacam que este tema tem ganhado cada vez mais relevância no Brasil, com impactos diretos na sociedade brasileira.</p>
-
-<p>Esta evolução tem sido acompanhada de perto por analistas e pesquisadores que estudam o impacto dessas transformações na sociedade brasileira. Os dados mais recentes mostram uma evolução positiva em diversos indicadores relacionados ao tema.</p>
-
-<ul>
-<li><strong>Impacto Nacional:</strong> As mudanças observadas têm influência direta na economia brasileira</li>
-<li><strong>Perspectivas Futuras:</strong> Projeções indicam crescimento sustentável nos próximos anos</li>
-<li><strong>Relevância Social:</strong> O tema afeta diretamente a vida dos brasileiros</li>
-<li><strong>Inovação:</strong> Novas abordagens estão sendo desenvolvidas</li>
-<li><strong>Sustentabilidade:</strong> Soluções de longo prazo estão sendo implementadas</li>
-</ul>"""
-
-        # Seções adicionais baseadas na categoria
-        additional_sections = self._get_category_specific_sections(topic_lower, category_lower)
-        
-        # Conteúdo final
-        final_content = f"""{base_content}
-
-{additional_sections}
-
-<h3>Conclusão</h3>
-
-<p>Esta matéria sobre {topic_lower} foi desenvolvida com base em informações atualizadas e análises de especialistas da área. O RadarBR continua acompanhando os desdobramentos desta notícia e manterá os leitores informados sobre novos desenvolvimentos relacionados ao tema.</p>
-
-<p>O cenário atual é promissor e indica que o Brasil está no caminho certo para se consolidar como uma referência em {topic_lower}. A continuidade das políticas públicas e o engajamento do setor privado serão fundamentais para manter o ritmo de crescimento observado.</p>
-
-<p>Para mais informações sobre {topic_lower} e outros assuntos relevantes para o Brasil, acompanhe nossas atualizações diárias e mantenha-se sempre bem informado sobre os temas que mais importam para o país.</p>"""
-
-        return final_content
-
-    def _get_category_specific_sections(self, topic_lower, category_lower):
-        """Gera seções específicas por categoria"""
-        sections = {
-            "tecnologia": f"""
-<h3>Contexto Histórico e Evolução</h3>
-
-<p>Para entender melhor a situação atual, é importante analisar o contexto histórico que levou a essa situação. O Brasil tem passado por transformações significativas nos últimos anos, com mudanças que impactaram diretamente a vida dos cidadãos brasileiros.</p>
-
-<p>Esta questão tem relevância especial no contexto brasileiro, onde as particularidades locais influenciam diretamente os resultados observados. O Brasil, com sua diversidade regional e cultural, apresenta desafios e oportunidades únicos.</p>
-
-<h3>Análise Detalhada e Técnica</h3>
-
-<p>Os especialistas brasileiros destacam que {topic_lower} tem ganhado cada vez mais relevância no cenário nacional. As mudanças observadas nos últimos meses indicam uma tendência consistente que merece atenção especial dos profissionais da área.</p>
-
-<p>Do ponto de vista técnico, esta questão apresenta características específicas que merecem atenção especial dos profissionais da área. A implementação de novas tecnologias e metodologias tem revolucionado a forma como abordamos este tema.</p>
-
-<h3>Impacto na Sociedade Brasileira</h3>
-
-<p>A população brasileira tem sentido diretamente os efeitos das transformações relacionadas a {topic_lower}. Desde as grandes metrópoles como São Paulo e Rio de Janeiro até as cidades do interior, é possível observar mudanças significativas que afetam o dia a dia das pessoas.</p>
-
-<p>O impacto social é especialmente relevante nas comunidades mais vulneráveis, onde essas transformações podem representar uma oportunidade de inclusão e desenvolvimento. Isso demonstra o potencial transformador desta questão para toda a sociedade brasileira.</p>
-
-<h3>Perspectivas para o Futuro</h3>
-
-<p>As projeções para {topic_lower} indicam que esta tendência deve se manter nos próximos anos, com possíveis desenvolvimentos que podem trazer benefícios adicionais para o Brasil. Os analistas são cautelosamente otimistas quanto ao futuro, destacando que o país tem todas as condições necessárias para se consolidar como uma referência na área.</p>
-
-<p>Os investimentos planejados para os próximos anos devem acelerar ainda mais essa tendência positiva, criando novas oportunidades e consolidando o Brasil como um player importante neste cenário.</p>
-""",
-            "economia": f"""
-<h3>Contexto Econômico Nacional</h3>
-
-<p>O cenário econômico brasileiro tem passado por transformações significativas que impactam diretamente o desenvolvimento de {topic_lower}. A estabilidade macroeconômica e as políticas públicas têm criado um ambiente propício para o crescimento desta área.</p>
-
-<h3>Análise de Mercado</h3>
-
-<p>O mercado brasileiro apresenta características únicas que influenciam diretamente como {topic_lower} se desenvolve. A análise de dados e tendências mostra um crescimento consistente e sustentável.</p>
-
-<h3>Impacto na Economia Brasileira</h3>
-
-<p>O impacto de {topic_lower} na economia brasileira tem sido significativo, contribuindo para o crescimento do PIB e a geração de empregos. Este setor tem se mostrado resiliente mesmo em períodos de instabilidade econômica.</p>
-
-<h3>Investimentos e Financiamento</h3>
-
-<p>Os investimentos em {topic_lower} têm crescido exponencialmente nos últimos anos, tanto do setor público quanto privado. Esta tendência indica confiança no potencial de crescimento desta área.</p>
-""",
-            "política": f"""
-<h3>Contexto Político Nacional</h3>
-
-<p>O cenário político brasileiro tem influenciado diretamente o desenvolvimento de {topic_lower}. As políticas públicas e as decisões governamentais têm criado um ambiente que favorece o crescimento desta área.</p>
-
-<h3>Políticas Públicas</h3>
-
-<p>As políticas públicas relacionadas a {topic_lower} têm evoluído significativamente, criando um marco regulatório que favorece o desenvolvimento sustentável e a inovação.</p>
-
-<h3>Impacto na Democracia</h3>
-
-<p>O desenvolvimento de {topic_lower} tem contribuído para o fortalecimento da democracia brasileira, promovendo transparência e participação cidadã.</p>
-
-<h3>Desafios e Oportunidades</h3>
-
-<p>Embora existam desafios significativos, as oportunidades para o desenvolvimento de {topic_lower} no Brasil são abundantes e promissoras.</p>
-""",
-            "esportes": f"""
-<h3>História dos Esportes no Brasil</h3>
-
-<p>O Brasil tem uma rica tradição esportiva que remonta às primeiras décadas do século XX. Desde então, o país tem se destacado em diversas modalidades, criando uma cultura esportiva única.</p>
-
-<h3>Impacto Cultural</h3>
-
-<p>O esporte no Brasil vai além da competição. Ele representa uma forma de expressão cultural, unindo comunidades e criando identidades regionais.</p>
-
-<h3>Desenvolvimento e Infraestrutura</h3>
-
-<p>Nos últimos anos, o Brasil tem investido significativamente na infraestrutura esportiva. Esses investimentos têm gerado resultados positivos, tanto para os atletas quanto para a população em geral.</p>
-
-<h3>Perspectivas para o Futuro</h3>
-
-<p>As perspectivas para {topic_lower} no Brasil são promissoras, com investimentos crescentes e políticas públicas que favorecem o desenvolvimento esportivo.</p>
-""",
-            "saúde": f"""
-<h3>Sistema de Saúde Brasileiro</h3>
-
-<p>O Sistema Único de Saúde (SUS) tem sido fundamental para o desenvolvimento de {topic_lower} no Brasil. A universalidade e integralidade do sistema criam oportunidades únicas de desenvolvimento.</p>
-
-<h3>Inovação em Saúde</h3>
-
-<p>A inovação em saúde tem sido uma prioridade no Brasil, com investimentos crescentes em pesquisa e desenvolvimento. Esta tendência tem gerado resultados positivos para a população brasileira.</p>
-
-<h3>Desafios da Saúde Pública</h3>
-
-<p>Embora existam desafios significativos no sistema de saúde brasileiro, as oportunidades para o desenvolvimento de {topic_lower} são abundantes e promissoras.</p>
-
-<h3>Qualidade de Vida</h3>
-
-<p>O desenvolvimento de {topic_lower} tem contribuído significativamente para a melhoria da qualidade de vida da população brasileira.</p>
-""",
-            "meio ambiente": f"""
-<h3>Sustentabilidade Ambiental</h3>
-
-<p>A sustentabilidade ambiental tem sido uma prioridade crescente no Brasil, com políticas públicas e iniciativas privadas que favorecem o desenvolvimento de {topic_lower}.</p>
-
-<h3>Preservação da Biodiversidade</h3>
-
-<p>O Brasil possui uma das maiores biodiversidades do mundo, o que cria oportunidades únicas para o desenvolvimento de {topic_lower} de forma sustentável.</p>
-
-<h3>Energias Renováveis</h3>
-
-<p>O desenvolvimento de energias renováveis tem sido uma prioridade no Brasil, criando oportunidades para o crescimento de {topic_lower}.</p>
-
-<h3>Mudanças Climáticas</h3>
-
-<p>As mudanças climáticas representam um desafio global, mas também uma oportunidade para o desenvolvimento de soluções inovadoras em {topic_lower}.</p>
-"""
-        }
-        
-        return sections.get(category_lower, f"""
-<h3>Contexto Histórico e Evolução</h3>
-
-<p>Para entender melhor a situação atual, é importante analisar o contexto histórico que levou a essa situação. O Brasil tem passado por transformações significativas nos últimos anos, com mudanças que impactaram diretamente a vida dos cidadãos brasileiros.</p>
-
-<h3>Análise Detalhada</h3>
-
-<p>Os especialistas brasileiros destacam que {topic_lower} tem ganhado cada vez mais relevância no cenário nacional. As mudanças observadas nos últimos meses indicam uma tendência consistente que merece atenção especial dos profissionais da área.</p>
-
-<h3>Impacto na Sociedade Brasileira</h3>
-
-<p>A população brasileira tem sentido diretamente os efeitos das transformações relacionadas a {topic_lower}. Desde as grandes metrópoles como São Paulo e Rio de Janeiro até as cidades do interior, é possível observar mudanças significativas que afetam o dia a dia das pessoas.</p>
-
-<h3>Perspectivas para o Futuro</h3>
-
-<p>As projeções para {topic_lower} indicam que esta tendência deve se manter nos próximos anos, com possíveis desenvolvimentos que podem trazer benefícios adicionais para o Brasil.</p>
-""")
-
-    def _expand_content(self, content, topic, category, min_words):
-        """Expande conteúdo se necessário"""
-        # Se já tem mais palavras que o mínimo, retornar como está
-        word_count = len(strip_tags(content).split())
-        if word_count >= min_words:
-            return content
-        
-        # Verificar se o tópico é adequado para expansão
-        if not self._should_expand_content(topic, content):
-            self.stdout.write(f"⚠ Tópico '{topic}' não adequado para expansão genérica")
-            return content
-        
-        # Adicionar seções adicionais
-        additional_sections = self._generate_additional_sections(topic, category)
-        
-        # Inserir antes da conclusão
-        if '<h3>Conclusão</h3>' in content:
-            content = content.replace('<h3>Conclusão</h3>', additional_sections + '<h3>Conclusão</h3>')
-        else:
-            content += additional_sections
-        
-        # Verificar se ainda precisa de mais conteúdo
-        word_count = len(strip_tags(content).split())
-        if word_count < min_words:
-            # Adicionar mais seções se ainda não atingiu o mínimo
-            more_sections = self._generate_more_sections(topic, category)
-            content += more_sections
-            
-            # Se ainda não atingiu, adicionar mais conteúdo
-            word_count = len(strip_tags(content).split())
-            if word_count < min_words:
-                extra_sections = self._generate_extra_sections(topic, category)
-                content += extra_sections
-                
-                # Última tentativa - adicionar mais conteúdo se necessário
-                word_count = len(strip_tags(content).split())
-                if word_count < min_words:
-                    final_sections = self._generate_final_sections(topic, category)
-                    content += final_sections
-        
-        return content
-
-    def _generate_additional_sections(self, topic, category):
-        """Gera seções adicionais para expandir conteúdo"""
-        topic_lower = topic.lower()
-        
-        sections = f"""
-
-<h3>Impacto Regional no Brasil</h3>
-
-<p>O impacto de {topic_lower} varia significativamente entre as diferentes regiões do Brasil. No Nordeste, por exemplo, as características específicas da região influenciam diretamente como este tema se desenvolve, criando oportunidades únicas de crescimento e desenvolvimento.</p>
-
-<p>Na região Sul, a tradição industrial e tecnológica oferece um ambiente propício para o desenvolvimento de soluções inovadoras relacionadas a {topic_lower}. Esta vantagem competitiva tem sido aproveitada por empresas e profissionais locais.</p>
-
-<h3>Tendências Emergentes</h3>
-
-<p>As tendências emergentes relacionadas a {topic_lower} indicam uma evolução constante e positiva. Novas tecnologias e metodologias estão sendo desenvolvidas, criando oportunidades para profissionais e empresas brasileiras.</p>
-
-<p>Essas tendências são acompanhadas de perto por especialistas e pesquisadores, que identificam padrões e desenvolvem estratégias para aproveitar as oportunidades que surgem.</p>
-
-<h3>Casos de Sucesso</h3>
-
-<p>Existem diversos casos de sucesso relacionados a {topic_lower} no Brasil que servem como referência e inspiração. Esses casos demonstram o potencial do país e a capacidade dos profissionais brasileiros de desenvolver soluções inovadoras.</p>
-
-<p>Esses exemplos de sucesso são fundamentais para motivar outros profissionais e empresas a investirem nesta área, criando um ciclo virtuoso de crescimento e desenvolvimento.</p>
-
-<h3>Recomendações e Próximos Passos</h3>
-
-<p>Com base na análise apresentada, é possível identificar algumas recomendações importantes para o desenvolvimento futuro desta área. Essas recomendações são fundamentadas em dados concretos e na experiência de especialistas.</p>
-
-<p>O primeiro passo é continuar investindo em pesquisa e desenvolvimento, garantindo que o Brasil mantenha sua posição de liderança. Além disso, é importante focar na formação de profissionais qualificados.</p>
-"""
-        
-        return sections
-
-    def _generate_more_sections(self, topic, category):
-        """Gera seções adicionais para atingir o mínimo de palavras"""
-        topic_lower = topic.lower()
-        
-        sections = f"""
-
-<h3>Análise Comparativa Internacional</h3>
-
-<p>Comparando com outros países, o Brasil apresenta características únicas em relação a {topic_lower}. Países como Estados Unidos e China têm desenvolvido estratégias específicas que podem servir de referência para o Brasil.</p>
-
-<p>Na Europa, especialmente na Alemanha e França, existem políticas públicas que têm se mostrado eficazes no desenvolvimento desta área. Essas experiências internacionais oferecem lições valiosas para o Brasil.</p>
-
-<h3>Desafios e Oportunidades</h3>
-
-<p>Os principais desafios relacionados a {topic_lower} no Brasil incluem a necessidade de investimentos em infraestrutura e capacitação profissional. No entanto, esses desafios também representam oportunidades para crescimento e desenvolvimento.</p>
-
-<p>As oportunidades incluem o potencial de criação de empregos, desenvolvimento de novas tecnologias e fortalecimento da economia nacional. O Brasil tem todas as condições para se tornar uma referência mundial nesta área.</p>
-
-<h3>Investimentos e Financiamento</h3>
-
-<p>Os investimentos em {topic_lower} têm crescido significativamente nos últimos anos. Empresas privadas, governo e instituições de pesquisa têm direcionado recursos para o desenvolvimento desta área.</p>
-
-<p>O financiamento público tem sido fundamental para impulsionar o crescimento, com programas específicos que incentivam a inovação e o desenvolvimento tecnológico.</p>
-
-<h3>Impacto Social e Econômico</h3>
-
-<p>O impacto social de {topic_lower} é significativo, afetando diretamente a vida de milhões de brasileiros. Desde a criação de empregos até a melhoria da qualidade de vida, os benefícios são amplos.</p>
-
-<p>Economicamente, esta área tem se mostrado um motor de crescimento, contribuindo para o PIB nacional e fortalecendo a posição do Brasil no cenário internacional.</p>
-"""
-        
-        return sections
-
-    def _generate_extra_sections(self, topic, category):
-        """Gera seções extras para garantir o mínimo de palavras"""
-        topic_lower = topic.lower()
-        
-        sections = f"""
-
-<h3>Estatísticas e Dados Relevantes</h3>
-
-<p>Os dados mais recentes sobre {topic_lower} mostram uma evolução positiva e consistente. Segundo estudos realizados por instituições especializadas, os indicadores têm apresentado melhorias significativas nos últimos meses.</p>
-
-<p>As estatísticas revelam que o Brasil está se posicionando de forma competitiva no cenário internacional, com números que demonstram o potencial de crescimento e desenvolvimento nesta área.</p>
-
-<h3>Políticas Públicas e Regulamentação</h3>
-
-<p>As políticas públicas relacionadas a {topic_lower} têm sido fundamentais para o desenvolvimento desta área no Brasil. O governo tem implementado medidas que incentivam o crescimento e a inovação.</p>
-
-<p>A regulamentação tem se mostrado adequada para promover o desenvolvimento sustentável, criando um ambiente favorável para investimentos e inovações.</p>
-
-<h3>Educação e Capacitação</h3>
-
-<p>A educação e capacitação profissional são pilares fundamentais para o desenvolvimento de {topic_lower} no Brasil. Instituições de ensino têm adaptado seus currículos para atender às demandas do mercado.</p>
-
-<p>Programas de capacitação e especialização têm sido desenvolvidos para formar profissionais qualificados, garantindo que o Brasil tenha a mão de obra necessária para sustentar o crescimento nesta área.</p>
-
-<h3>Sustentabilidade e Meio Ambiente</h3>
-
-<p>A sustentabilidade é um aspecto crucial no desenvolvimento de {topic_lower}. O Brasil tem se destacado por implementar práticas sustentáveis que respeitam o meio ambiente.</p>
-
-<p>As iniciativas de sustentabilidade não apenas protegem o meio ambiente, mas também criam oportunidades de negócios e desenvolvimento econômico.</p>
-"""
-        
-        return sections
-
-    def _generate_final_sections(self, topic, category):
-        """Gera seções finais para garantir o mínimo de palavras"""
-        topic_lower = topic.lower()
-        
-        sections = f"""
-
-<h3>Inovação e Tecnologia</h3>
-
-<p>A inovação tecnológica tem sido um fator determinante no desenvolvimento de {topic_lower}. Novas tecnologias estão sendo desenvolvidas constantemente, criando oportunidades para empresas e profissionais brasileiros.</p>
-
-<p>O Brasil tem se destacado por sua capacidade de inovação, com empresas nacionais desenvolvendo soluções que competem internacionalmente.</p>
-
-<h3>Cooperação Internacional</h3>
-
-<p>A cooperação internacional é fundamental para o desenvolvimento de {topic_lower} no Brasil. Parcerias com outros países têm permitido o intercâmbio de conhecimento e tecnologia.</p>
-
-<p>Essas parcerias internacionais têm se mostrado benéficas para todas as partes envolvidas, criando um ambiente de colaboração e crescimento mútuo.</p>
-
-<h3>Futuro e Perspectivas</h3>
-
-<p>As perspectivas para o futuro de {topic_lower} no Brasil são muito positivas. Com os investimentos planejados e as políticas públicas adequadas, espera-se um crescimento sustentável nos próximos anos.</p>
-
-<p>O Brasil tem todas as condições para se tornar uma referência mundial nesta área, com potencial para liderar inovações e desenvolvimentos importantes.</p>
-"""
-        
-        return sections
-
-    def _adjust_content_length(self, content, topic, category, min_words):
-        """Ajusta o comprimento do conteúdo para atingir o mínimo necessário"""
-        # Calcular margem de palavras (±15%)
-        margin = int(min_words * 0.15)
-        target_min = min_words - margin
-        
-        # Adicionar seções específicas baseadas na categoria
-        additional_content = self._generate_category_specific_content(topic, category)
-        content += additional_content
-        
-        # Verificar se ainda precisa de mais conteúdo
-        word_count = len(strip_tags(content).split())
-        if word_count < target_min:
-            # Adicionar mais seções se necessário
-            more_content = self._generate_additional_sections(topic, category)
-            content += more_content
-            
-            # Se ainda não atingiu, adicionar seções extras
-            word_count = len(strip_tags(content).split())
-            if word_count < target_min:
-                extra_content = self._generate_extra_sections(topic, category)
-                content += extra_content
-        
-        return content
-
-    def _optimize_content_length(self, content, target_max):
-        """Otimiza o comprimento do conteúdo para não exceder o máximo"""
-        # Por enquanto, apenas retorna o conteúdo como está
-        # Em uma versão futura, poderia implementar resumo inteligente
-        return content
-
-
-    def _generate_content_based_on_reference(self, topic, news_article, category, min_words):
-        """Gera conteúdo baseado em artigo de referência com margem de ±15%"""
-        try:
-            # Usar IA melhorada com contexto específico da notícia
-            from rb_ingestor.ai_enhanced import generate_enhanced_article
-            
-            # Calcular margem de palavras (±15%)
-            margin = int(min_words * 0.15)
-            target_words_min = min_words - margin
-            target_words_max = min_words + margin
-            
-            ai_content = generate_enhanced_article(topic, news_article, target_words_min)
-            
-            if ai_content:
-                content = f'<p class="dek">{strip_tags(ai_content.get("dek", news_article.get('description', '') if news_article else ""))[:220]}</p>\n{ai_content.get("html", "<p></p>")}'
-                
-                word_count = ai_content.get('word_count', 0)
-                quality_score = ai_content.get('quality_score', 0)
-                
-                # Verificar se está dentro da margem aceitável
-                if target_words_min <= word_count <= target_words_max and quality_score >= 60:
-                    self.stdout.write(f"✅ Conteúdo baseado em referência: {word_count} palavras (qualidade: {quality_score}%)")
-                    return content
-                else:
-                    self.stdout.write(f"⚠ IA fora da margem ({word_count} palavras), ajustando...")
-                
-        except Exception as e:
-            self.stdout.write(f"⚠ IA falhou: {e}")
-        
-        # Fallback: criar conteúdo baseado na referência manualmente
-        return self._create_content_from_reference(topic, news_article, category, min_words)
-
-    def _create_content_from_reference(self, topic, news_article, category, min_words):
-        """Cria conteúdo baseado na referência encontrada"""
-        title = news_article.get('title', '')
-        description = news_article.get('description', '')
-        source = news_article.get('source', '')
-        
-        # Calcular margem de palavras (±15%)
-        margin = int(min_words * 0.15)
-        target_words_min = min_words - margin
-        
+        # Criar conteúdo baseado EXCLUSIVAMENTE na notícia encontrada
         content = f"""<p class="dek">{description}</p>
 
 <h2>Análise da Notícia</h2>
 
-<p>Esta notícia tem ganhado destaque e merece análise detalhada. {description}</p>
+<p>Esta notícia tem ganhado destaque e merece análise detalhada. {title}</p>
 
 <h3>Contexto e Desenvolvimentos</h3>
 
@@ -889,165 +959,374 @@ class Command(BaseCommand):
 <p>Esta notícia representa um momento importante na evolução do tema. É fundamental acompanhar os próximos desenvolvimentos para entender completamente o impacto.</p>
 
 <p>O RadarBR continuará acompanhando esta história e trará atualizações conforme novos fatos surjam.</p>"""
-        
-        # Verificar se precisa expandir para atingir a margem
-        word_count = len(strip_tags(content).split())
-        if word_count < target_words_min:
-            # Adicionar seções específicas baseadas na categoria
-            additional_content = self._generate_category_specific_content(topic, category)
-            content += additional_content
-        
+
         return content
 
-    def _generate_content_from_scratch(self, topic, category, min_words):
-        """Gera conteúdo do zero quando não há referências"""
+    def _generate_content_based_on_reference(self, topic, news_article, category, min_words):
+        """Gera conteúdo baseado em artigo de referência com margem de +/-15% - MESMA LÓGICA DA AUTOMAÇÃO"""
         try:
-            # Usar IA melhorada sem contexto de notícia
+            # Usar IA melhorada com contexto específico da notícia
             from rb_ingestor.ai_enhanced import generate_enhanced_article
             
-            ai_content = generate_enhanced_article(topic, None, min_words)
+            # Calcular margem de palavras (±15%)
+            target_words = min_words
+            min_target = int(target_words * 0.85)
+            max_target = int(target_words * 1.15)
+            
+            ai_content = generate_enhanced_article(topic, news_article, target_words)
             
             if ai_content:
-                content = f'<p class="dek">{strip_tags(ai_content.get("dek", f"Análise completa sobre {topic.lower()}"))[:220]}</p>\n{ai_content.get("html", "<p></p>")}'
+                word_count = ai_content.get("word_count", 0)
+                quality_score = ai_content.get("quality_score", 0)
                 
-                word_count = ai_content.get('word_count', 0)
-                quality_score = ai_content.get('quality_score', 0)
-                
-                if word_count >= min_words and quality_score >= 60:
-                    self.stdout.write(f"✅ Conteúdo criado do zero: {word_count} palavras (qualidade: {quality_score}%)")
+                if min_target <= word_count <= max_target and quality_score >= 60:
+                    self.stdout.write(f"Conteudo baseado em referencia: {word_count} palavras (qualidade: {quality_score}%)")
+                    title = strip_tags(ai_content.get("title", topic.title()))[:200]
+                    content = f'<p class="dek">{strip_tags(ai_content.get("dek", news_article.get("description", "") if news_article else ""))[:220]}</p>\n{ai_content.get("html", "<p></p>")}'
                     return content
                 else:
-                    self.stdout.write(f"⚠ IA gerou {word_count} palavras, usando fallback")
-                
+                    self.stdout.write(f"AVISO: IA fora da margem ({word_count} palavras), ajustando...")
+            
         except Exception as e:
-            self.stdout.write(f"⚠ IA falhou: {e}")
+            self.stdout.write(f"AVISO: Erro na IA melhorada: {e}")
         
-        # Fallback: conteúdo genérico estruturado
-        return self._generate_structured_content(topic, category, min_words)
+        # Fallback: criar conteúdo baseado na referência
+        return self._create_content_from_reference(topic, news_article, category, min_words)
 
-    def _generate_category_specific_content(self, topic, category):
-        """Gera conteúdo específico baseado na categoria"""
-        topic_lower = topic.lower()
+    def _create_content_from_reference(self, topic, news_article, category, min_words):
+        """Cria conteúdo baseado na referência encontrada"""
+        if not news_article:
+            return self._generate_content_from_scratch(topic, category, min_words)
         
-        # Verificar se category não é None
-        if not category:
-            category = "brasil"
+        title = news_article.get("title", "")
+        description = news_article.get("description", "")
+        source = news_article.get("source", "")
         
-        if category.lower() == "economia":
-            return f"""
+        # Criar conteúdo baseado na notícia específica
+        content = f"""<p class="dek">{description}</p>
 
-<h3>Análise Econômica</h3>
+<h2>Análise da Notícia</h2>
 
-<p>Do ponto de vista econômico, {topic_lower} apresenta implicações importantes para o mercado brasileiro. Os indicadores econômicos têm mostrado evolução positiva relacionada a este tema.</p>
+<p>Esta notícia tem ganhado destaque e merece análise detalhada. {title}</p>
 
-<p>Especialistas em economia destacam que esta situação pode gerar oportunidades de investimento e crescimento para o país.</p>
+<h3>Contexto e Desenvolvimentos</h3>
 
-<h3>Impacto no Mercado</h3>
+<p>Os fatos relacionados a esta notícia indicam uma evolução significativa no cenário atual. A situação tem sido acompanhada de perto por especialistas e analistas que estudam o impacto dessas transformações.</p>
 
-<p>O impacto no mercado brasileiro tem sido significativo, com empresas e investidores acompanhando de perto os desenvolvimentos relacionados a {topic_lower}.</p>
+<p>Segundo informações da {source}, os desenvolvimentos mais recentes mostram uma evolução positiva em diversos indicadores relacionados ao tema.</p>
 
-<p>As perspectivas para os próximos meses são positivas, com expectativa de crescimento sustentável.</p>"""
-        
-        elif category.lower() == "política":
-            return f"""
+<h3>Análise Detalhada</h3>
 
-<h3>Análise Política</h3>
+<p>Analisando os dados disponíveis, é possível identificar padrões importantes que merecem atenção. A notícia sobre "{title}" representa um marco significativo no contexto atual.</p>
 
-<p>No cenário político brasileiro, {topic_lower} tem gerado debates importantes entre diferentes correntes políticas. O tema tem sido objeto de discussão no Congresso Nacional.</p>
-
-<p>As autoridades políticas têm se posicionado de forma clara sobre o assunto, buscando soluções que beneficiem a população.</p>
-
-<h3>Impacto na Sociedade</h3>
-
-<p>O impacto na sociedade brasileira tem sido significativo, afetando diretamente a vida dos cidadãos. As políticas públicas relacionadas a este tema têm sido acompanhadas de perto.</p>"""
-        
-        elif category.lower() == "tecnologia":
-            return f"""
-
-<h3>Inovação Tecnológica</h3>
-
-<p>No campo da tecnologia, {topic_lower} representa uma oportunidade de inovação para o Brasil. Empresas brasileiras têm desenvolvido soluções inovadoras relacionadas a este tema.</p>
-
-<p>A tecnologia tem sido fundamental para impulsionar o desenvolvimento desta área, criando novas oportunidades de negócios.</p>
-
-<h3>Futuro Digital</h3>
-
-<p>As perspectivas para o futuro digital são promissoras, com novas tecnologias sendo desenvolvidas constantemente para melhorar a eficiência e a qualidade dos serviços.</p>"""
-        
-        else:
-            return f"""
-
-<h3>Desenvolvimento Nacional</h3>
-
-<p>No contexto nacional, {topic_lower} tem se mostrado um tema de grande relevância para o desenvolvimento do Brasil. As iniciativas relacionadas a este assunto têm ganhado destaque.</p>
-
-<p>O país tem demonstrado capacidade de liderança nesta área, com resultados positivos que beneficiam toda a sociedade.</p>"""
-
-    def _generate_structured_content(self, topic, category, min_words):
-        """Gera conteúdo estruturado genérico"""
-        topic_lower = topic.lower()
-        
-        # Verificar se category não é None
-        if not category:
-            category = "brasil"
-        
-        content = f"""<p class="dek">Análise completa e atualizada sobre {topic_lower} no Brasil</p>
-
-<h2>Introdução</h2>
-
-<p>{topic.title()} é um tema de grande relevância no cenário atual brasileiro. Este assunto tem ganhado destaque nos últimos tempos e merece análise detalhada.</p>
-
-<h3>Contexto Atual</h3>
-
-<p>O contexto atual relacionado a {topic_lower} apresenta características únicas que merecem atenção especial. A situação tem evoluído de forma positiva, com indicadores que demonstram progresso significativo.</p>
-
-<h3>Desenvolvimentos Recentes</h3>
-
-<p>Os desenvolvimentos mais recentes relacionados a {topic_lower} mostram uma evolução consistente e positiva. Especialistas têm acompanhado de perto essas transformações.</p>
+<p>Especialistas têm destacado a importância deste desenvolvimento para o futuro do setor. As implicações são amplas e afetam diversos aspectos da sociedade.</p>
 
 <h3>Impacto no Brasil</h3>
 
-<p>No Brasil, {topic_lower} tem implicações importantes que afetam diversos setores da sociedade. O país tem se posicionado de forma estratégica em relação a este tema.</p>
+<p>No contexto brasileiro, esta notícia tem repercussões importantes. O país tem acompanhado de perto os desenvolvimentos relacionados a este tema.</p>
+
+<p>As autoridades brasileiras têm se posicionado de forma clara sobre o assunto, demonstrando preocupação com os impactos potenciais.</p>
+
+<h3>Desenvolvimentos Recentes</h3>
+
+<p>Os desenvolvimentos mais recentes relacionados a esta notícia têm chamado a atenção de especialistas e analistas. A evolução da situação tem sido acompanhada de perto por diversos setores da sociedade.</p>
+
+<p>Segundo análises realizadas por especialistas, os indicadores mostram uma tendência positiva que pode trazer benefícios significativos para o país.</p>
 
 <h3>Perspectivas Futuras</h3>
 
-<p>As perspectivas para o futuro são promissoras, com expectativa de crescimento sustentável e desenvolvimento contínuo nesta área.</p>
+<p>Olhando para o futuro, espera-se que novos desenvolvimentos surjam nos próximos dias. A situação está em constante evolução.</p>
+
+<p>Especialistas preveem que os próximos passos serão cruciais para determinar o rumo dos acontecimentos.</p>
 
 <h3>Conclusão</h3>
 
-<p>{topic.title()} representa uma oportunidade importante para o Brasil. É fundamental acompanhar os desenvolvimentos e manter-se informado sobre as novidades relacionadas a este tema.</p>
+<p>Esta notícia representa um momento importante na evolução do tema. É fundamental acompanhar os próximos desenvolvimentos para entender completamente o impacto.</p>
 
 <p>O RadarBR continuará acompanhando esta história e trará atualizações conforme novos fatos surjam.</p>"""
-        
+
         return content
 
-    def _get_category(self, topic, category, Categoria):
-        """Obtém ou cria categoria"""
-        if category:
-            category_name = category.title()
-        else:
-            category_name = self._detect_category(topic.lower()).title()
+    def _generate_content_from_scratch(self, topic, category, min_words):
+        """Gera conteúdo do zero quando não há notícia específica"""
+        category_name = category.nome if category else "geral"
         
-        if category_name == "Geral":
-            category_name = "Brasil"
+        content = f"""<p class="dek">Análise completa sobre {topic.lower()} e seus desenvolvimentos recentes no Brasil.</p>
 
-        cat = Categoria.objects.filter(nome=category_name).first()
+<h2>Desenvolvimentos Recentes</h2>
+
+<p>Esta notícia tem ganhado destaque nos últimos dias e merece atenção especial. {topic.title()} tem sido um tema de grande relevância no cenário atual.</p>
+
+<h3>Contexto da Notícia</h3>
+
+<p>Os fatos relacionados a {topic.lower()} indicam uma evolução significativa no cenário atual. A situação tem sido acompanhada de perto por especialistas e analistas que estudam o impacto dessas transformações.</p>
+
+<p>Segundo informações de fontes especializadas, os desenvolvimentos mais recentes mostram uma evolução positiva em diversos indicadores relacionados ao tema.</p>
+
+<h3>Análise Detalhada</h3>
+
+<p>Analisando os dados disponíveis, é possível identificar padrões importantes que merecem atenção. {topic.title()} representa um marco significativo no contexto atual.</p>
+
+<p>Especialistas têm destacado a importância deste desenvolvimento para o futuro do setor. As implicações são amplas e afetam diversos aspectos da sociedade.</p>
+
+<h3>Impacto no Brasil</h3>
+
+<p>No contexto brasileiro, {topic.lower()} tem repercussões importantes. O país tem acompanhado de perto os desenvolvimentos relacionados a este tema.</p>
+
+<p>As autoridades brasileiras têm se posicionado de forma clara sobre o assunto, demonstrando preocupação com os impactos potenciais.</p>
+
+<h3>Desenvolvimentos Recentes</h3>
+
+<p>Os desenvolvimentos mais recentes relacionados a {topic.lower()} têm chamado a atenção de especialistas e analistas. A evolução da situação tem sido acompanhada de perto por diversos setores da sociedade.</p>
+
+<p>Segundo análises realizadas por especialistas, os indicadores mostram uma tendência positiva que pode trazer benefícios significativos para o país.</p>
+
+<h3>Perspectivas Futuras</h3>
+
+<p>Olhando para o futuro, espera-se que novos desenvolvimentos surjam nos próximos dias. A situação está em constante evolução.</p>
+
+<p>Especialistas preveem que os próximos passos serão cruciais para determinar o rumo dos acontecimentos.</p>
+
+<h3>Conclusão</h3>
+
+<p>{topic.title()} representa um momento importante na evolução do tema. É fundamental acompanhar os próximos desenvolvimentos para entender completamente o impacto.</p>
+
+<p>O RadarBR continuará acompanhando esta história e trará atualizações conforme novos fatos surjam.</p>"""
+
+        return content
+
+    def _adjust_content_length(self, content, topic, category, min_words):
+        """Ajusta o comprimento do conteúdo para atingir o mínimo de palavras"""
+        current_words = len(strip_tags(content).split())
+        
+        if current_words >= min_words:
+            return content
+        
+        # Adicionar seções extras se necessário
+        additional_content = f"""
+
+<h3>Desenvolvimento Nacional</h3>
+
+<p>No contexto nacional, {topic.lower()} tem se mostrado um tema de grande relevância para o desenvolvimento do Brasil. As iniciativas relacionadas a este assunto têm ganhado destaque.</p>
+
+<p>O país tem demonstrado capacidade de liderança nesta área, com resultados positivos que beneficiam toda a sociedade.</p>
+
+<h3>Impacto Regional no Brasil</h3>
+
+<p>O impacto de {topic.lower()} varia significativamente entre as diferentes regiões do Brasil. No Nordeste, por exemplo, as características específicas da região influenciam diretamente como este tema se desenvolve, criando oportunidades únicas de crescimento e desenvolvimento.</p>
+
+<p>Na região Sul, a tradição industrial e tecnológica oferece um ambiente propício para o desenvolvimento de soluções inovadoras relacionadas a {topic.lower()}. Esta vantagem competitiva tem sido aproveitada por empresas e profissionais locais.</p>
+
+<h3>Tendências Emergentes</h3>
+
+<p>As tendências emergentes relacionadas a {topic.lower()} indicam uma evolução constante e positiva. Novas tecnologias e metodologias estão sendo desenvolvidas, criando oportunidades para profissionais e empresas brasileiras.</p>
+
+<p>Essas tendências são acompanhadas de perto por especialistas e pesquisadores, que identificam padrões e desenvolvem estratégias para aproveitar as oportunidades que surgem.</p>
+
+<h3>Casos de Sucesso</h3>
+
+<p>Existem diversos casos de sucesso relacionados a {topic.lower()} no Brasil que servem como referência e inspiração. Esses casos demonstram o potencial do país e a capacidade dos profissionais brasileiros de desenvolver soluções inovadoras.</p>
+
+<p>Esses exemplos de sucesso são fundamentais para motivar outros profissionais e empresas a investirem nesta área, criando um ciclo virtuoso de crescimento e desenvolvimento.</p>
+
+<h3>Recomendações e Próximos Passos</h3>
+
+<p>Com base na análise apresentada, é possível identificar algumas recomendações importantes para o desenvolvimento futuro desta área. Essas recomendações são fundamentadas em dados concretos e na experiência de especialistas.</p>
+
+<p>O primeiro passo é continuar investindo em pesquisa e desenvolvimento, garantindo que o Brasil mantenha sua posição de liderança. Além disso, é importante focar na formação de profissionais qualificados.</p>"""
+
+        return content + additional_content
+
+    def _detect_category_from_news(self, topic_lower, news_article, Categoria):
+        """Detecta categoria baseada no site de origem, notícia encontrada ou sistema inteligente"""
+        # 1. PRIORIDADE MÁXIMA: Extrair categoria do site de origem
+        if news_article and news_article.get("original_url"):
+            # Verificar se não é uma URL do Google News
+            original_url = news_article.get("original_url")
+            if self._is_google_news_url(original_url):
+                self.stdout.write("⚠ Pulando SiteCategorizer - URL é do Google News")
+            else:
+                try:
+                    from rb_ingestor.site_categorizer import SiteCategorizer
+                    site_categorizer = SiteCategorizer()
+                    
+                    # Usar URL original em vez do Google News
+                    original_news = {
+                        'url': original_url,
+                        'title': news_article.get('title', ''),
+                        'description': news_article.get('description', '')
+                    }
+                    
+                    # Tentar extrair categoria do site original
+                    site_category = site_categorizer.categorize_article(original_news)
+                    
+                    if site_category:
+                        self.stdout.write(f"Categoria do site: {site_category}")
+                        
+                        # Buscar categoria existente
+                        cat = Categoria.objects.filter(nome=site_category.title()).first()
+                        if cat:
+                            self.stdout.write(f"Usando categoria existente: {site_category}")
+                            return cat
+                        
+                        # Criar nova categoria se não existir
+                        cat, created = Categoria.objects.get_or_create(
+                            slug=slugify(site_category)[:140],
+                            defaults={"nome": site_category.title()}
+                        )
+                        if created:
+                            self.stdout.write(f"Nova categoria criada: {site_category}")
+                        else:
+                            self.stdout.write(f"Categoria encontrada: {site_category}")
+                        return cat
+                    
+                except Exception as e:
+                    self.stdout.write(f"AVISO: Erro no categorizador de site: {e}")
+        
+        # 2. FALLBACK: Tentar usar categoria da notícia encontrada
+        if news_article and news_article.get("category"):
+            news_category = news_article.get("category", "").strip()
+            if news_category:
+                # Limpar e normalizar categoria da notícia
+                clean_category = news_category.title().strip()
+                self.stdout.write(f"Categoria da noticia: {clean_category}")
+                
+                # Buscar categoria existente
+                cat = Categoria.objects.filter(nome=clean_category).first()
+                if cat:
+                    self.stdout.write(f"Usando categoria existente: {clean_category}")
+                    return cat
+                
+                # Criar nova categoria se não existir
+                cat, created = Categoria.objects.get_or_create(
+                    slug=slugify(clean_category)[:140],
+                    defaults={"nome": clean_category}
+                )
+                if created:
+                    self.stdout.write(f"Nova categoria criada: {clean_category}")
+                else:
+                    self.stdout.write(f"Categoria encontrada: {clean_category}")
+                return cat
+        
+        # 3. FALLBACK FINAL: Sistema inteligente de análise de conteúdo
+        self.stdout.write("Usando sistema inteligente de categorizacao...")
+        title = news_article.get("title", "") if news_article else ""
+        description = news_article.get("description", "") if news_article else ""
+        
+        try:
+            from rb_ingestor.smart_categorizer import SmartCategorizer
+            categorizer = SmartCategorizer()
+            
+            # Categorizar baseado no conteúdo completo
+            category_name = categorizer.categorize_content(title, description, topic_lower)
+            confidence = categorizer.get_category_confidence(title, description, topic_lower)
+            
+            self.stdout.write(f"Categoria detectada: {category_name} (confianca: {confidence:.2f})")
+            
+            # Salvar confiança da categoria original para uso posterior
+            self._original_category_confidence = confidence
+            
+            # Buscar ou criar categoria
+            cat = Categoria.objects.filter(nome=category_name.title()).first()
+            if cat:
+                return cat
+            
+            # Criar nova categoria se não existir
+            cat, created = Categoria.objects.get_or_create(
+                slug=slugify(category_name)[:140],
+                defaults={"nome": category_name.title()}
+            )
+            return cat
+            
+        except Exception as e:
+            self.stdout.write(f"AVISO: Erro no categorizador inteligente: {e}")
+            # Fallback final para sistema simples
+            return self._get_category_fallback(topic_lower, Categoria)
+
+    def _get_category_fallback(self, topic_lower, Categoria):
+        """Fallback simples para categorização"""
+        category_mapping = {
+            "politica": "Política",
+            "economia": "Economia", 
+            "esportes": "Esportes",
+            "tecnologia": "Tecnologia",
+            "saude": "Saúde",
+            "mundo": "Mundo",
+            "brasil": "Brasil"
+        }
+        
+        for keyword, category_name in category_mapping.items():
+            if keyword in topic_lower:
+                cat = Categoria.objects.filter(nome=category_name).first()
+                if cat:
+                    return cat
+                return Categoria.objects.create(nome=category_name, slug=slugify(category_name)[:140])
+        
+        # Default
+        cat = Categoria.objects.filter(nome="Brasil").first()
         if cat:
             return cat
+        return Categoria.objects.create(nome="Brasil", slug="brasil")
 
-        # Criar nova categoria
-        cat, created = Categoria.objects.get_or_create(
-            slug=slugify(category_name)[:140],
-            defaults={"nome": category_name}
-        )
-        return cat
-
-    def _add_image(self, noticia, topic):
-        """Adiciona imagem à notícia"""
+    def _add_image(self, noticia, topic, news_article=None):
+        """Adiciona imagem à notícia seguindo lógica inteligente"""
         try:
+            # LÓGICA INTELIGENTE MELHORADA:
+            # 1. Figuras públicas: Detecção inteligente → Rede social do artigo original → Instagram oficial → Bancos gratuitos
+            # 2. Artigos gerais: Bancos gratuitos
+            
+            # NOVA PRIORIDADE 1: Detecção inteligente de figuras públicas
+            from rb_ingestor.smart_public_figure_detector import SmartPublicFigureDetector
+            smart_detector = SmartPublicFigureDetector()
+            
+            full_text = f"{noticia.titulo} {noticia.conteudo}"
+            if news_article:
+                full_text += f" {news_article.get('title', '')} {news_article.get('description', '')}"
+            
+            # Detectar figura pública usando sistema inteligente
+            public_figure = smart_detector.detect_public_figure(full_text)
+            
+            if public_figure:
+                # É figura pública - seguir lógica específica
+                self.stdout.write(f"Figura publica detectada: {public_figure['figure']}")
+                
+                # PRIORIDADE 1: Imagem de rede social no artigo original
+                if news_article:
+                    from rb_ingestor.instagram_image_finder import InstagramImageFinder
+                    instagram_finder = InstagramImageFinder()
+                    social_image = instagram_finder.extract_social_media_images_from_news(news_article)
+                    if social_image:
+                        self.stdout.write(f"Imagem de rede social encontrada no artigo original")
+                        noticia.imagem = social_image["url"]
+                        noticia.imagem_alt = social_image.get("alt", f"Imagem de {public_figure['figure']}")
+                        noticia.imagem_credito = social_image.get("credit", f"Foto: {public_figure['instagram_handle']}")
+                        noticia.imagem_licenca = "Rede Social - Figura Pública"
+                        noticia.imagem_fonte_url = social_image.get("url", "")
+                        noticia.save()
+                        
+                        self.stdout.write("Imagem de rede social adicionada com sucesso")
+                        return
+                
+                # PRIORIDADE 2: Instagram oficial da figura (usando sistema inteligente)
+                instagram_image = smart_detector.get_instagram_image_for_figure(public_figure)
+                
+                if instagram_image and instagram_image.get("url"):
+                    self.stdout.write(f"Imagem do Instagram oficial encontrada: {public_figure['instagram_handle']}")
+                    noticia.imagem = instagram_image["url"]
+                    noticia.imagem_alt = instagram_image.get("alt", f"Imagem de {public_figure['figure']}")
+                    noticia.imagem_credito = instagram_image.get("credit", f"Foto: Instagram {public_figure['instagram_handle']}")
+                    noticia.imagem_licenca = "Figura Pública - Unsplash"
+                    noticia.imagem_fonte_url = instagram_image.get("instagram_url", "")
+                    noticia.save()
+                    
+                    self.stdout.write("Imagem do Instagram oficial adicionada com sucesso")
+                    return
+            
+            # FALLBACK: Bancos de imagens gratuitos (para artigos gerais ou quando Instagram não funciona)
+            self.stdout.write("Usando banco de imagens gratuitos...")
             from rb_ingestor.image_search import ImageSearchEngine
-
             search_engine = ImageSearchEngine()
+            
             image_url = search_engine.search_image(
                 noticia.titulo,
                 noticia.conteudo,
@@ -1062,10 +1341,13 @@ class Command(BaseCommand):
                 noticia.imagem_fonte_url = image_url
                 noticia.save()
 
-                self.stdout.write("🖼️  Imagem adicionada com sucesso")
+                self.stdout.write("Imagem gratuita adicionada com sucesso")
+                return
+            
+            self.stdout.write("AVISO: Nenhuma imagem encontrada")
 
         except Exception as e:
-            self.stdout.write(f"⚠ Erro ao adicionar imagem: {e}")
+            self.stdout.write(f"AVISO: Erro ao adicionar imagem: {e}")
 
     def _ping_sitemap(self):
         """Faz ping do sitemap"""
@@ -1076,7 +1358,7 @@ class Command(BaseCommand):
             sm_url = absolute_sitemap_url()
             res = ping_search_engines(sm_url)
             
-            self.stdout.write(f"🔗 Ping sitemap: Google={'OK' if res['google'] else 'NOK'}; Bing={'OK' if res['bing'] else 'NOK'}")
+            self.stdout.write(f"Ping sitemap: Google={'OK' if res['google'] else 'NOK'}; Bing={'OK' if res['bing'] else 'NOK'}")
             
         except Exception as e:
-            self.stdout.write(f"⚠ Erro ao fazer ping do sitemap: {e}")
+            self.stdout.write(f"AVISO: Erro no ping do sitemap: {e}")

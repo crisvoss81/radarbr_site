@@ -74,46 +74,34 @@ INFORMAÇÕES DA NOTÍCIA:
 - Fonte: {source}
 
 REQUISITOS OBRIGATÓRIOS:
-- Mínimo de {min_words} palavras (ideal: {min_words + 200})
+- MÍNIMO de {min_words} palavras (ideal: {min_words + 200})
 - Artigo baseado nos FATOS REAIS da notícia, não genérico
 - Linguagem jornalística profissional e envolvente
-- Estrutura com subtítulos H2 e H3 informativos
-- Parágrafos curtos e objetivos (máximo 4 linhas)
+- ESTRUTURA OBRIGATÓRIA: EXATAMENTE 2 subtítulos H2 (não mais, não menos)
+- Parágrafos informativos e desenvolvidos (4-5 frases cada)
 - Incluir listas quando apropriado
-- Densidade de palavras-chave natural (1-2%)
+- Densidade de palavra-chave natural (1-2%)
 - Contexto brasileiro quando relevante
 - Tom informativo mas acessível
 
-ESTRUTURA OBRIGATÓRIA:
-1. **Introdução Impactante** (2-3 parágrafos)
+ESTRUTURA OBRIGATÓRIA (EXATAMENTE 2 H2):
+1. **Primeiro H2** (4-5 parágrafos informativos)
    - Contextualize a notícia específica
    - Explique por que é importante agora
    - Mencione os fatos principais
+   - Desenvolva cada ponto com detalhes
 
-2. **Desenvolvimento dos Fatos** (4-5 parágrafos)
+2. **Segundo H2** (4-5 parágrafos informativos)
    - Detalhe os acontecimentos específicos
    - Cite informações da fonte quando possível
    - Explique o contexto histórico se relevante
+   - Desenvolva análises e implicações
 
-3. **Análise e Impacto** (3-4 parágrafos)
-   - Analise as implicações da notícia
-   - Explique quem é afetado e como
-   - Discuta possíveis consequências
-
-4. **Contexto Brasileiro** (2-3 parágrafos)
-   - Como isso afeta o Brasil especificamente
-   - Reações ou posicionamentos brasileiros
-   - Impacto na sociedade brasileira
-
-5. **Perspectivas Futuras** (2-3 parágrafos)
-   - O que esperar nos próximos dias/semanas
-   - Possíveis desenvolvimentos
-   - Próximos passos ou decisões
-
-6. **Conclusão Forte** (1-2 parágrafos)
-   - Resumo dos pontos principais
-   - Importância da notícia
-   - Chamada para acompanhamento
+IMPORTANTE - DESENVOLVIMENTO DE CONTEÚDO:
+- NÃO finalize antes de atingir o mínimo de {min_words} palavras
+- Desenvolva cada parágrafo com 4-5 frases completas
+- Seja detalhado e informativo
+- Use transições naturais entre parágrafos
 
 IMPORTANTE - EVITAR PLÁGIO:
 - NUNCA copie títulos de outros portais
@@ -127,6 +115,22 @@ IMPORTANTE - EVITAR PLÁGIO:
 - Seja preciso e factual
 - Mantenha tom jornalístico profissional
 - Inclua detalhes específicos quando disponíveis
+
+CRÍTICO - CONTEÚDO ESPECÍFICO:
+- SEMPRE baseie o conteúdo nos FATOS REAIS da notícia fornecida
+- NÃO crie conteúdo genérico sobre o tema
+- Use os detalhes específicos do título e descrição
+- Se a notícia fala sobre "Tesla paga bilhões a Musk", foque NESSA notícia específica
+- Se a notícia fala sobre "Anitta no Iêmen", foque NESSA viagem específica
+- NUNCA generalize - seja sempre específico aos fatos da notícia
+
+OBRIGATÓRIO - USAR DADOS ESPECÍFICOS:
+- Se o título menciona "Grávida, garota de programa ligada a Neymar surge com exame de DNA"
+- Foque EXCLUSIVAMENTE neste caso específico do Neymar
+- Use os detalhes: grávida, garota de programa, exame de DNA
+- NÃO fale genericamente sobre Neymar - fale sobre ESTE caso específico
+- Se menciona "Metrópoles", "Terra", "Jornal Correio" - use essas fontes específicas
+- SEMPRE seja específico aos fatos mencionados no título e descrição
 
 FORMATO DE RESPOSTA (JSON):
 {{
