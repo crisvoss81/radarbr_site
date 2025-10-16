@@ -235,7 +235,11 @@ class NewsContentExtractor:
             from playwright.sync_api import sync_playwright
             print("🧭 Abrindo link no navegador headless...")
             with sync_playwright() as p:
-                browser = p.chromium.launch(headless=True)
+                # Tentar chromium-headless-shell primeiro, fallback para chromium
+                try:
+                    browser = p.chromium.launch(headless=True, channel="chromium-headless-shell")
+                except Exception:
+                    browser = p.chromium.launch(headless=True)
                 context = browser.new_context(user_agent=self.session.headers.get('User-Agent'))
                 page = context.new_page()
                 # Estratégia multi-fase de carregamento

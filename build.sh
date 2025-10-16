@@ -17,10 +17,22 @@ pip install -r requirements.txt
 echo "Instalando browsers do Playwright..."
 # Garante instalação dentro do projeto (persistente no deploy)
 export PLAYWRIGHT_BROWSERS_PATH=0
-# Instala ambos alvos para compatibilidade com ambientes que usam headless_shell
-python -m playwright install chromium chromium-headless-shell || python -m playwright install chromium
+# Instala chromium-headless-shell primeiro (preferido), depois chromium como fallback
+echo "Instalando chromium-headless-shell..."
+python -m playwright install chromium-headless-shell || echo "⚠ chromium-headless-shell falhou, tentando chromium..."
+python -m playwright install chromium
 echo "Verificando instalação do Chromium..."
-python -c "from playwright.sync_api import sync_playwright; p = sync_playwright().start(); browser = p.chromium.launch(headless=True); browser.close(); print('✅ Chromium instalado e funcionando')"
+python -c "
+from playwright.sync_api import sync_playwright
+p = sync_playwright().start()
+try:
+    browser = p.chromium.launch(headless=True, channel='chromium-headless-shell')
+    print('✅ chromium-headless-shell funcionando')
+except:
+    browser = p.chromium.launch(headless=True)
+    print('✅ chromium padrão funcionando')
+browser.close()
+"
 
 # 3. Instalar dependências Node.js
 echo "Instalando dependências Node.js..."
