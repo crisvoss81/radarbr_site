@@ -9,7 +9,10 @@
     buildCommand: |
       chmod +x build.sh
       ./build.sh
-    startCommand: gunicorn core.wsgi:application
+    startCommand: |
+      chmod +x scripts/install_playwright.sh
+      ./scripts/install_playwright.sh
+      gunicorn core.wsgi:application
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: core.settings
