@@ -15,6 +15,8 @@ pip install -r requirements.txt
 
 # 2.1. Instalar browsers do Playwright
 echo "Instalando browsers do Playwright..."
+# Garante instalação dentro do projeto (persistente no deploy)
+export PLAYWRIGHT_BROWSERS_PATH=0
 # Instala ambos alvos para compatibilidade com ambientes que usam headless_shell
 python -m playwright install chromium chromium-headless-shell || python -m playwright install chromium
 echo "Verificando instalação do Chromium..."
