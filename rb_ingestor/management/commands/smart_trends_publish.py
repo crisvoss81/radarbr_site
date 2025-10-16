@@ -19,6 +19,7 @@ from rb_ingestor.image_search import find_image_for_news
 from rb_ingestor.image_cache import image_cache
 from rb_ingestor.trending_analyzer import TrendingAnalyzer
 from rb_ingestor.audience_analyzer import AudienceAnalyzer
+from rb_ingestor.enhanced_trending_sources import EnhancedTrendingSources
 
 # Funções auxiliares (mesmas do comando original)
 _NO_STATUS_SENTINEL = object()
@@ -69,6 +70,7 @@ class Command(BaseCommand):
         # Inicializar analisadores
         trending_analyzer = TrendingAnalyzer()
         audience_analyzer = AudienceAnalyzer()
+        enhanced_sources = EnhancedTrendingSources()
 
         # Obter insights da audiência
         audience_insights = audience_analyzer.get_audience_insights()
@@ -85,11 +87,11 @@ class Command(BaseCommand):
         terms = []
         
         if opts["strategy"] == "trending":
-            terms = self._get_trending_topics(trending_analyzer, opts["limit"])
+            terms = self._get_enhanced_trending_topics(enhanced_sources, opts["limit"])
         elif opts["strategy"] == "audience":
             terms = self._get_audience_optimized_topics(audience_analyzer, opts["limit"])
         else:  # mixed
-            terms = self._get_mixed_strategy_topics(trending_analyzer, audience_analyzer, opts["limit"])
+            terms = self._get_mixed_strategy_topics(enhanced_sources, audience_analyzer, opts["limit"])
 
         # Adicionar tópicos sazonais se solicitado
         if opts["include_seasonal"]:
@@ -109,18 +111,8 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR("Nenhum tópico encontrado."))
             return
 
-        # Processar tópicos (mesma lógica do comando original)
+        # Processar tópicos usando a mesma lógica do publish_topic
         created = 0
-        day = timezone.localdate().isoformat()
-
-        def unique_slug(base_title: str) -> str:
-            base = (slugify(base_title) or "post")[:180]
-            slug, i = base, 2
-            while Noticia.objects.filter(slug=slug).exists():
-                slug = f"{base[:176]}-{i}"; i += 1
-            return slug
-
-        published_value = _status_published(Noticia)
         
         for topic in terms:
             topic_clean = topic.strip()
@@ -276,14 +268,45 @@ class Command(BaseCommand):
         
         return topics[:limit]
 
-    def _get_mixed_strategy_topics(self, trending_analyzer: TrendingAnalyzer, 
+    def _get_mixed_strategy_topics(self, enhanced_sources: EnhancedTrendingSources, 
                                  audience_analyzer: AudienceAnalyzer, limit: int) -> list:
         """Combina estratégias de trending topics e análise de audiência"""
         # 60% trending topics, 40% audience optimized
         trending_count = int(limit * 0.6)
         audience_count = limit - trending_count
         
-        trending_topics = self._get_trending_topics(trending_analyzer, trending_count)
+        trending_topics = self._get_enhanced_trending_topics(enhanced_sources, trending_count)
         audience_topics = self._get_audience_optimized_topics(audience_analyzer, audience_count)
         
         return trending_topics + audience_topics
+    
+    def _get_enhanced_trending_topics(self, enhanced_sources: EnhancedTrendingSources, limit: int) -> list:
+        """Busca tópicos em ascensão usando fontes aprimoradas"""
+        try:
+            self.stdout.write("🔍 Buscando temas em ascensão de múltiplas fontes...")
+            
+            # Obter todos os trending topics
+            trending_data = enhanced_sources.get_all_trending_topics(limit * 2)
+            
+            if not trending_data:
+                self.stdout.write("⚠ Nenhum trending topic encontrado")
+                return []
+            
+            # Extrair apenas os tópicos
+            topics = []
+            for item in trending_data[:limit]:
+                topic = item.get('topic', '')
+                if topic:
+                    topics.append(topic)
+                    if self.stdout.verbosity >= 1:
+                        source = item.get('source', 'unknown')
+                        score = item.get('trend_score', 0)
+                        category = item.get('category', 'geral')
+                        self.stdout.write(f"  📈 {topic} (Fonte: {source}, Score: {score}, Categoria: {category})")
+            
+            self.stdout.write(f"✅ Encontrados {len(topics)} temas em ascensão")
+            return topics
+            
+        except Exception as e:
+            self.stdout.write(f"❌ Erro ao buscar trending topics: {e}")
+            return []

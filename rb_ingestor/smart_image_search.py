@@ -28,7 +28,7 @@ class SmartImageSearch:
             print(f"📸 Imagem original encontrada: {original_image_url}")
             
             # 2. Google Lens analisa e busca imagens similares
-            lens_result = self.google_lens.find_similar_images(original_image_url, max_results=6)
+            lens_result = self.google_lens.find_similar_images(original_image_url, max_results=6, article_title=article_title)
             
             if not lens_result['success']:
                 print(f"❌ Google Lens falhou: {lens_result.get('error', 'Erro desconhecido')}")

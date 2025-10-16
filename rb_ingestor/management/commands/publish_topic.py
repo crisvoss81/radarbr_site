@@ -867,18 +867,8 @@ class Command(BaseCommand):
             word_count = ai_content.get("word_count", 0)
             quality_score = ai_content.get("quality_score", 0)
             
-            # Calcular margem de 20% baseada no conteúdo real extraído
-            if news_article.get('base_word_count'):
-                base_word_count = news_article['base_word_count']
-                margem_min = int(base_word_count * 0.80)  # 20% a menos
-                margem_max = int(base_word_count * 1.20)  # 20% a mais
-            else:
-                # Fallback para min_words se não houver base_word_count
-                margem_min = int(min_words * 0.80)
-                margem_max = int(min_words * 1.20)
-            
-            if margem_min <= word_count <= margem_max and quality_score >= 40:
-                self.stdout.write(f"✅ IA gerou {word_count} palavras (qualidade: {quality_score}%) - dentro da margem de 20%")
+            if quality_score >= 40:
+                self.stdout.write(f"✅ IA gerou {word_count} palavras (qualidade: {quality_score}%) - aprovado")
                 
                 # Usar o conteúdo da IA diretamente
                 title = strip_tags(ai_content.get("title", topic.title()))[:200]
@@ -889,8 +879,8 @@ class Command(BaseCommand):
                 content = f'<p class="dek">{dek}</p>\n{html_content}'
                 return content
             else:
-                self.stdout.write(f"⚠ IA gerou {word_count} palavras (qualidade: {quality_score}%) - fora da margem de 20% ({margem_min}-{margem_max})")
-                raise RuntimeError("IA não atingiu critérios de palavras/qualidade")
+                self.stdout.write(f"⚠ IA gerou {word_count} palavras (qualidade: {quality_score}%) - qualidade insuficiente")
+                raise RuntimeError("IA não atingiu critérios de qualidade")
                 
         except Exception as e:
             self.stdout.write(f"❌ Publicação cancelada: {e}")

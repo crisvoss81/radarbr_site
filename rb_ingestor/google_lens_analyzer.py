@@ -74,15 +74,38 @@ class GoogleLensAnalyzer:
         # Simular detecção de objetos baseada em padrões
         objects_detected = []
         
-        # Detectar contexto político/governamental (simulação)
-        if any(word in image_url.lower() for word in ['trump', 'president', 'government', 'cia', 'fbi']):
+        # Detectar contexto baseado na URL da imagem (mais específico)
+        url_lower = image_url.lower()
+        
+        # Detectar contexto político/governamental
+        if any(word in url_lower for word in ['trump', 'president', 'government', 'cia', 'fbi', 'politica', 'politico', 'governo', 'presidente']):
             objects_detected.extend(['politician', 'government', 'official', 'building'])
-        elif any(word in image_url.lower() for word in ['bitcoin', 'crypto', 'money']):
-            objects_detected.extend(['money', 'digital', 'technology', 'currency'])
-        elif any(word in image_url.lower() for word in ['sport', 'football', 'athlete']):
-            objects_detected.extend(['athlete', 'sports', 'competition', 'field'])
+        # Detectar contexto econômico/financeiro
+        elif any(word in url_lower for word in ['bitcoin', 'crypto', 'money', 'economia', 'financeiro', 'inflacao', 'dolar', 'real', 'banco', 'mercado']):
+            objects_detected.extend(['money', 'digital', 'technology', 'currency', 'economy'])
+        # Detectar contexto esportivo
+        elif any(word in url_lower for word in ['sport', 'football', 'athlete', 'futebol', 'esporte', 'atleta', 'copa', 'mundial']):
+            objects_detected.extend(['athlete', 'sports', 'competition', 'field', 'stadium'])
+        # Detectar contexto tecnológico
+        elif any(word in url_lower for word in ['tech', 'technology', 'ai', 'artificial', 'intelligence', 'tecnologia', 'inteligencia', 'artificial', 'celular', 'smartphone']):
+            objects_detected.extend(['technology', 'device', 'screen', 'digital', 'innovation'])
+        # Detectar contexto de saúde
+        elif any(word in url_lower for word in ['health', 'medical', 'doctor', 'hospital', 'saude', 'medico', 'hospital', 'vacina', 'covid']):
+            objects_detected.extend(['medical', 'healthcare', 'doctor', 'hospital', 'medicine'])
+        # Detectar contexto de entretenimento
+        elif any(word in url_lower for word in ['movie', 'film', 'actor', 'celebrity', 'filme', 'ator', 'celebridade', 'cinema', 'netflix']):
+            objects_detected.extend(['celebrity', 'entertainment', 'movie', 'actor', 'cinema'])
+        # Detectar contexto de notícias gerais
+        elif any(word in url_lower for word in ['news', 'breaking', 'update', 'noticia', 'atualizacao', 'urgente']):
+            objects_detected.extend(['news', 'media', 'journalism', 'report'])
         else:
-            objects_detected.extend(['person', 'scene', 'environment'])
+            # Fallback mais específico baseado no tamanho da imagem
+            if image_size > 100000:  # Imagem muito grande
+                objects_detected.extend(['landscape', 'scene', 'environment', 'wide'])
+            elif image_size > 50000:  # Imagem grande
+                objects_detected.extend(['person', 'portrait', 'face', 'close'])
+            else:  # Imagem pequena
+                objects_detected.extend(['icon', 'symbol', 'logo', 'graphic'])
         
         # Simular confiança baseada no tamanho da imagem
         confidence = min(0.95, 0.6 + (image_size / 100000))
@@ -119,14 +142,14 @@ class GoogleLensAnalyzer:
             data = response.json()
             results = []
             
-            for photo in data.get('results', []):
+            for i, photo in enumerate(data.get('results', [])):
                 results.append({
                     'url': photo['urls']['regular'],
                     'thumb': photo['urls']['thumb'],
                     'alt': photo.get('alt_description', ''),
                     'credit': f"Photo by {photo['user']['name']} on Unsplash",
                     'source': 'unsplash',
-                    'similarity_score': random.uniform(0.6, 0.9)  # Simular score de similaridade
+                    'similarity_score': random.uniform(0.7, 0.95) + (i * 0.01)  # Variação baseada na posição
                 })
             
             return results
@@ -157,14 +180,14 @@ class GoogleLensAnalyzer:
             data = response.json()
             results = []
             
-            for photo in data.get('photos', []):
+            for i, photo in enumerate(data.get('photos', [])):
                 results.append({
                     'url': photo['src']['large'],
                     'thumb': photo['src']['medium'],
                     'alt': photo.get('alt', ''),
                     'credit': f"Photo by {photo['photographer']} on Pexels",
                     'source': 'pexels',
-                    'similarity_score': random.uniform(0.6, 0.9)
+                    'similarity_score': random.uniform(0.7, 0.95) + (i * 0.01)  # Variação baseada na posição
                 })
             
             return results
@@ -173,7 +196,7 @@ class GoogleLensAnalyzer:
             print(f"Erro na busca Pexels: {e}")
             return []
     
-    def find_similar_images(self, image_url: str, max_results: int = 10) -> Dict:
+    def find_similar_images(self, image_url: str, max_results: int = 10, article_title: str = "") -> Dict:
         """Processo completo: Google Lens analisa imagem e busca similares no Pexels/Unsplash"""
         print(f"🔍 Google Lens analisando imagem: {image_url}")
         
@@ -196,9 +219,21 @@ class GoogleLensAnalyzer:
         print(f"🎯 Objetos detectados: {', '.join(objects_detected)}")
         print(f"🎨 Características visuais: {', '.join(visual_features)}")
         
-        # 3. Google Lens busca imagens similares baseadas nas características visuais
-        # Usando as características detectadas para buscar no Pexels/Unsplash
-        search_terms = objects_detected + visual_features
+        # 3. NOVO: Usar título do artigo para busca mais específica
+        if article_title:
+            # Extrair palavras-chave do título do artigo
+            import re
+            title_keywords = re.findall(r'\b\w+\b', article_title.lower())
+            # Filtrar palavras muito comuns
+            stop_words = {'de', 'da', 'do', 'das', 'dos', 'em', 'na', 'no', 'nas', 'nos', 'para', 'por', 'com', 'sem', 'sobre', 'entre', 'até', 'após', 'durante', 'mediante', 'conforme', 'segundo', 'consoante', 'a', 'o', 'e', 'é', 'são', 'foi', 'será', 'tem', 'ter', 'terá', 'que', 'quando', 'onde', 'como', 'porque', 'se', 'mas', 'ou', 'então', 'assim', 'também', 'ainda', 'já', 'não', 'mais', 'muito', 'pouco', 'bem', 'mal', 'hoje', 'ontem', 'amanhã', 'agora', 'depois', 'antes', 'aqui', 'ali', 'lá', 'este', 'esta', 'isto', 'esse', 'essa', 'isso', 'aquele', 'aquela', 'aquilo', 'meu', 'minha', 'meus', 'minhas', 'seu', 'sua', 'seus', 'suas', 'nosso', 'nossa', 'nossos', 'nossas', 'teu', 'tua', 'teus', 'tuas', 'vosso', 'vossa', 'vossos', 'vossas', 'um', 'uma', 'uns', 'umas', 'algum', 'alguma', 'alguns', 'algumas', 'nenhum', 'nenhuma', 'nenhuns', 'nenhumas', 'todo', 'toda', 'todos', 'todas', 'outro', 'outra', 'outros', 'outras', 'mesmo', 'mesma', 'mesmos', 'mesmas', 'tal', 'tais', 'qual', 'quais', 'quanto', 'quanta', 'quantos', 'quantas', 'certo', 'certa', 'certos', 'certas', 'vário', 'vária', 'vários', 'várias', 'diverso', 'diversa', 'diversos', 'diversas', 'cada', 'ambos', 'ambas', 'ambos', 'ambas', 'qualquer', 'quaisquer', 'algo', 'alguém', 'alguns', 'algumas', 'ninguém', 'nada', 'tudo', 'todos', 'todas', 'outro', 'outra', 'outros', 'outras', 'mesmo', 'mesma', 'mesmos', 'mesmas', 'tal', 'tais', 'qual', 'quais', 'quanto', 'quanta', 'quantos', 'quantas', 'certo', 'certa', 'certos', 'certas', 'vário', 'vária', 'vários', 'várias', 'diverso', 'diversa', 'diversos', 'diversas', 'cada', 'ambos', 'ambas', 'ambos', 'ambas', 'qualquer', 'quaisquer', 'algo', 'alguém', 'alguns', 'algumas', 'ninguém', 'nada', 'tudo', 'todos', 'todas'}
+            relevant_keywords = [word for word in title_keywords if len(word) > 3 and word not in stop_words]
+            
+            # Usar palavras-chave do título como termos de busca principais
+            search_terms = relevant_keywords[:3] + objects_detected[:2] + visual_features[:2]
+            print(f"🔍 Termos de busca baseados no artigo: {search_terms}")
+        else:
+            # Fallback para método antigo
+            search_terms = objects_detected + visual_features
         
         unsplash_results = self.search_similar_images_unsplash(search_terms, max_results // 2)
         pexels_results = self.search_similar_images_pexels(search_terms, max_results // 2)
