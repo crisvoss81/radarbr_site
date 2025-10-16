@@ -14,6 +14,7 @@ from slugify import slugify
 from datetime import datetime, timedelta
 import random
 import logging
+from rb_ingestor.title_styles import title_style_manager
 
 # Configurar logging
 logger = logging.getLogger(__name__)
@@ -325,11 +326,18 @@ class Command(BaseCommand):
             
             # 3) Gerar conteúdo com IA usando dados reais
             from rb_ingestor.ai_enhanced import generate_enhanced_article
+            from rb_ingestor.writing_styles import writing_style_manager
+            
+            # Selecionar estilo aleatório
+            random_style = writing_style_manager.get_random_style()
+            style_info = writing_style_manager.get_style_info(random_style)
+            self.stdout.write(f"🎨 Estilo selecionado: {style_info['name']}")
             
             ai_content = generate_enhanced_article(
                 article.get('topic', ''), 
                 enhanced_article, 
-                min_words
+                min_words,
+                random_style
             )
             
             if not ai_content:
@@ -348,11 +356,14 @@ class Command(BaseCommand):
             
             self.stdout.write(f"✅ IA gerou {word_count} palavras (qualidade: {quality_score}%)")
             
-            # 6) Verificar margem
-            if min_words * 0.85 <= word_count <= min_words * 1.15:
-                self.stdout.write(f"✅ Conteúdo dentro da margem ideal: {word_count} palavras")
+            # 6) Verificar margem de 15%
+            margem_min = int(min_words * 0.85)  # 15% a menos
+            margem_max = int(min_words * 1.15)  # 15% a mais
+            
+            if margem_min <= word_count <= margem_max:
+                self.stdout.write(f"✅ Conteúdo dentro da margem de 15%: {word_count} palavras ({margem_min}-{margem_max})")
             else:
-                self.stdout.write(f"⚠ Conteúdo fora da margem ideal: {word_count} palavras")
+                self.stdout.write(f"⚠ Conteúdo fora da margem de 15%: {word_count} palavras (alvo: {margem_min}-{margem_max})")
             
             return title, content
             
@@ -399,81 +410,55 @@ class Command(BaseCommand):
             return html
 
     def _generate_title_from_news(self, article):
-        """Título PRÓPRIO otimizado para SEO, inspirado no original sem copiar."""
-        import re
+        """Gera título usando sistema de estilos aleatórios mantendo a palavra-chave."""
         topic = article.get('topic', '') or ''
-        original = (article.get('title') or '').strip()
-        description = (article.get('description') or '').strip()
-
-        # Limpeza de marcas/portais
-        portals = ['G1','Globo','Folha','Estadão','UOL','Terra','R7','IG','Exame','Metrópoles','O Globo','CNN','BBC','Reuters']
-        clean = original
-        for p in portals:
-            clean = clean.replace(f' - {p}', '').replace(f' | {p}', '').replace(f' ({p})', '')
-
-        # Palavras‑chave
-        stop = {'de','da','do','das','dos','para','por','com','sem','uma','um','o','a','os','as','e','ou','no','na','nos','nas','em','ao','aos','à','às','que','sobre','após','contra','entre','como','mais','menos','hoje'}
-        text_ref = f"{clean} {description}".lower()
-        words = [w.strip(',.:;!?"()') for w in text_ref.split()]
-        keys = []
-        seen = set()
-        for w in words:
-            if len(w) > 2 and w not in stop and w not in seen:
-                seen.add(w); keys.append(w)
-        keys = keys[:6]
-
-        base_topic = topic.title().strip() or 'Notícia'
+        original_title = (article.get('title') or '').strip()
         
-        # Estruturas de título mais naturais e variadas
-        estruturas = []
+        if not topic:
+            return f"Últimas Notícias"
         
-        # Estrutura 1: Declaração direta (sem dois pontos)
-        if any(word in text_ref for word in ['dividendos', 'juros', 'impostos']):
-            estruturas.append(f"{base_topic} {keys[0].title()} — valores e datas" if keys else None)
-            estruturas.append(f"{base_topic} {keys[0].title()} para acionistas" if keys else None)
+        # Usar o sistema de estilos para gerar título
+        title = title_style_manager.generate_smart_title(topic, original_title)
         
-        # Estrutura 2: Com dois pontos (apenas para explicações)
-        if any(word in text_ref for word in ['acordo', 'parceria', 'medidas']):
-            estruturas.append(f"{base_topic} {keys[0].title()}: entenda os detalhes" if keys else None)
-            estruturas.append(f"{base_topic} {keys[0].title()}: o que muda" if keys else None)
+        # Verificar se é suficientemente diferente do original
+        if self._is_title_different_enough(title, original_title):
+            return title
         
-        # Estrutura 3: Interrogativa (para engajamento)
-        if any(word in text_ref for word in ['anuncia', 'divulga', 'confirma']):
-            estruturas.append(f"O que {base_topic} anuncia sobre {keys[0].title()}?" if keys else None)
-            estruturas.append(f"Como {base_topic} atua em {keys[0].title()}?" if keys else None)
+        # Se muito similar, tentar novamente com estilo diferente
+        for _ in range(3):  # Máximo 3 tentativas
+            style = title_style_manager.get_random_style()
+            title = title_style_manager.generate_title(style, topic)
+            if self._is_title_different_enough(title, original_title):
+                return title
         
-        # Estrutura 4: Declaração simples (mais natural)
-        estruturas.append(f"{base_topic} {keys[0].title()}" if keys else None)
-        estruturas.append(f"{base_topic} {keys[0].title()} hoje" if keys else None)
+        # Fallback: título simples
+        return f"O que {topic.title()} anuncia sobre {topic}?"
+    
+    def _is_title_different_enough(self, new_title, original_title):
+        """Verifica se o novo título é suficientemente diferente do original"""
+        import re
         
-        # Estrutura 5: Com traço (mais elegante)
-        estruturas.append(f"{base_topic} {keys[0].title()} — análise completa" if keys else None)
-        estruturas.append(f"{base_topic} {keys[0].title()} — impactos e próximos passos" if keys else None)
+        if not original_title:
+            return True
         
-        # Padrões originais como fallback
-        patterns = [
-            lambda ks: f"{base_topic}: {ks[0].title()} e {ks[1].title()} — entenda" if len(ks) >= 2 else None,
-            lambda ks: f"{base_topic} hoje: {ks[0].title()} em foco" if ks else None,
-            lambda ks: f"{clean} — impactos e próximos passos"[:140],
-        ]
+        # Normalizar ambos os títulos
+        new_norm = re.sub(r'\s+', ' ', new_title.lower().strip())
+        orig_norm = re.sub(r'\s+', ' ', original_title.lower().strip())
         
-        # Adicionar padrões originais às estruturas
-        for pattern in patterns:
-            estruturas.append(pattern(keys))
-
-        def norm(s):
-            return re.sub(r'\s+', ' ', s.lower()).strip()
-        orig_n = norm(original)
+        # Se são idênticos, não usar
+        if new_norm == orig_norm:
+            return False
         
-        # Testar todas as estruturas
-        for estrutura in estruturas:
-            if not estrutura:
-                continue
-            if 20 <= len(estrutura) <= 140 and norm(estrutura) != orig_n:
-                return estrutura
-                
-        fallback = f"{clean} — análise" if clean else f"{base_topic}: Últimas Notícias"
-        return fallback[:140]
+        # Se o novo título contém mais de 80% das palavras do original, evitar
+        new_words = set(new_norm.split())
+        orig_words = set(orig_norm.split())
+        
+        if len(orig_words) > 0:
+            similarity = len(new_words.intersection(orig_words)) / len(orig_words)
+            if similarity > 0.8:
+                return False
+        
+        return True
 
     def _generate_content_from_news_fallback(self, article):
         """Gera conteúdo fallback baseado na notícia específica"""
@@ -659,9 +644,32 @@ class Command(BaseCommand):
         return cat
 
     def _add_specific_image(self, noticia, article):
-        """Adiciona imagem apenas de bancos gratuitos (sem Instagram)."""
+        """Adiciona imagem usando Google Lens + bancos gratuitos."""
         try:
-            self.stdout.write("🖼️ Buscando imagem em bancos gratuitos (Unsplash/Pexels)...")
+            # NOVO: Busca inteligente com Google Lens
+            self.stdout.write("🔍 Buscando imagem com Google Lens...")
+            from rb_ingestor.smart_image_search import smart_image_search
+            
+            # Tentar busca inteligente com Google Lens
+            news_url = article.get('url', '') if article else ''
+            
+            if news_url:
+                smart_image = smart_image_search.find_smart_image_for_article(
+                    news_url, 
+                    noticia.titulo
+                )
+                
+                if smart_image:
+                    noticia.imagem = smart_image['url']
+                    noticia.imagem_alt = smart_image['alt']
+                    noticia.imagem_credito = smart_image['credit']
+                    noticia.save()
+                    
+                    self.stdout.write(f"✅ Imagem inteligente encontrada: {smart_image['source'].upper()} (similaridade: {smart_image['similarity_score']:.2f})")
+                    return
+            
+            # FALLBACK: Busca tradicional em bancos gratuitos
+            self.stdout.write("🔄 Google Lens falhou, usando busca tradicional...")
             from rb_ingestor.image_search import ImageSearchEngine
 
             search_engine = ImageSearchEngine()
@@ -685,7 +693,7 @@ class Command(BaseCommand):
                 noticia.imagem_fonte_url = image_url
                 noticia.save()
 
-                self.stdout.write(f"✅ Imagem gratuita adicionada: {search_term}")
+                self.stdout.write(f"✅ Imagem tradicional encontrada: {search_term}")
                 return
 
             self.stdout.write("⚠️ Nenhuma imagem encontrada nos bancos gratuitos")

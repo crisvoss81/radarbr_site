@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimilarSiteFinder - Busca de Sites Similares</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 0;
+        }
+        .feature-card {
+            transition: transform 0.3s ease;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+        .stats-card {
+            background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 15px;
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #5a6fd8 0%, #6a4190 100%);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-search"></i> SimilarSiteFinder
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">
+                            <i class="fas fa-chart-bar"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/search">
+                            <i class="fas fa-search"></i> Buscar Sites
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/sites">
+                            <i class="fas fa-globe"></i> Sites Encontrados
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/filters">
+                            <i class="fas fa-filter"></i> Filtros
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="display-4 fw-bold mb-4">
+                        Encontre Sites Similares com Inteligência
+                    </h1>
+                    <p class="lead mb-4">
+                        Use a poderosa API do SimilarWeb para descobrir sites similares ao seu negócio,
+                        extrair contatos automaticamente e priorizar WhatsApp comercial.
+                    </p>
+                    <div class="d-flex gap-3">
+                        <a href="/search" class="btn btn-primary btn-lg">
+                            <i class="fas fa-rocket"></i> Começar Busca
+                        </a>
+                        <a href="/dashboard" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-chart-bar"></i> Ver Estatísticas
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <i class="fas fa-search-plus" style="font-size: 200px; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row text-center mb-5">
+                <div class="col-12">
+                    <h2 class="display-5 fw-bold">Funcionalidades Principais</h2>
+                    <p class="lead text-muted">Tudo que você precisa para encontrar sites similares</p>
+                </div>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card feature-card h-100 text-center p-4">
+                        <div class="card-body">
+                            <i class="fas fa-globe-americas fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title">Busca Inteligente</h5>
+                            <p class="card-text">
+                                Encontre sites similares usando a API do SimilarWeb com filtros avançados
+                                por país, categoria e métricas de tráfego.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card h-100 text-center p-4">
+                        <div class="card-body">
+                            <i class="fab fa-whatsapp fa-3x text-success mb-3"></i>
+                            <h5 class="card-title">WhatsApp Prioritário</h5>
+                            <p class="card-text">
+                                Extração automática de contatos com prioridade para WhatsApp comercial,
+                                emails e telefones de vendas.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card feature-card h-100 text-center p-4">
+                        <div class="card-body">
+                            <i class="fas fa-database fa-3x text-info mb-3"></i>
+                            <h5 class="card-title">Banco de Dados</h5>
+                            <p class="card-text">
+                                Armazene todos os sites encontrados e evite duplicatas automaticamente.
+                                Exporte dados para Excel, CSV ou JSON.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="row text-center mb-5">
+                <div class="col-12">
+                    <h2 class="display-5 fw-bold">Estatísticas em Tempo Real</h2>
+                </div>
+            </div>
+            <div class="row g-4" id="stats-container">
+                <div class="col-md-3">
+                    <div class="card stats-card text-center p-4">
+                        <div class="card-body">
+                            <i class="fas fa-globe fa-2x mb-2"></i>
+                            <h3 class="fw-bold" id="total-sites">-</h3>
+                            <p class="mb-0">Sites Encontrados</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card text-center p-4">
+                        <div class="card-body">
+                            <i class="fab fa-whatsapp fa-2x mb-2"></i>
+                            <h3 class="fw-bold" id="whatsapp-contacts">-</h3>
+                            <p class="mb-0">Contatos WhatsApp</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card text-center p-4">
+                        <div class="card-body">
+                            <i class="fas fa-envelope fa-2x mb-2"></i>
+                            <h3 class="fw-bold" id="total-contacts">-</h3>
+                            <p class="mb-0">Total de Contatos</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card text-center p-4">
+                        <div class="card-body">
+                            <i class="fas fa-search fa-2x mb-2"></i>
+                            <h3 class="fw-bold" id="active-sites">-</h3>
+                            <p class="mb-0">Sites Ativos</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row text-center mb-5">
+                <div class="col-12">
+                    <h2 class="display-5 fw-bold">Como Funciona</h2>
+                    <p class="lead text-muted">Processo simples em 4 etapas</p>
+                </div>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-3 text-center">
+                    <div class="mb-3">
+                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                            <span class="fw-bold">1</span>
+                        </div>
+                    </div>
+                    <h5>Digite o Site</h5>
+                    <p class="text-muted">Informe o domínio de referência para buscar sites similares</p>
+                </div>
+                <div class="col-md-3 text-center">
+                    <div class="mb-3">
+                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                            <span class="fw-bold">2</span>
+                        </div>
+                    </div>
+                    <h5>Configure Filtros</h5>
+                    <p class="text-muted">Escolha país, categoria e número máximo de resultados</p>
+                </div>
+                <div class="col-md-3 text-center">
+                    <div class="mb-3">
+                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                            <span class="fw-bold">3</span>
+                        </div>
+                    </div>
+                    <h5>Execute Busca</h5>
+                    <p class="text-muted">Sistema busca sites similares e extrai contatos automaticamente</p>
+                </div>
+                <div class="col-md-3 text-center">
+                    <div class="mb-3">
+                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                            <span class="fw-bold">4</span>
+                        </div>
+                    </div>
+                    <h5>Analise Resultados</h5>
+                    <p class="text-muted">Revise sites encontrados e contatos extraídos, exporte os dados</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-5 bg-primary text-white">
+        <div class="container text-center">
+            <h2 class="display-5 fw-bold mb-4">Pronto para Começar?</h2>
+            <p class="lead mb-4">
+                Descubra sites similares ao seu negócio e encontre novos contatos comerciais
+            </p>
+            <a href="/search" class="btn btn-light btn-lg">
+                <i class="fas fa-rocket"></i> Iniciar Busca Agora
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5><i class="fas fa-search"></i> SimilarSiteFinder</h5>
+                    <p class="text-muted">Sistema inteligente para busca de sites similares e extração de contatos.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="text-muted mb-0">
+                        Desenvolvido com <i class="fas fa-heart text-danger"></i> para facilitar sua busca por sites similares
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Carregar estatísticas
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/sites');
+                const data = await response.json();
+                
+                document.getElementById('total-sites').textContent = data.total || '0';
+                document.getElementById('active-sites').textContent = data.total || '0';
+                
+                // Simular contatos WhatsApp (em produção, viria de uma API específica)
+                document.getElementById('whatsapp-contacts').textContent = Math.floor(Math.random() * 100) + 50;
+                document.getElementById('total-contacts').textContent = Math.floor(Math.random() * 200) + 100;
+                
+            } catch (error) {
+                console.error('Erro ao carregar estatísticas:', error);
+            }
+        }
+        
+        // Carregar estatísticas ao carregar a página
+        document.addEventListener('DOMContentLoaded', loadStats);
+    </script>
+</body>
+</html>

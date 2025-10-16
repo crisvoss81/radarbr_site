@@ -10,6 +10,7 @@ from slugify import slugify
 from django.apps import apps
 import logging
 import random
+from rb_ingestor.title_styles import title_style_manager
 
 logger = logging.getLogger(__name__)
 
@@ -93,19 +94,41 @@ class Command(BaseCommand):
 
         # Gerar conteúdo com palavras dinâmicas baseadas no conteúdo real
         if news_article.get('base_word_count'):
-            # Usar 70% do conteúdo real como alvo
-            dynamic_min_words = max(600, int(news_article['base_word_count'] * 0.7))
-            self.stdout.write(f"📊 Conteúdo real: {news_article['base_word_count']} palavras → Alvo: {dynamic_min_words}")
+            # Usar margem de 15% baseada no conteúdo real extraído
+            base_word_count = news_article['base_word_count']
+            target_min = int(base_word_count * 0.85)  # 15% a menos
+            target_max = int(base_word_count * 1.15)  # 15% a mais
+            dynamic_min_words = target_min
+            
+            self.stdout.write(f"📊 Conteúdo real: {base_word_count} palavras → Alvo: {target_min}-{target_max} (margem 15%)")
         else:
             dynamic_min_words = min_words
             self.stdout.write(f"📊 Sem conteúdo real → Alvo padrão: {dynamic_min_words}")
         
         content = self._generate_content_from_news(topic, news_article, cat, dynamic_min_words)
         
-        # Verificar contagem de palavras
+        # Verificar contagem de palavras com margem de 15%
         word_count = len(strip_tags(content).split())
         self.stdout.write(f"Palavras geradas: {word_count}")
         
+        # Validar se está dentro da margem de 15%
+        if news_article.get('base_word_count'):
+            base_word_count = news_article['base_word_count']
+            target_min = int(base_word_count * 0.85)
+            target_max = int(base_word_count * 1.15)
+            
+            if target_min <= word_count <= target_max:
+                self.stdout.write(f"✅ Conteudo dentro da margem ideal: {word_count} palavras")
+            else:
+                self.stdout.write(f"⚠ Conteudo fora da margem ideal: {word_count} palavras (ideal: {target_min}-{target_max})")
+        else:
+            # Validação padrão para casos sem conteúdo real
+            if word_count < min_words * 0.85:  # 85% do mínimo
+                self.stdout.write(f"AVISO: Conteudo com {word_count} palavras (minimo: {int(min_words * 0.85)}), ajustando...")
+                content = self._adjust_content_length(content, topic, cat, min_words)
+                word_count = len(strip_tags(content).split())
+                self.stdout.write(f"Palavras apos ajuste: {word_count}")
+
         # CATEGORIZAR BASEADO NO CONTEÚDO GERADO (apenas se categoria original não foi detectada com alta confiança)
         if not hasattr(self, '_original_category_confidence') or self._original_category_confidence < 0.6:
             self.stdout.write("🔍 Analisando conteúdo gerado para determinar categoria...")
@@ -116,12 +139,6 @@ class Command(BaseCommand):
                 cat = final_category
         else:
             self.stdout.write(f"✅ Mantendo categoria original detectada: {cat.nome} (confiança alta)")
-        
-        if word_count < min_words * 0.85:  # 85% do mínimo
-            self.stdout.write(f"AVISO: Conteudo com {word_count} palavras (minimo: {int(min_words * 0.85)}), ajustando...")
-            content = self._adjust_content_length(content, topic, cat, min_words)
-            word_count = len(strip_tags(content).split())
-            self.stdout.write(f"Palavras apos ajuste: {word_count}")
 
         # Integrar vídeos do YouTube automaticamente
         try:
@@ -779,91 +796,28 @@ class Command(BaseCommand):
                 return Categoria.objects.first()
     
     def _generate_title_from_news(self, topic, news_article):
-        """Gera título PRÓPRIO SEO: Entidade + verbo + objeto: gancho (sem copiar)."""
+        """Gera título usando sistema de estilos aleatórios mantendo a palavra-chave."""
         if not news_article:
             return f"{topic.title()}: Últimas Notícias"
 
-        import re
-
-        original = (news_article.get('title') or '').strip()
-        description = (news_article.get('description') or '').strip()
-        base_topic = topic.title().strip() or 'Notícia'
-
-        # Remover marcas de portal
-        portals = ['G1','Globo','Folha','Estadão','UOL','Terra','R7','IG','Exame','Metrópoles','O Globo','CNN','BBC','Reuters']
-        clean = original
-        for p in portals:
-            clean = clean.replace(f' - {p}', '').replace(f' | {p}', '').replace(f' ({p})', '')
-
-        # Heurísticas para entidade, verbo e objeto
-        text_all = f"{clean}. {description}"
-        # Entidade: primeira sequência de palavras com inicial maiúscula
-        m_ent = re.search(r'([A-ZÁÉÍÓÚÂÊÔÃÕ][\wÁÉÍÓÚÂÊÔÃÕçÇãõâêôíóúàéíóú-]+(?:\s+[A-ZÁÉÍÓÚÂÊÔÃÕ][\wÁÉÍÓÚÂÊÔÃÕçÇãõâêôíóúàéíóú-]+){0,2})', clean)
-        entidade = (m_ent.group(1) if m_ent else base_topic).strip()
-        # Verbo chave
-        verbos_map = {
-            'aprova':'aprova','anuncia':'anuncia','divulga':'divulga','entrega':'entrega','confirma':'confirma',
-            'projeta':'projeta','corta':'corta','eleva':'eleva','recuar':'recua','recua':'recua','sobe':'sobe','cai':'cai'
-        }
-        verbo = None
-        for v in verbos_map.keys():
-            if re.search(rf'\b{v}\w*\b', text_all, re.IGNORECASE):
-                verbo = verbos_map[v]; break
-        verbo = verbo or 'anuncia'
-        # Objeto
-        objetos = ['dividendos','impostos','preços','tarifas','acordo','parceria','reféns','sanções','investimentos','meta','juros']
-        objeto = None
-        for o in objetos:
-            if re.search(rf'\b{o}\b', text_all, re.IGNORECASE):
-                objeto = o; break
-        objeto = objeto or (clean.split(':')[0].lower() if ':' in clean else base_topic.lower())
-
-        # Estruturas de título mais naturais e variadas
-        estruturas = []
+        original_title = (news_article.get('title') or '').strip()
         
-        # Estrutura 1: Declaração direta (sem dois pontos)
-        if objeto in ['dividendos', 'juros', 'impostos']:
-            estruturas.append(f"{entidade} {verbo} {objeto} — valores e datas")
-            estruturas.append(f"{entidade} {verbo} {objeto} para acionistas")
+        # Usar o sistema de estilos para gerar título
+        title = title_style_manager.generate_smart_title(topic, original_title)
         
-        # Estrutura 2: Com dois pontos (apenas para explicações)
-        if objeto in ['acordo', 'parceria', 'medidas']:
-            estruturas.append(f"{entidade} {verbo} {objeto}: entenda os detalhes")
-            estruturas.append(f"{entidade} {verbo} {objeto}: o que muda")
+        # Verificar se é suficientemente diferente do original
+        if self._is_title_different_enough(title, original_title):
+            return title
         
-        # Estrutura 3: Interrogativa (para engajamento)
-        if verbo in ['anuncia', 'divulga', 'confirma']:
-            estruturas.append(f"O que {entidade} {verbo} sobre {objeto}?")
-            estruturas.append(f"Como {entidade} {verbo} {objeto}?")
+        # Se muito similar, tentar novamente com estilo diferente
+        for _ in range(3):  # Máximo 3 tentativas
+            style = title_style_manager.get_random_style()
+            title = title_style_manager.generate_title(style, topic)
+            if self._is_title_different_enough(title, original_title):
+                return title
         
-        # Estrutura 4: Declaração simples (mais natural)
-        estruturas.append(f"{entidade} {verbo} {objeto}")
-        estruturas.append(f"{entidade} {verbo} {objeto} hoje")
-        
-        # Estrutura 5: Com traço (mais elegante)
-        estruturas.append(f"{entidade} {verbo} {objeto} — análise completa")
-        estruturas.append(f"{entidade} {verbo} {objeto} — impactos e próximos passos")
-
-        # Remover duplicatas na entidade (ex.: "Petrobras Dividendos: Petrobras ...")
-        if entidade.lower() in base_topic.lower():
-            entidade = base_topic
-
-        # Escolher a melhor estrutura baseada no contexto
-        for estrutura in estruturas:
-            # Substituir entidade na estrutura escolhida
-            titulo = estrutura.replace("{entidade}", entidade).replace("{verbo}", verbo).replace("{objeto}", objeto)
-            
-            # Verificar se não é muito similar ao original
-            if self._is_title_different_enough(titulo, clean):
-                # Normalizar espaços e limitar tamanho
-                titulo = re.sub(r'\s+', ' ', titulo).strip()
-                if 20 <= len(titulo) <= 140:
-                    return titulo
-        
-        # Fallback: estrutura simples
-        titulo = f"{entidade} {verbo} {objeto}"
-        titulo = re.sub(r'\s+', ' ', titulo).strip()
-        return titulo[:140]
+        # Fallback: título simples
+        return f"O que {topic.title()} anuncia sobre {topic}?"
 
     def _is_title_different_enough(self, new_title, original_title):
         """Verifica se o novo título é suficientemente diferente do original"""
@@ -897,7 +851,13 @@ class Command(BaseCommand):
             # Usar sistema de IA melhorado (MESMO DA AUTOMAÇÃO)
             from rb_ingestor.ai_enhanced import generate_enhanced_article
             
-            ai_content = generate_enhanced_article(topic, news_article, min_words)
+            # Selecionar estilo aleatório
+            from rb_ingestor.writing_styles import writing_style_manager
+            random_style = writing_style_manager.get_random_style()
+            style_info = writing_style_manager.get_style_info(random_style)
+            self.stdout.write(f"🎨 Estilo selecionado: {style_info['name']}")
+            
+            ai_content = generate_enhanced_article(topic, news_article, min_words, random_style)
             
             if not ai_content:
                 self.stdout.write("⚠ IA não retornou conteúdo")
@@ -907,8 +867,18 @@ class Command(BaseCommand):
             word_count = ai_content.get("word_count", 0)
             quality_score = ai_content.get("quality_score", 0)
             
-            if word_count >= min_words and quality_score >= 40:  # Aceitar qualidade 40%+
-                self.stdout.write(f"✅ IA gerou {word_count} palavras (qualidade: {quality_score}%)")
+            # Calcular margem de 15% baseada no conteúdo real extraído
+            if news_article.get('base_word_count'):
+                base_word_count = news_article['base_word_count']
+                margem_min = int(base_word_count * 0.85)  # 15% a menos
+                margem_max = int(base_word_count * 1.15)  # 15% a mais
+            else:
+                # Fallback para min_words se não houver base_word_count
+                margem_min = int(min_words * 0.85)
+                margem_max = int(min_words * 1.15)
+            
+            if margem_min <= word_count <= margem_max and quality_score >= 40:
+                self.stdout.write(f"✅ IA gerou {word_count} palavras (qualidade: {quality_score}%) - dentro da margem de 15%")
                 
                 # Usar o conteúdo da IA diretamente
                 title = strip_tags(ai_content.get("title", topic.title()))[:200]
@@ -919,7 +889,7 @@ class Command(BaseCommand):
                 content = f'<p class="dek">{dek}</p>\n{html_content}'
                 return content
             else:
-                self.stdout.write(f"⚠ IA gerou {word_count} palavras (qualidade: {quality_score}%), fora dos critérios")
+                self.stdout.write(f"⚠ IA gerou {word_count} palavras (qualidade: {quality_score}%) - fora da margem de 15% ({margem_min}-{margem_max})")
                 raise RuntimeError("IA não atingiu critérios de palavras/qualidade")
                 
         except Exception as e:
@@ -1312,8 +1282,30 @@ class Command(BaseCommand):
                 # Usar apenas bancos gratuitos (Unsplash/Pexels) - Instagram removido
                 self.stdout.write("🖼️ Usando bancos gratuitos para figura pública...")
             
-            # FALLBACK: Bancos de imagens gratuitos (para artigos gerais ou quando Instagram não funciona)
-            self.stdout.write("Usando banco de imagens gratuitos...")
+            # NOVO: Busca inteligente com Google Lens
+            self.stdout.write("🔍 Buscando imagem com Google Lens...")
+            from rb_ingestor.smart_image_search import smart_image_search
+            
+            # Tentar busca inteligente com Google Lens
+            news_url = news_article.get('url', '') if news_article else ''
+            
+            if news_url:
+                smart_image = smart_image_search.find_smart_image_for_article(
+                    news_url, 
+                    noticia.titulo
+                )
+                
+                if smart_image:
+                    noticia.imagem = smart_image['url']
+                    noticia.imagem_alt = smart_image['alt']
+                    noticia.imagem_credito = smart_image['credit']
+                    noticia.save()
+                    
+                    self.stdout.write(f"✅ Imagem inteligente encontrada: {smart_image['source'].upper()} (similaridade: {smart_image['similarity_score']:.2f})")
+                    return
+            
+            # FALLBACK: Bancos de imagens gratuitos tradicionais
+            self.stdout.write("🔄 Google Lens falhou, usando busca tradicional...")
             from rb_ingestor.image_search import ImageSearchEngine
             search_engine = ImageSearchEngine()
             
@@ -1331,10 +1323,10 @@ class Command(BaseCommand):
                 noticia.imagem_fonte_url = image_url
                 noticia.save()
 
-                self.stdout.write("Imagem gratuita adicionada com sucesso")
+                self.stdout.write("✅ Imagem tradicional encontrada")
                 return
             
-            self.stdout.write("AVISO: Nenhuma imagem encontrada")
+            self.stdout.write("⚠ Nenhuma imagem encontrada")
 
         except Exception as e:
             self.stdout.write(f"AVISO: Erro ao adicionar imagem: {e}")

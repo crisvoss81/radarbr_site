@@ -1,0 +1,9 @@
+SIMILARWEB_API_KEY=sua_chave_api_similarweb_aqui
+DATABASE_URL=sqlite:///sites.db
+FLASK_SECRET_KEY=sua_chave_secreta_muito_segura_aqui
+DEBUG=True
+DEFAULT_COUNTRY=BR
+MAX_RESULTS=50
+REQUEST_TIMEOUT=30
+CONTACT_TIMEOUT=10
+MAX_CONTACTS=10

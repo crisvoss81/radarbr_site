@@ -55,25 +55,38 @@ class NewsContentExtractor:
 
     def extract_from_google_news_link(self, gnews_link: str) -> Optional[Dict]:
         """Abre link do Google News no navegador e extrai conteúdo da página final do publisher.
-        Se continuar em news.google.com, tenta links externos do cluster em ordem.
+        Sistema de fallback: tenta até 3 links externos do cluster em ordem.
         """
         final_url, html = self._get_final_url_and_html_with_browser(gnews_link)
+        
         # Se ainda estamos no Google News, tentar extrair links externos e abrir cada um
         if (not final_url or 'news.google.com' in final_url) and html:
             links = self._find_external_links_from_google_html(html, gnews_link)
-            print(f"🔗 Links externos do cluster: {len(links)}")
-            for idx, ext in enumerate(links[:6], start=1):
+            print(f"🔗 Links externos do cluster encontrados: {len(links)}")
+            
+            # Tentar até 3 links externos (margem de segurança)
+            for idx, ext_link in enumerate(links[:3], start=1):
                 try:
-                    print(f"➡ Abrindo link externo #{idx}: {ext}")
-                    u2, h2 = self._get_final_url_and_html_with_browser(ext)
+                    print(f"➡ Tentando link externo #{idx}: {ext_link[:60]}...")
+                    u2, h2 = self._get_final_url_and_html_with_browser(ext_link)
+                    
                     if u2 and h2 and 'news.google.com' not in u2:
                         final_url, html = u2, h2
+                        print(f"✅ Sucesso no link externo #{idx}: {u2[:60]}...")
                         break
+                    else:
+                        print(f"⚠ Link externo #{idx} ainda redireciona para Google News")
+                        
                 except Exception as e:
-                    print(f"⚠ Erro no link externo #{idx}: {e}")
+                    print(f"❌ Erro no link externo #{idx}: {e}")
                     continue
+        
+        # Verificar se conseguimos sair do Google News
         if not final_url or 'news.google.com' in final_url or not html:
+            print("❌ Não foi possível acessar conteúdo do publisher")
             return None
+        
+        # Extrair dados da página final
         soup = BeautifulSoup(html, 'html.parser')
         extracted_data = {
             'url': final_url,
@@ -87,27 +100,67 @@ class NewsContentExtractor:
             'images': self._extract_images(soup),
             'source_domain': self._extract_domain(final_url)
         }
-        if extracted_data['title'] and extracted_data['content']:
+        
+        # Validar qualidade do conteúdo extraído
+        if extracted_data['title'] and extracted_data['content'] and len(extracted_data['content']) > 100:
             print(f"✅ Conteúdo (publisher) extraído: {len(extracted_data['content'])} chars")
+            print(f"✅ Site original: {extracted_data['source_domain']}")
             return extracted_data
+        
+        print("❌ Conteúdo extraído insuficiente ou inválido")
         return None
 
     def extract_best_for_topic(self, topic: str, max_items: int = 6) -> Optional[Dict]:
-        """Tenta os primeiros itens do RSS abrindo em navegador até conseguir o artigo original (com retry)."""
+        """Tenta os primeiros itens do RSS abrindo em navegador até conseguir o artigo original (com retry e fallback)."""
         items = self.get_rss_items_for_topic(topic, max_items=max_items)
         print(f"🔎 RSS itens encontrados: {len(items)}")
+        
+        if not items:
+            print("❌ Nenhum item RSS encontrado")
+            return None
+        
+        # Tentar cada item com sistema de fallback
         for idx, item in enumerate(items, start=1):
             link = item.get('link')
             if not link:
                 continue
+            
             print(f"🧭 Tentando item #{idx}: {link[:80]}...")
-            # duas tentativas com 5s entre
-            for attempt in range(1, 3):
+            
+            # Tentar extrair conteúdo com retry
+            data = self._extract_with_retry(link, max_attempts=2)
+            if data:
+                print(f"✅ Sucesso no item #{idx}")
+                return data
+            
+            print(f"❌ Falha no item #{idx}, tentando próximo...")
+        
+        print("❌ Todos os itens falharam na extração")
+        return None
+    
+    def _extract_with_retry(self, link: str, max_attempts: int = 2) -> Optional[Dict]:
+        """Extrai conteúdo com retry e sistema de fallback."""
+        for attempt in range(1, max_attempts + 1):
+            try:
+                print(f"🔄 Tentativa {attempt}/{max_attempts}")
                 data = self.extract_from_google_news_link(link)
-                if data:
+                
+                if data and data.get('content') and len(data['content']) > 200:
+                    print(f"✅ Conteúdo extraído: {len(data['content'])} chars")
                     return data
-                print(f"⏳ Aguardando 5s antes do retry (tentativa {attempt}/2) ...")
-                time.sleep(5)
+                
+                print(f"⚠ Tentativa {attempt} falhou ou conteúdo insuficiente")
+                
+                if attempt < max_attempts:
+                    print("⏳ Aguardando 3s antes do retry...")
+                    time.sleep(3)
+                    
+            except Exception as e:
+                print(f"❌ Erro na tentativa {attempt}: {e}")
+                if attempt < max_attempts:
+                    print("⏳ Aguardando 3s antes do retry...")
+                    time.sleep(3)
+        
         return None
 
     # ===== API ANTIGA (mantida para compatibilidade interna) =====

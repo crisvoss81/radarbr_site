@@ -118,8 +118,7 @@
   {% if object.imagem %}
     <figure class="post-figure">
       <img
-        src='{% cloudinary_image_url object.imagem width=1200 height=675 crop="fill" %}'
-        {% cloudinary_responsive_image object.imagem %}
+        src="{{ object.imagem }}"
         width="1200" height="675"
         loading="eager" fetchpriority="high" decoding="async"
         alt="{{ object.imagem_alt|default:object.titulo|striptags }}"

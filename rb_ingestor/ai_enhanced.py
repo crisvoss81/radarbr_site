@@ -16,7 +16,7 @@ except Exception:
 
 MODEL_DEFAULT = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
-def generate_enhanced_article(topic: str, news_context: Optional[Dict] = None, min_words: int = 800) -> Dict:
+def generate_enhanced_article(topic: str, news_context: Optional[Dict] = None, min_words: int = 800, writing_style: str = None) -> Dict:
     """
     Gera artigo melhorado baseado em contexto específico
     """
@@ -25,11 +25,16 @@ def generate_enhanced_article(topic: str, news_context: Optional[Dict] = None, m
     
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     
+    # Selecionar estilo de escrita aleatório se não especificado
+    if not writing_style:
+        from rb_ingestor.writing_styles import writing_style_manager
+        writing_style = writing_style_manager.get_random_style()
+    
     # Criar prompt específico baseado no contexto
     if news_context:
-        prompt = create_news_specific_prompt(topic, news_context, min_words)
+        prompt = create_news_specific_prompt(topic, news_context, min_words, writing_style)
     else:
-        prompt = create_topic_specific_prompt(topic, min_words)
+        prompt = create_topic_specific_prompt(topic, min_words, writing_style)
     
     try:
         response = client.chat.completions.create(
@@ -57,15 +62,23 @@ def generate_enhanced_article(topic: str, news_context: Optional[Dict] = None, m
         print(f"Erro na IA melhorada: {e}")
         return None
 
-def create_news_specific_prompt(topic: str, news_context: Dict, min_words: int) -> str:
+def create_news_specific_prompt(topic: str, news_context: Dict, min_words: int, writing_style: str = None) -> str:
     """Cria prompt específico baseado em notícia real"""
     
     title = news_context.get('title', '')
     description = news_context.get('description', '')
     source = news_context.get('source', '')
     
+    # Obter informações do estilo de escrita
+    style_prompt = ""
+    if writing_style:
+        from rb_ingestor.writing_styles import writing_style_manager
+        style_prompt = writing_style_manager.create_style_prompt(writing_style, topic, min_words)
+    
     return f"""
-Crie um artigo jornalístico completo e envolvente baseado nesta notícia específica:
+{style_prompt}
+
+Crie um artigo completo e envolvente baseado nesta notícia específica:
 
 INFORMAÇÕES DA NOTÍCIA:
 - Tópico: {topic}
@@ -140,11 +153,19 @@ FORMATO DE RESPOSTA (JSON):
 }}
 """
 
-def create_topic_specific_prompt(topic: str, min_words: int) -> str:
+def create_topic_specific_prompt(topic: str, min_words: int, writing_style: str = None) -> str:
     """Cria prompt específico para tópico sem notícia"""
     
+    # Obter informações do estilo de escrita
+    style_prompt = ""
+    if writing_style:
+        from rb_ingestor.writing_styles import writing_style_manager
+        style_prompt = writing_style_manager.create_style_prompt(writing_style, topic, min_words)
+    
     return f"""
-Crie um artigo jornalístico completo e envolvente sobre o tópico: "{topic}"
+{style_prompt}
+
+Crie um artigo completo e envolvente sobre o tópico: "{topic}"
 
 REQUISITOS OBRIGATÓRIOS:
 - Mínimo de {min_words} palavras (ideal: {min_words + 200})
