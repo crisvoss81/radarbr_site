@@ -35,6 +35,8 @@
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
+      - key: PLAYWRIGHT_BROWSERS_PATH
+        value: "0"
 
   - type: cron
     name: radarbr-automation
@@ -64,6 +66,8 @@
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
+      - key: PLAYWRIGHT_BROWSERS_PATH
+        value: "0"
 
   # Sistema de backup - execução diária às 6h
   - type: cron

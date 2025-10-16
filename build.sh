@@ -13,6 +13,10 @@ fi
 echo "Instalando dependências Python..."
 pip install -r requirements.txt
 
+# 2.1. Instalar browsers do Playwright
+echo "Instalando browsers do Playwright..."
+python -m playwright install chromium
+
 # 3. Instalar dependências Node.js
 echo "Instalando dependências Node.js..."
 npm install
