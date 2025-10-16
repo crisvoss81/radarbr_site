@@ -15,7 +15,8 @@ pip install -r requirements.txt
 
 # 2.1. Instalar browsers do Playwright
 echo "Instalando browsers do Playwright..."
-python -m playwright install chromium
+# Instala ambos alvos para compatibilidade com ambientes que usam headless_shell
+python -m playwright install chromium chromium-headless-shell || python -m playwright install chromium
 echo "Verificando instalação do Chromium..."
 python -c "from playwright.sync_api import sync_playwright; p = sync_playwright().start(); browser = p.chromium.launch(headless=True); browser.close(); print('✅ Chromium instalado e funcionando')"
 
