@@ -91,8 +91,16 @@ class Command(BaseCommand):
         else:
             title = self._generate_title_from_news(topic, news_article)
 
-        # Gerar conteúdo
-        content = self._generate_content_from_news(topic, news_article, cat, min_words)
+        # Gerar conteúdo com palavras dinâmicas baseadas no conteúdo real
+        if news_article.get('base_word_count'):
+            # Usar 70% do conteúdo real como alvo
+            dynamic_min_words = max(600, int(news_article['base_word_count'] * 0.7))
+            self.stdout.write(f"📊 Conteúdo real: {news_article['base_word_count']} palavras → Alvo: {dynamic_min_words}")
+        else:
+            dynamic_min_words = min_words
+            self.stdout.write(f"📊 Sem conteúdo real → Alvo padrão: {dynamic_min_words}")
+        
+        content = self._generate_content_from_news(topic, news_article, cat, dynamic_min_words)
         
         # Verificar contagem de palavras
         word_count = len(strip_tags(content).split())
@@ -182,66 +190,77 @@ class Command(BaseCommand):
         return False
 
     def _search_specific_news(self, topic):
-        """Busca notícias específicas sobre o tópico"""
+        """Busca notícias específicas sobre o tópico via RSS"""
         try:
-            from gnews import GNews
+            from rb_ingestor.news_content_extractor import NewsContentExtractor
             
-            google_news = GNews()
-            google_news.language = "pt"
-            google_news.country = "BR"
-            google_news.max_results = 1
+            extractor = NewsContentExtractor()
+            self.stdout.write(f"🔍 Buscando RSS para: {topic}")
             
-            articles = google_news.get_news(topic)
+            # Buscar notícias via RSS para o tópico específico
+            items = extractor.get_rss_items_for_topic(topic, max_items=3)
             
-            if articles:
-                article = articles[0]
-                # Verificar se o tópico aparece no título ou descrição
-                if self._is_relevant_article(topic, article):
-                    return article
+            if items:
+                # Pegar o primeiro item válido
+                for item in items:
+                    title = item.get('title') or ''
+                    desc = item.get('description') or ''
+                    url = item.get('link') or ''
+                    
+                    if title and url:
+                        self.stdout.write(f"✅ Notícia RSS encontrada: {title[:50]}...")
+                        return {
+                            'title': title,
+                            'description': desc,
+                            'url': url,
+                            'published_date': '',
+                            'source': '',
+                            'topic': topic
+                        }
             
+            self.stdout.write("⚠ Nenhuma notícia RSS encontrada para o tópico")
             return None
             
         except Exception as e:
-            self.stdout.write(f"AVISO: Erro ao buscar noticias: {e}")
+            self.stdout.write(f"AVISO: Erro ao buscar noticias RSS: {e}")
             return None
 
     def _extract_from_original_sites(self, news_article):
-        """Extrai conteúdo do primeiro site que o Google News retornou"""
+        """Extrai conteúdo usando NewsContentExtractor com navegador headless"""
         try:
-            # LÓGICA SIMPLES: Acessar diretamente o primeiro resultado do Google News
-            google_news_url = news_article.get('url', '')
+            from rb_ingestor.news_content_extractor import NewsContentExtractor
             
-            if google_news_url and 'news.google.com' in google_news_url:
-                self.stdout.write("🔍 Acessando primeiro resultado do Google News...")
+            extractor = NewsContentExtractor()
+            rss_url = news_article.get('url', '')
+            
+            if rss_url:
+                self.stdout.write("🔍 Extraindo conteúdo real com navegador headless...")
                 
-                # Extrair URL original do Google News
-                original_url = self._extract_original_url_from_google_news(google_news_url)
+                # Usar NewsContentExtractor que tem navegador headless
+                data = extractor.extract_content_from_url(rss_url)
                 
-                if original_url:
-                    self.stdout.write(f"✅ URL original encontrado: {original_url}")
+                if data and data.get('content') and len(data.get('content', '')) > 200:
+                    base_words = len((data['content'] or '').split())
+                    self.stdout.write(f"✅ Conteúdo completo extraído: {base_words} palavras")
                     
-                    # Acessar diretamente o artigo original
-                    content = self._extract_content_from_url(original_url)
-                    
-                    if content and content.get('content') and len(content.get('content', '')) > 200:
-                        self.stdout.write(f"✅ Conteúdo extraído do artigo original")
-                        return {
-                            'title': content.get('title', ''),
-                            'description': content.get('description', ''),
-                            'content': content.get('content', ''),
-                            'author': content.get('author', ''),
-                            'date': content.get('date', ''),
-                            'images': content.get('images', []),
-                            'source_domain': self._extract_domain_from_url(original_url),
-                            'original_url': original_url,
-                            'real_content': True
-                        }
-                    else:
-                        self.stdout.write("⚠ Conteúdo extraído insuficiente, usando dados do Google News")
+                    return {
+                        'title': data.get('title', ''),
+                        'description': data.get('description', ''),
+                        'content': data.get('content', ''),
+                        'author': data.get('author', ''),
+                        'date': data.get('date', ''),
+                        'images': data.get('images', []),
+                        'source_domain': data.get('source_domain', ''),
+                        'original_url': data.get('original_url', ''),
+                        'real_content': True,
+                        'base_word_count': base_words
+                    }
                 else:
-                    self.stdout.write("⚠ Não foi possível extrair URL original")
+                    self.stdout.write("⚠ Falha ao extrair conteúdo real, usando dados RSS")
+            else:
+                self.stdout.write("⚠ Sem URL RSS para extrair")
             
-            # FALLBACK: Usar dados do Google News diretamente
+            # FALLBACK: Usar dados do RSS diretamente
             self.stdout.write("🔄 Usando dados do Google News como base")
             return {
                 'title': news_article.get('title', ''),
@@ -873,39 +892,39 @@ class Command(BaseCommand):
         return True
 
     def _generate_content_from_news(self, topic, news_article, category, min_words):
-        """Gera conteúdo baseado na notícia específica encontrada - MESMA LÓGICA DA AUTOMAÇÃO"""
+        """Gera conteúdo baseado na notícia específica - SEM FALLBACK"""
         try:
             # Usar sistema de IA melhorado (MESMO DA AUTOMAÇÃO)
             from rb_ingestor.ai_enhanced import generate_enhanced_article
             
             ai_content = generate_enhanced_article(topic, news_article, min_words)
             
-            if ai_content:
-                # Verificar qualidade do conteúdo
-                word_count = ai_content.get("word_count", 0)
-                quality_score = ai_content.get("quality_score", 0)
+            if not ai_content:
+                self.stdout.write("⚠ IA não retornou conteúdo")
+                raise RuntimeError("IA não retornou conteúdo")
+            
+            # Verificar qualidade do conteúdo
+            word_count = ai_content.get("word_count", 0)
+            quality_score = ai_content.get("quality_score", 0)
+            
+            if word_count >= min_words and quality_score >= 40:  # Aceitar qualidade 40%+
+                self.stdout.write(f"✅ IA gerou {word_count} palavras (qualidade: {quality_score}%)")
                 
-                if word_count >= min_words and quality_score >= 40:  # Aceitar qualidade 40%+
-                    self.stdout.write(f"IA melhorada gerou {word_count} palavras (qualidade: {quality_score}%)")
-                    
-                    # Usar o conteúdo da IA diretamente
-                    title = strip_tags(ai_content.get("title", topic.title()))[:200]
-                    dek = strip_tags(ai_content.get("dek", news_article.get("description", "") if news_article else ""))[:220]
-                    html_content = ai_content.get("html", "<p></p>")
-                    
-                    # Montar conteúdo final
-                    content = f'<p class="dek">{dek}</p>\n{html_content}'
-                    return content
-                else:
-                    self.stdout.write(f"AVISO: IA gerou {word_count} palavras (qualidade: {quality_score}%), usando fallback")
+                # Usar o conteúdo da IA diretamente
+                title = strip_tags(ai_content.get("title", topic.title()))[:200]
+                dek = strip_tags(ai_content.get("dek", news_article.get("description", "") if news_article else ""))[:220]
+                html_content = ai_content.get("html", "<p></p>")
+                
+                # Montar conteúdo final
+                content = f'<p class="dek">{dek}</p>\n{html_content}'
+                return content
             else:
-                self.stdout.write("AVISO: IA não retornou conteúdo, usando fallback")
+                self.stdout.write(f"⚠ IA gerou {word_count} palavras (qualidade: {quality_score}%), fora dos critérios")
+                raise RuntimeError("IA não atingiu critérios de palavras/qualidade")
                 
         except Exception as e:
-            self.stdout.write(f"AVISO: Erro na IA melhorada: {e}")
-        
-        # FALLBACK MELHORADO: Usar a mesma lógica da automação
-        return self._generate_content_based_on_reference(topic, news_article, category, min_words)
+            self.stdout.write(f"❌ Publicação cancelada: {e}")
+            raise
 
     def _generate_content_from_news_fallback(self, topic, news_article, category, min_words):
         """Gera conteúdo fallback baseado na notícia específica"""
@@ -1290,37 +1309,8 @@ class Command(BaseCommand):
                 # É figura pública - seguir lógica específica
                 self.stdout.write(f"Figura publica detectada: {public_figure['figure']}")
                 
-                # PRIORIDADE 1: Imagem de rede social no artigo original
-                if news_article:
-                    from rb_ingestor.instagram_image_finder import InstagramImageFinder
-                    instagram_finder = InstagramImageFinder()
-                    social_image = instagram_finder.extract_social_media_images_from_news(news_article)
-                    if social_image:
-                        self.stdout.write(f"Imagem de rede social encontrada no artigo original")
-                        noticia.imagem = social_image["url"]
-                        noticia.imagem_alt = social_image.get("alt", f"Imagem de {public_figure['figure']}")
-                        noticia.imagem_credito = social_image.get("credit", f"Foto: {public_figure['instagram_handle']}")
-                        noticia.imagem_licenca = "Rede Social - Figura Pública"
-                        noticia.imagem_fonte_url = social_image.get("url", "")
-                        noticia.save()
-                        
-                        self.stdout.write("Imagem de rede social adicionada com sucesso")
-                        return
-                
-                # PRIORIDADE 2: Instagram oficial da figura (usando sistema inteligente)
-                instagram_image = smart_detector.get_instagram_image_for_figure(public_figure)
-                
-                if instagram_image and instagram_image.get("url"):
-                    self.stdout.write(f"Imagem do Instagram oficial encontrada: {public_figure['instagram_handle']}")
-                    noticia.imagem = instagram_image["url"]
-                    noticia.imagem_alt = instagram_image.get("alt", f"Imagem de {public_figure['figure']}")
-                    noticia.imagem_credito = instagram_image.get("credit", f"Foto: Instagram {public_figure['instagram_handle']}")
-                    noticia.imagem_licenca = "Figura Pública - Unsplash"
-                    noticia.imagem_fonte_url = instagram_image.get("instagram_url", "")
-                    noticia.save()
-                    
-                    self.stdout.write("Imagem do Instagram oficial adicionada com sucesso")
-                    return
+                # Usar apenas bancos gratuitos (Unsplash/Pexels) - Instagram removido
+                self.stdout.write("🖼️ Usando bancos gratuitos para figura pública...")
             
             # FALLBACK: Bancos de imagens gratuitos (para artigos gerais ou quando Instagram não funciona)
             self.stdout.write("Usando banco de imagens gratuitos...")

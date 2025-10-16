@@ -53,12 +53,12 @@ def split_content_sections(html: str) -> str:
         # Se não há pelo menos 2 H2s, retorna o conteúdo original
         return html
     
-    # Pegar o primeiro H2 como divisor
-    first_h2_end = h2_matches[0].end()
+    # Pegar o segundo H2 como divisor (final da primeira seção)
+    second_h2_start = h2_matches[1].start()
     
-    # Dividir o conteúdo
-    first_section = html[:first_h2_end]
-    second_section = html[first_h2_end:]
+    # Dividir o conteúdo: primeira seção vai até antes do segundo H2
+    first_section = html[:second_h2_start]
+    second_section = html[second_h2_start:]
     
     # Combinar com o banner no meio
     result = first_section + adsense_banner + second_section

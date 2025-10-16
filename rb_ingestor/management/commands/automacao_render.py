@@ -67,43 +67,47 @@ class Command(BaseCommand):
         return recent_count < 2
 
     def _get_specific_news(self):
-        """Busca notícias específicas do Google News"""
+        """Busca notícias via RSS feeds do Google News"""
         try:
-            from gnews import GNews
+            from rb_ingestor.news_content_extractor import NewsContentExtractor
             
-            # Configurar GNews
-            google_news = GNews(
-                language='pt', 
-                country='BR', 
-                period='1d', 
-                max_results=10,
-                exclude_websites=['youtube.com', 'instagram.com', 'facebook.com']
-            )
+            extractor = NewsContentExtractor()
+            topics = [
+                'economia', 'política', 'tecnologia', 'brasil', 'mundo', 'esportes', 'saúde', 'ciência'
+            ]
             
-            # Buscar notícias específicas
-            articles = google_news.get_top_news()
-            if not articles:
-                self.stdout.write("⚠ GNews retornou vazio — usando fallback RSS")
-                return self._get_specific_news_fallback_rss()
-            
-            # Filtrar e processar notícias
             processed_news = []
-            for article in articles[:5]:
-                if self._is_valid_news_article(article):
-                    processed_news.append({
-                        'title': article.get('title', ''),
-                        'description': article.get('description', ''),
-                        'url': article.get('url', ''),
-                        'published_date': article.get('published date', ''),
-                        'source': article.get('publisher', {}).get('title', ''),
-                        'topic': self._extract_main_topic(article.get('title', ''))
-                    })
+            for topic in topics:
+                self.stdout.write(f"🔍 Buscando RSS para: {topic}")
+                items = extractor.get_rss_items_for_topic(topic, max_items=2)
+                
+                for item in items:
+                    title = item.get('title') or ''
+                    desc = item.get('description') or ''
+                    url = item.get('link') or ''
+                    
+                    if title and url and self._is_valid_news_article({'title': title, 'url': url}):
+                        processed_news.append({
+                            'title': title,
+                            'description': desc,
+                            'url': url,
+                            'published_date': '',
+                            'source': '',
+                            'topic': self._extract_main_topic(title)
+                        })
+                        
+                        if len(processed_news) >= 8:  # Limite de artigos
+                            break
+                
+                if len(processed_news) >= 8:
+                    break
             
+            self.stdout.write(f"✅ RSS retornou {len(processed_news)} notícias")
             return processed_news
             
         except Exception as e:
-            self.stdout.write(f"⚠ Erro Google News: {e} — usando fallback RSS")
-            return self._get_specific_news_fallback_rss()
+            self.stdout.write(f"⚠ Erro RSS: {e}")
+            return []
 
     def _get_specific_news_fallback_rss(self):
         """Fallback: usa RSS do Google News via NewsContentExtractor para montar artigos específicos."""
@@ -272,34 +276,79 @@ class Command(BaseCommand):
         return ""
 
     def _generate_content_from_news(self, article):
-        """Gera conteúdo usando a mesma lógica do comando manual validado"""
+        """Gera conteúdo usando RSS + navegador headless para extrair conteúdo real"""
         try:
-            # Usar a mesma lógica do publish_topic que está funcionando
+            # 1) Extrair conteúdo real usando navegador headless
+            base_words = None
+            enhanced_article = article.copy()
+            
+            try:
+                from rb_ingestor.news_content_extractor import NewsContentExtractor
+                extractor = NewsContentExtractor()
+                
+                # Tentar extrair do URL do RSS
+                rss_url = article.get('url', '')
+                if rss_url:
+                    self.stdout.write(f"🔍 Extraindo conteúdo real de: {rss_url}")
+                    data = extractor.extract_content_from_url(rss_url)
+                    
+                    if data and data.get('content'):
+                        base_words = len((data['content'] or '').split())
+                        self.stdout.write(f"✅ Conteúdo completo extraído: {base_words} palavras")
+                        
+                        # Atualizar artigo com dados reais
+                        enhanced_article.update({
+                            'title': data.get('title', article.get('title', '')),
+                            'description': data.get('description', article.get('description', '')),
+                            'content': data.get('content', ''),
+                            'author': data.get('author', ''),
+                            'date': data.get('date', ''),
+                            'real_content': True,
+                            'source_domain': data.get('source_domain', ''),
+                            'original_url': rss_url
+                        })
+                    else:
+                        self.stdout.write("⚠ Falha ao extrair conteúdo real, usando dados RSS")
+                else:
+                    self.stdout.write("⚠ Sem URL RSS para extrair")
+                    
+            except Exception as e:
+                self.stdout.write(f"⚠ Erro na extração com navegador: {e}")
+            
+            # 2) Definir palavras mínimas baseado no conteúdo extraído
+            if base_words and base_words >= 100:
+                min_words = max(600, int(base_words * 0.7))  # 70% do conteúdo original
+                self.stdout.write(f"📊 Base real: {base_words} palavras → Alvo: {min_words} palavras")
+            else:
+                min_words = 700  # Padrão quando não há conteúdo real
+                self.stdout.write(f"📊 Sem conteúdo real → Alvo padrão: {min_words} palavras")
+            
+            # 3) Gerar conteúdo com IA usando dados reais
             from rb_ingestor.ai_enhanced import generate_enhanced_article
             
-            # Definir palavras mínimas baseado no artigo
-            min_words = 700  # Padrão que funciona bem no manual
-            
-            # Gerar conteúdo com IA melhorada (mesmo método do manual)
-            ai_content = generate_enhanced_article(article.get('topic', ''), article, min_words)
+            ai_content = generate_enhanced_article(
+                article.get('topic', ''), 
+                enhanced_article, 
+                min_words
+            )
             
             if not ai_content:
                 self.stdout.write("⚠ IA não retornou conteúdo")
                 raise RuntimeError("IA não retornou conteúdo")
             
-            # Processar resultado (mesmo que o manual)
-            title = strip_tags(ai_content.get("title", article.get('title', '')))[:200]
+            # 4) Processar resultado
+            title = strip_tags(ai_content.get("title", enhanced_article.get('title', '')))[:200]
             html = ai_content.get("html", "<p></p>")
-            content = f'<p class="dek">{strip_tags(ai_content.get("dek", article.get('description', '')))[:220]}</p>\n{html}'
+            content = f'<p class="dek">{strip_tags(ai_content.get("dek", enhanced_article.get('description', '')))[:220]}</p>\n{html}'
             
-            # Contar palavras (mesmo método do manual)
+            # 5) Contar palavras e validar
             from django.utils.html import strip_tags as dj_strip
             word_count = len(dj_strip(content).split())
             quality_score = ai_content.get('quality_score', 0)
             
             self.stdout.write(f"✅ IA gerou {word_count} palavras (qualidade: {quality_score}%)")
             
-            # Verificar margem (mesmo critério do manual)
+            # 6) Verificar margem
             if min_words * 0.85 <= word_count <= min_words * 1.15:
                 self.stdout.write(f"✅ Conteúdo dentro da margem ideal: {word_count} palavras")
             else:
