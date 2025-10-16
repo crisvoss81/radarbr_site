@@ -16,6 +16,8 @@ pip install -r requirements.txt
 # 2.1. Instalar browsers do Playwright
 echo "Instalando browsers do Playwright..."
 python -m playwright install chromium
+echo "Verificando instalação do Chromium..."
+python -c "from playwright.sync_api import sync_playwright; p = sync_playwright().start(); browser = p.chromium.launch(headless=True); browser.close(); print('✅ Chromium instalado e funcionando')"
 
 # 3. Instalar dependências Node.js
 echo "Instalando dependências Node.js..."
