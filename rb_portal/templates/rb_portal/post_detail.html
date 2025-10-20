@@ -3,7 +3,6 @@
 {% load rb_filters %}
 {% load markdown_extras %}
 {% load cloudinary_extras %}
-{% load adsense_extras %}
 
 {% block title %}{{ object.titulo|striptags }} | RadarBR{% endblock %}
 {% block meta_description %}{{ object.conteudo|meta_description_from_highlights }}{% endblock %}
@@ -110,11 +109,6 @@
     </div>
   </header>
 
-  <!-- AdSense Banner após título (responsivo) -->
-  <div class="ad-slot ad-slot--post-header">
-    {% adsense_banner_auto "4840700734" %}
-  </div>
-
   {% if object.imagem %}
     <figure class="post-figure">
       <img
@@ -136,18 +130,8 @@
     </figure>
   {% endif %}
 
-  <!-- AdSense Banner após imagem (responsivo) -->
-  <div class="ad-slot ad-slot--post-image">
-    {% adsense_banner_auto "4840700734" %}
-  </div>
-
   <div class="post-content">
     {{ object.conteudo|split_content_sections|safe }}
-  </div>
-
-  <!-- AdSense Banner após conteúdo (responsivo) -->
-  <div class="ad-slot ad-slot--post-content">
-    {% adsense_banner_auto "4840700734" %}
   </div>
 
   <!-- Artigos Relacionados -->

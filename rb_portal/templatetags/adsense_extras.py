@@ -18,8 +18,8 @@ def adsense_ad(ad_slot, ad_format="auto", responsive=True, width=None, height=No
     {% adsense_ad "1234567890" width=728 height=90 %}
     {% adsense_ad "1234567890" ad_format="rectangle" %}
     """
-    # ID do cliente AdSense (do settings)
-    client_id = settings.ADSENSE_CLIENT
+    # ID do cliente AdSense (hardcoded)
+    client_id = "ca-pub-3913403142217011"
     
     # Verificar se temos um slot válido
     if not ad_slot or ad_slot.startswith("123456789"):

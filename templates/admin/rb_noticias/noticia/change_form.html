@@ -1,0 +1,94 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .auto-fill-section {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 15px;
+        margin: 10px 0;
+    }
+    
+    .auto-fill-section h3 {
+        margin-top: 0;
+        color: #495057;
+        font-size: 14px;
+        font-weight: bold;
+    }
+    
+    .field-titulo {
+        position: relative;
+    }
+    
+    #auto-fill-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    #auto-fill-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    #auto-fill-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .auto-fill-message {
+        animation: slideIn 0.3s ease-out;
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .field-highlight {
+        animation: highlight 2s ease-out;
+    }
+    
+    @keyframes highlight {
+        0% { background-color: #d4edda; }
+        100% { background-color: transparent; }
+    }
+    
+    .help-text {
+        font-size: 11px;
+        color: #6c757d;
+        font-style: italic;
+        margin-top: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auto-fill-section">
+    <h3>🤖 Preenchimento Automático</h3>
+    <p class="help-text">
+        Digite o título e escolha a categoria. Clique em "Preencher Automaticamente" para gerar automaticamente:
+        slug, URL da fonte, nome da fonte, alt text da imagem e outros campos relacionados.
+        <strong>Você pode editar qualquer campo após o preenchimento automático.</strong>
+    </p>
+</div>
+
+{{ block.super }}
+{% endblock %}
