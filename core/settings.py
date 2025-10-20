@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.humanize",
     "cloudinary_storage",
     "cloudinary",
+    "localflavor",
     "rb_portal",
     "rb_noticias",
     "rb_ingestor",
@@ -102,6 +103,24 @@ LANGUAGE_CODE = "pt-br"
 TIME_ZONE = "America/Sao_Paulo"
 USE_I18N = True
 USE_TZ = True
+
+# Configurações específicas para o Brasil
+USE_L10N = True
+USE_THOUSAND_SEPARATOR = True
+THOUSAND_SEPARATOR = '.'
+DECIMAL_SEPARATOR = ','
+NUMBER_GROUPING = 3
+
+# Idiomas suportados
+LANGUAGES = [
+    ('pt-br', 'Português (Brasil)'),
+]
+
+# Formatação de data e hora para o Brasil
+DATE_FORMAT = 'd/m/Y'
+DATETIME_FORMAT = 'd/m/Y H:i'
+SHORT_DATE_FORMAT = 'd/m/Y'
+SHORT_DATETIME_FORMAT = 'd/m/Y H:i'
 
 # --- CONFIGURAÇÕES DE SEGURANÇA PARA PRODUÇÃO ---
 if os.getenv('RENDER'):
