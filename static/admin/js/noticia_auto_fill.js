@@ -13,9 +13,10 @@
         // Adicionar botão de preenchimento automático
         addAutoFillButton();
         
-        // Detectar mudanças no título para sugerir slug
+        // Detectar mudanças no título para sugerir slug e fonte URL
         $('#id_titulo').on('input', function() {
             autoGenerateSlug();
+            autoGenerateFonteUrl();
         });
         
         // Detectar mudanças na categoria para atualizar alt text
@@ -71,6 +72,40 @@
         var slugField = $('#id_slug');
         if (!slugField.val()) {
             slugField.val(slug);
+        }
+    }
+    
+    function autoGenerateFonteUrl() {
+        var titulo = $('#id_titulo').val();
+        if (!titulo) return;
+        
+        // Gerar fonte URL SEO-friendly baseada no título
+        var tituloSlug = titulo
+            .toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, '') // Remover caracteres especiais
+            .replace(/\s+/g, '-') // Substituir espaços por hífens
+            .replace(/-+/g, '-') // Remover hífens duplicados
+            .replace(/^-|-$/g, ''); // Remover hífens do início/fim
+        
+        // Limitar tamanho do slug do título
+        tituloSlug = tituloSlug.substring(0, 30);
+        
+        // Gerar timestamp atual
+        var now = new Date();
+        var timestamp = now.getFullYear().toString() + 
+                       (now.getMonth() + 1).toString().padStart(2, '0') + 
+                       now.getDate().toString().padStart(2, '0');
+        
+        // Gerar ID único simples
+        var uniqueId = Math.random().toString(36).substring(2, 8);
+        
+        // Criar fonte URL SEO-friendly
+        var fonteUrl = `radarbr-${tituloSlug}-${timestamp}-${uniqueId}`;
+        
+        // Preencher campo fonte URL se estiver vazio
+        var fonteUrlField = $('#id_fonte_url');
+        if (!fonteUrlField.val()) {
+            fonteUrlField.val(fonteUrl);
         }
     }
     

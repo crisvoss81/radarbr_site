@@ -62,13 +62,37 @@ class NoticiaAdmin(admin.ModelAdmin):
                 # Gerar slug automaticamente
                 slug = slugify(titulo)[:180]
                 
-                # Gerar fonte URL automaticamente
+                # Gerar fonte URL automaticamente com foco em SEO
                 from django.utils import timezone
-                timestamp = timezone.now().strftime('%Y%m%d-%H%M%S')
-                fonte_url = f"admin-manual-{timestamp}-{slugify(titulo)[:20]}"
+                import random
+                import string
                 
-                # Gerar nome da fonte
-                fonte_nome = "RadarBR Admin"
+                # Criar URL SEO-friendly baseada no título
+                titulo_slug = slugify(titulo)[:30]
+                timestamp = timezone.now().strftime('%Y%m%d')
+                
+                # Gerar ID único para evitar duplicatas
+                unique_id = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
+                
+                # URL otimizada para SEO
+                fonte_url = f"radarbr-{titulo_slug}-{timestamp}-{unique_id}"
+                
+                # Verificar se já existe e gerar nova se necessário
+                counter = 1
+                original_fonte_url = fonte_url
+                while Noticia.objects.filter(fonte_url=fonte_url).exists():
+                    fonte_url = f"{original_fonte_url}-{counter}"
+                    counter += 1
+                
+                # Gerar nome da fonte SEO-friendly
+                if categoria_id:
+                    try:
+                        categoria = Categoria.objects.get(id=categoria_id)
+                        fonte_nome = f"RadarBR - {categoria.nome}"
+                    except Categoria.DoesNotExist:
+                        fonte_nome = "RadarBR"
+                else:
+                    fonte_nome = "RadarBR"
                 
                 # Gerar alt text para imagem
                 imagem_alt = f"Imagem relacionada a {titulo[:50]}"
