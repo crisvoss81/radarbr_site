@@ -67,3 +67,40 @@ def category_list(request, slug):
         "cats": Categoria.objects.all().order_by("nome"),
     }
     return render(request, "rb_portal/category_list.html", ctx)
+
+
+def all_categories(request):
+    """View para mostrar todas as categorias"""
+    categories = Categoria.objects.all().order_by("nome")
+    
+    # Buscar última notícia de cada categoria
+    categories_with_news = []
+    for category in categories:
+        last_news = Noticia.objects.filter(
+            categoria=category, 
+            status=Noticia.Status.PUBLICADO
+        ).order_by("-publicado_em").first()
+        
+        categories_with_news.append({
+            'category': category,
+            'last_news': last_news
+        })
+    
+    # Buscar notícias para a sidebar
+    qs = Noticia.objects.filter(status=Noticia.Status.PUBLICADO).order_by("-publicado_em")
+    others = list(qs[1:3])  # Para a sidebar
+    
+    # Criar page_obj vazio para evitar erro na sidebar
+    from django.core.paginator import Paginator
+    paginator = Paginator(qs, 10)
+    page_obj = paginator.get_page(1)
+    
+    ctx = {
+        "categories_with_news": categories_with_news,
+        "categories": categories,
+        "cats": categories,  # Para manter consistência com sidebar
+        "others": others,    # Para a sidebar "Em alta"
+        "trending": None,    # Para evitar erro na sidebar
+        "page_obj": page_obj, # Para evitar erro na sidebar
+    }
+    return render(request, "rb_portal/all_categories.html", ctx)

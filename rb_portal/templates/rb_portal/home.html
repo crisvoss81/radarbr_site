@@ -8,35 +8,67 @@
 {% block content %}
 <section class="grid">
   <div class="main">
-    <div class="hero">
+    <!-- Super Destaque - Imagem Grande com Título Sobreposto -->
+    <div class="super-hero">
       {% if featured %}
-        <article class="hero-item">
-          <a class="hero-thumb" href="{{ featured.get_absolute_url }}" aria-label="{{ featured.titulo|striptags }}">
+        <article class="super-hero-item">
+          <a class="super-hero-thumb" href="{{ featured.get_absolute_url }}" aria-label="{{ featured.titulo|striptags }}">
             {% if featured.imagem %}
               <img 
-                src="{% cloudinary_image_url featured.imagem width=800 height=450 crop='fill' %}"
+                src="{% cloudinary_image_url featured.imagem width=1200 height=600 crop='fill' %}"
                 {% cloudinary_responsive_image featured.imagem %}
-                width="800" height="450"
+                width="1200" height="600"
                 loading="eager" fetchpriority="high" decoding="async"
                 alt="{{ featured.imagem_alt|default:featured.titulo|striptags }}"
               >
             {% else %}
-              <div class="thumb-ph thumb-ph--lg thumb-ph--{{ featured.categoria.slug|default:'geral' }}">
-                <div class="thumb-ph-icon">📰</div>
+              <div class="super-thumb-ph super-thumb-ph--{{ featured.categoria.slug|default:'geral' }}">
+                <div class="super-thumb-ph-icon">📰</div>
                 RadarBR
               </div>
             {% endif %}
+            <div class="super-hero-overlay">
+              {% if featured.categoria %}<span class="super-chip">{{ featured.categoria.nome }}</span>{% endif %}
+              <h1 class="super-hero-title">{{ featured.titulo|striptags }}</h1>
+            </div>
           </a>
-          <div class="hero-body">
-            {% if featured.categoria %}<a class="chip" href="{{ featured.categoria.get_absolute_url }}">{{ featured.categoria.nome }}</a>{% endif %}
-            <h2 class="hero-title"><a href="{{ featured.get_absolute_url }}">{{ featured.titulo|striptags }}</a></h2>
-          </div>
         </article>
       {% endif %}
     </div>
 
+    <!-- Três Imagens em Destaque com Títulos Abaixo -->
+    <div class="featured-grid">
+      {% for obj in page_obj.object_list|slice:'1:4' %}
+        <article class="featured-item">
+          <a class="featured-thumb" href="{{ obj.get_absolute_url }}" aria-label="{{ obj.titulo|striptags }}">
+            {% if obj.imagem %}
+              <img 
+                src="{% cloudinary_image_url obj.imagem width=400 height=250 crop='fill' %}"
+                {% cloudinary_responsive_image obj.imagem %}
+                width="400" height="250"
+                loading="lazy" decoding="async"
+                alt="{{ obj.imagem_alt|default:obj.titulo|striptags }}"
+              >
+            {% else %}
+              <div class="featured-thumb-ph featured-thumb-ph--{{ obj.categoria.slug|default:'geral' }}">
+                <div class="featured-thumb-ph-icon">📰</div>
+                RadarBR
+              </div>
+            {% endif %}
+          </a>
+          <div class="featured-content">
+            {% if obj.categoria %}<span class="featured-chip">{{ obj.categoria.nome }}</span>{% endif %}
+            <h3 class="featured-title"><a href="{{ obj.get_absolute_url }}">{{ obj.titulo|striptags }}</a></h3>
+          </div>
+        </article>
+      {% empty %}
+        <p class="muted">Nenhuma notícia encontrada.</p>
+      {% endfor %}
+    </div>
+
+    <!-- Lista de Notícias Restantes -->
     <div class="list">
-      {% for obj in page_obj.object_list|slice:'1:' %}
+      {% for obj in page_obj.object_list|slice:'4:' %}
         {% include 'rb_portal/includes/_card.html' with obj=obj %}
       {% empty %}
         <p class="muted">Nenhuma notícia encontrada.</p>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Zoom</title>
+    <style>
+        .test-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        
+        .test-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+        }
+        
+        .test-image:hover {
+            transform: scale(1.05);
+        }
+        
+        .test-card {
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .test-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        
+        .test-card:hover img {
+            transform: scale(1.08);
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Teste de Efeito de Zoom</h1>
+        
+        <h2>Imagem Simples</h2>
+        <img src="https://picsum.photos/800/400" alt="Teste" class="test-image">
+        
+        <h2>Card com Zoom</h2>
+        <div class="test-card">
+            <img src="https://picsum.photos/400/200" alt="Teste Card">
+        </div>
+        
+        <h2>Instruções:</h2>
+        <p>Passe o mouse sobre as imagens acima para ver o efeito de zoom.</p>
+        <p>Se funcionar aqui, o problema pode estar no CSS do projeto.</p>
+    </div>
+</body>
+</html>

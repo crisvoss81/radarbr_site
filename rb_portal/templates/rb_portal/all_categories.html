@@ -1,0 +1,76 @@
+{% extends 'rb_portal/base.html' %}
+{% load rb_filters %}
+{% load cloudinary_extras %}
+
+{% block title %}Todas as Categorias | RadarBR{% endblock %}
+{% block meta_description %}Explore todas as categorias de notícias do RadarBR: tecnologia, esportes, economia, entretenimento e muito mais.{% endblock %}
+
+{% block content %}
+<section class="grid">
+  <div class="main">
+    <header class="page-header">
+      <h1 class="page-title">Todas as Categorias</h1>
+      <p class="page-description">Explore todas as categorias de notícias disponíveis no RadarBR</p>
+    </header>
+
+    <div class="categories-grid">
+      {% for item in categories_with_news %}
+        <article class="category-card">
+          <a href="{{ item.category.get_absolute_url }}" class="category-card-link">
+            <div class="category-card-content">
+              <h3 class="category-card-title">{{ item.category.nome }}</h3>
+              <p class="category-card-count">
+                {% with count=item.category.noticia_set.count %}
+                  {{ count }} notícia{{ count|pluralize }}
+                {% endwith %}
+              </p>
+            </div>
+            <div class="category-card-arrow">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+              </svg>
+            </div>
+          </a>
+          
+          {% if item.last_news %}
+            <div class="category-last-news">
+              <a href="{{ item.last_news.get_absolute_url }}" class="last-news-link">
+                <div class="last-news-image">
+                  {% if item.last_news.imagem %}
+                    <img 
+                      src="{% cloudinary_image_url item.last_news.imagem width=300 height=180 crop='fill' %}"
+                      {% cloudinary_responsive_image item.last_news.imagem %}
+                      width="300" height="180"
+                      loading="lazy" decoding="async"
+                      alt="{{ item.last_news.imagem_alt|default:item.last_news.titulo|striptags }}"
+                    >
+                  {% else %}
+                    <div class="last-news-ph last-news-ph--{{ item.category.slug|default:'geral' }}">
+                      <div class="last-news-ph-icon">📰</div>
+                      RadarBR
+                    </div>
+                  {% endif %}
+                </div>
+                <div class="last-news-content">
+                  <h4 class="last-news-title">{{ item.last_news.titulo|striptags|truncatechars:60 }}</h4>
+                  <div class="last-news-meta">
+                    <time datetime="{{ item.last_news.publicado_em|date:'c' }}" class="last-news-time">
+                      {{ item.last_news.publicado_em|timesince }} atrás
+                    </time>
+                  </div>
+                </div>
+              </a>
+            </div>
+          {% endif %}
+        </article>
+      {% empty %}
+        <p class="muted">Nenhuma categoria encontrada.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <aside class="aside">
+    {% include 'rb_portal/includes/_sidebar.html' %}
+  </aside>
+</section>
+{% endblock %}

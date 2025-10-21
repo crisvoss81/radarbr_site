@@ -28,6 +28,7 @@ urlpatterns = [
     path("test-images/", portal_views.test_images, name="test_images"),
     path("noticia/<slug:slug>/", portal_views.post_detail, name="noticia"),
     path("categoria/<slug:slug>/", portal_views.category_list, name="categoria"),
+    path("categorias/", portal_views.all_categories, name="all_categories"),
 
     # Sitemaps, Feeds, etc.
     path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="sitemap"),
