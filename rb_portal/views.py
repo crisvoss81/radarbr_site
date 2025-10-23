@@ -4,12 +4,27 @@ from django.core.paginator import Paginator
 
 # IMPORTANTE: Ajuste a importação dos modelos
 from rb_noticias.models import Noticia, Categoria
+from rb_portal.models import ConfiguracaoSite
 
 def home(request):
+    # Buscar notícia em destaque primeiro
+    featured = Noticia.objects.filter(
+        status=Noticia.Status.PUBLICADO,
+        destaque=True
+    ).order_by("-publicado_em").first()
+    
+    # Se não houver destaque, pegar a mais recente
+    if not featured:
+        featured = Noticia.objects.filter(
+            status=Noticia.Status.PUBLICADO
+        ).order_by("-publicado_em").first()
+    
+    # Buscar outras notícias (excluindo a featured)
     qs = Noticia.objects.filter(status=Noticia.Status.PUBLICADO).order_by("-publicado_em")
-
-    featured = qs.first()
-    others = list(qs[1:3])
+    if featured:
+        qs = qs.exclude(id=featured.id)
+    
+    others = list(qs[:3])
 
     paginator = Paginator(qs, 10)
     page_obj = paginator.get_page(request.GET.get("page") or 1)
@@ -104,3 +119,95 @@ def all_categories(request):
         "page_obj": page_obj, # Para evitar erro na sidebar
     }
     return render(request, "rb_portal/all_categories.html", ctx)
+
+
+def contato(request):
+    """View para página de contato"""
+    # Buscar notícias para a sidebar
+    qs = Noticia.objects.filter(status=Noticia.Status.PUBLICADO).order_by("-publicado_em")
+    others = list(qs[1:3])
+    
+    from django.core.paginator import Paginator
+    paginator = Paginator(qs, 10)
+    page_obj = paginator.get_page(1)
+    
+    # Buscar configurações do site
+    config = ConfiguracaoSite.get_config()
+    
+    ctx = {
+        "cats": Categoria.objects.all().order_by("nome"),
+        "others": others,
+        "trending": None,
+        "page_obj": page_obj,
+        "config": config,
+    }
+    return render(request, "rb_portal/contato.html", ctx)
+
+
+def redes_sociais(request):
+    """View para página de redes sociais"""
+    # Buscar notícias para a sidebar
+    qs = Noticia.objects.filter(status=Noticia.Status.PUBLICADO).order_by("-publicado_em")
+    others = list(qs[1:3])
+    
+    from django.core.paginator import Paginator
+    paginator = Paginator(qs, 10)
+    page_obj = paginator.get_page(1)
+    
+    # Buscar configurações do site
+    config = ConfiguracaoSite.get_config()
+    
+    ctx = {
+        "cats": Categoria.objects.all().order_by("nome"),
+        "others": others,
+        "trending": None,
+        "page_obj": page_obj,
+        "config": config,
+    }
+    return render(request, "rb_portal/redes_sociais.html", ctx)
+
+
+def politicas(request):
+    """View para página de políticas"""
+    # Buscar notícias para a sidebar
+    qs = Noticia.objects.filter(status=Noticia.Status.PUBLICADO).order_by("-publicado_em")
+    others = list(qs[1:3])
+    
+    from django.core.paginator import Paginator
+    paginator = Paginator(qs, 10)
+    page_obj = paginator.get_page(1)
+    
+    # Buscar configurações do site
+    config = ConfiguracaoSite.get_config()
+    
+    ctx = {
+        "cats": Categoria.objects.all().order_by("nome"),
+        "others": others,
+        "trending": None,
+        "page_obj": page_obj,
+        "config": config,
+    }
+    return render(request, "rb_portal/politicas.html", ctx)
+
+
+def sobre(request):
+    """View para página sobre"""
+    # Buscar notícias para a sidebar
+    qs = Noticia.objects.filter(status=Noticia.Status.PUBLICADO).order_by("-publicado_em")
+    others = list(qs[1:3])
+    
+    from django.core.paginator import Paginator
+    paginator = Paginator(qs, 10)
+    page_obj = paginator.get_page(1)
+    
+    # Buscar configurações do site
+    config = ConfiguracaoSite.get_config()
+    
+    ctx = {
+        "cats": Categoria.objects.all().order_by("nome"),
+        "others": others,
+        "trending": None,
+        "page_obj": page_obj,
+        "config": config,
+    }
+    return render(request, "rb_portal/sobre.html", ctx)

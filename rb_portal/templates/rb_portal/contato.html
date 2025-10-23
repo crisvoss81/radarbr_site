@@ -1,0 +1,117 @@
+{% extends 'rb_portal/base.html' %}
+{% load static %}
+
+{% block title %}Contato | RadarBR{% endblock %}
+{% block meta_description %}Entre em contato com a equipe do RadarBR. Tire suas dúvidas, envie sugestões ou reporte problemas.{% endblock %}
+
+{% block content %}
+<section class="grid">
+  <div class="main">
+    <header class="page-header">
+      <h1 class="page-title">Contato</h1>
+      <p class="page-description">Entre em contato conosco. Estamos aqui para ajudar!</p>
+    </header>
+
+    <div class="contact-content">
+      <div class="contact-info">
+        <div class="contact-card">
+          <div class="contact-icon">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+              <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+            </svg>
+          </div>
+          <h3>E-mail</h3>
+          <p>{{ config.email_contato }}</p>
+          {% if config.email_redacao %}<p>{{ config.email_redacao }}</p>{% endif %}
+        </div>
+
+        <div class="contact-card">
+          <div class="contact-icon">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>
+          </div>
+          <h3>Localização</h3>
+          <p>Brasil</p>
+          <p>Atendimento 24/7</p>
+        </div>
+
+        <div class="contact-card">
+          <div class="contact-icon">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+          </div>
+          <h3>Horário de Atendimento</h3>
+          <p>Segunda a Sexta: 9h às 18h</p>
+          <p>Sábado: 9h às 12h</p>
+        </div>
+      </div>
+
+      <div class="contact-form">
+        <h2>Envie sua Mensagem</h2>
+        <form class="form" method="post">
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="nome">Nome Completo</label>
+            <input type="text" id="nome" name="nome" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="email">E-mail</label>
+            <input type="email" id="email" name="email" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="assunto">Assunto</label>
+            <select id="assunto" name="assunto" required>
+              <option value="">Selecione um assunto</option>
+              <option value="duvida">Dúvida</option>
+              <option value="sugestao">Sugestão</option>
+              <option value="problema">Reportar Problema</option>
+              <option value="parceria">Parceria</option>
+              <option value="outro">Outro</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="mensagem">Mensagem</label>
+            <textarea id="mensagem" name="mensagem" rows="6" required></textarea>
+          </div>
+          
+          <button type="submit" class="btn btn-primary">Enviar Mensagem</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="contact-faq">
+      <h2>Perguntas Frequentes</h2>
+      <div class="faq-list">
+        <div class="faq-item">
+          <h3>Como posso sugerir uma notícia?</h3>
+          <p>Envie sua sugestão através do formulário de contato acima, selecionando "Sugestão" no campo assunto.</p>
+        </div>
+        
+        <div class="faq-item">
+          <h3>Posso republicar conteúdo do RadarBR?</h3>
+          <p>Sim, desde que seja citada a fonte "RadarBR" e incluído um link para o artigo original.</p>
+        </div>
+        
+        <div class="faq-item">
+          <h3>Como reportar um erro?</h3>
+          <p>Use o formulário de contato selecionando "Reportar Problema" e descreva detalhadamente o erro encontrado.</p>
+        </div>
+        
+        <div class="faq-item">
+          <h3>Vocês fazem parcerias?</h3>
+          <p>Sim! Entre em contato conosco através do formulário selecionando "Parceria" no assunto.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="aside">
+    {% include 'rb_portal/includes/_sidebar.html' %}
+  </aside>
+</section>
+{% endblock %}

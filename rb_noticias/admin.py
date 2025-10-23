@@ -15,15 +15,15 @@ class CategoriaAdmin(admin.ModelAdmin):
 
 @admin.register(Noticia)
 class NoticiaAdmin(admin.ModelAdmin):
-    list_display = ['titulo', 'categoria', 'status', 'publicado_em', 'criado_em']
-    list_filter = ['categoria', 'status', 'publicado_em']
+    list_display = ['titulo', 'categoria', 'status', 'destaque', 'publicado_em', 'criado_em']
+    list_filter = ['categoria', 'status', 'destaque', 'publicado_em']
     search_fields = ['titulo', 'conteudo']
     prepopulated_fields = {'slug': ('titulo',)}
     date_hierarchy = 'publicado_em'
     
     fieldsets = (
         ('Conteúdo Principal', {
-            'fields': ('titulo', 'slug', 'conteudo', 'categoria', 'status')
+            'fields': ('titulo', 'slug', 'conteudo', 'categoria', 'status', 'destaque')
         }),
         ('Data e Hora', {
             'fields': ('publicado_em',)

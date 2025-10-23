@@ -45,6 +45,11 @@ class Noticia(models.Model):
         default=Status.PUBLICADO,
         choices=Status.choices,
     )
+    
+    destaque = models.BooleanField(
+        default=False,
+        help_text="Se marcado, esta notícia será exibida como destaque no topo da home"
+    )
 
     # Campo de imagem - URL externa de serviços gratuitos
     imagem = models.URLField(

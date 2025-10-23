@@ -29,6 +29,10 @@ urlpatterns = [
     path("noticia/<slug:slug>/", portal_views.post_detail, name="noticia"),
     path("categoria/<slug:slug>/", portal_views.category_list, name="categoria"),
     path("categorias/", portal_views.all_categories, name="all_categories"),
+    path("contato/", portal_views.contato, name="contato"),
+    path("redes-sociais/", portal_views.redes_sociais, name="redes_sociais"),
+    path("politicas/", portal_views.politicas, name="politicas"),
+    path("sobre/", portal_views.sobre, name="sobre"),
 
     # Sitemaps, Feeds, etc.
     path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="sitemap"),
