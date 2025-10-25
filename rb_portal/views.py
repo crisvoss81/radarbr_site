@@ -21,6 +21,13 @@ def home(request):
     others_qs = all_news.exclude(id=featured.id) if featured else all_news
     others = list(others_qs[:3])  # As 3 mais recentes após a featured
 
+    # Sistema de trending híbrido (recência + engajamento)
+    trending = Noticia.objects.filter(
+        status=Noticia.Status.PUBLICADO
+    ).exclude(id=featured.id if featured else None).order_by(
+        '-trending_score', '-publicado_em'
+    )[:4]
+
     # Para paginação, usar todas as notícias exceto a featured (ordenadas por data)
     paginator = Paginator(others_qs, 10)
     page_obj = paginator.get_page(request.GET.get("page") or 1)
@@ -28,6 +35,7 @@ def home(request):
     ctx = {
         "featured": featured,
         "others": others,
+        "trending": trending,
         "page_obj": page_obj,
         "cats": Categoria.objects.all().order_by("nome"),
     }
@@ -97,9 +105,14 @@ def all_categories(request):
             'last_news': last_news
         })
     
-    # Buscar notícias para a sidebar
+    # Sistema de trending híbrido para sidebar
+    trending = Noticia.objects.filter(
+        status=Noticia.Status.PUBLICADO
+    ).order_by('-trending_score', '-publicado_em')[:4]
+    
+    # Buscar notícias para fallback
     qs = Noticia.objects.filter(status=Noticia.Status.PUBLICADO).order_by("-publicado_em")
-    others = list(qs[1:3])  # Para a sidebar
+    others = list(qs[1:3])  # Para fallback
     
     # Criar page_obj vazio para evitar erro na sidebar
     from django.core.paginator import Paginator
@@ -110,8 +123,8 @@ def all_categories(request):
         "categories_with_news": categories_with_news,
         "categories": categories,
         "cats": categories,  # Para manter consistência com sidebar
-        "others": others,    # Para a sidebar "Em alta"
-        "trending": None,    # Para evitar erro na sidebar
+        "others": others,    # Para fallback
+        "trending": trending,    # Sistema de trending híbrido
         "page_obj": page_obj, # Para evitar erro na sidebar
     }
     return render(request, "rb_portal/all_categories.html", ctx)
@@ -119,7 +132,12 @@ def all_categories(request):
 
 def contato(request):
     """View para página de contato"""
-    # Buscar notícias para a sidebar
+    # Sistema de trending híbrido para sidebar
+    trending = Noticia.objects.filter(
+        status=Noticia.Status.PUBLICADO
+    ).order_by('-trending_score', '-publicado_em')[:4]
+    
+    # Buscar notícias para fallback
     qs = Noticia.objects.filter(status=Noticia.Status.PUBLICADO).order_by("-publicado_em")
     others = list(qs[1:3])
     
@@ -133,7 +151,7 @@ def contato(request):
     ctx = {
         "cats": Categoria.objects.all().order_by("nome"),
         "others": others,
-        "trending": None,
+        "trending": trending,
         "page_obj": page_obj,
         "config": config,
     }
@@ -142,7 +160,12 @@ def contato(request):
 
 def redes_sociais(request):
     """View para página de redes sociais"""
-    # Buscar notícias para a sidebar
+    # Sistema de trending híbrido para sidebar
+    trending = Noticia.objects.filter(
+        status=Noticia.Status.PUBLICADO
+    ).order_by('-trending_score', '-publicado_em')[:4]
+    
+    # Buscar notícias para fallback
     qs = Noticia.objects.filter(status=Noticia.Status.PUBLICADO).order_by("-publicado_em")
     others = list(qs[1:3])
     
@@ -156,7 +179,7 @@ def redes_sociais(request):
     ctx = {
         "cats": Categoria.objects.all().order_by("nome"),
         "others": others,
-        "trending": None,
+        "trending": trending,
         "page_obj": page_obj,
         "config": config,
     }
@@ -165,7 +188,12 @@ def redes_sociais(request):
 
 def politicas(request):
     """View para página de políticas"""
-    # Buscar notícias para a sidebar
+    # Sistema de trending híbrido para sidebar
+    trending = Noticia.objects.filter(
+        status=Noticia.Status.PUBLICADO
+    ).order_by('-trending_score', '-publicado_em')[:4]
+    
+    # Buscar notícias para fallback
     qs = Noticia.objects.filter(status=Noticia.Status.PUBLICADO).order_by("-publicado_em")
     others = list(qs[1:3])
     
@@ -179,7 +207,7 @@ def politicas(request):
     ctx = {
         "cats": Categoria.objects.all().order_by("nome"),
         "others": others,
-        "trending": None,
+        "trending": trending,
         "page_obj": page_obj,
         "config": config,
     }
@@ -188,7 +216,12 @@ def politicas(request):
 
 def sobre(request):
     """View para página sobre"""
-    # Buscar notícias para a sidebar
+    # Sistema de trending híbrido para sidebar
+    trending = Noticia.objects.filter(
+        status=Noticia.Status.PUBLICADO
+    ).order_by('-trending_score', '-publicado_em')[:4]
+    
+    # Buscar notícias para fallback
     qs = Noticia.objects.filter(status=Noticia.Status.PUBLICADO).order_by("-publicado_em")
     others = list(qs[1:3])
     
@@ -202,7 +235,7 @@ def sobre(request):
     ctx = {
         "cats": Categoria.objects.all().order_by("nome"),
         "others": others,
-        "trending": None,
+        "trending": trending,
         "page_obj": page_obj,
         "config": config,
     }

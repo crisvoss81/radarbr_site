@@ -23,11 +23,28 @@
       {% for obj in hot|slice:':4' %}
         <article class="trending-item">
           <a href="{{ obj.get_absolute_url }}" class="trending-link">
-            <h4 class="trending-title">{{ obj.titulo|striptags|truncatechars:50 }}</h4>
-            <div class="trending-meta">
-              <time datetime="{{ obj.publicado_em|date:'c' }}" class="trending-time">
-                {{ obj.publicado_em|timesince }} atrás
-              </time>
+            <div class="trending-image">
+              {% if obj.imagem %}
+                <img 
+                  src="{{ obj.imagem }}" 
+                  width="60" height="40"
+                  loading="lazy" decoding="async"
+                  alt="{{ obj.imagem_alt|default:obj.titulo|striptags }}"
+                  class="trending-img"
+                >
+              {% else %}
+                <div class="trending-ph trending-ph--{{ obj.categoria.slug|default:'geral' }}">
+                  <div class="trending-ph-icon">📰</div>
+                </div>
+              {% endif %}
+            </div>
+            <div class="trending-content">
+              <h4 class="trending-title">{{ obj.titulo|striptags|truncatechars:50 }}</h4>
+              <div class="trending-meta">
+                <time datetime="{{ obj.publicado_em|date:'c' }}" class="trending-time">
+                  {{ obj.publicado_em|timesince }} atrás
+                </time>
+              </div>
             </div>
           </a>
         </article>

@@ -15,11 +15,12 @@ class CategoriaAdmin(admin.ModelAdmin):
 
 @admin.register(Noticia)
 class NoticiaAdmin(admin.ModelAdmin):
-    list_display = ['titulo', 'categoria', 'status', 'destaque', 'publicado_em', 'criado_em']
+    list_display = ['titulo', 'categoria', 'status', 'destaque', 'views', 'clicks', 'shares', 'trending_score', 'publicado_em', 'criado_em']
     list_filter = ['categoria', 'status', 'destaque', 'publicado_em']
     search_fields = ['titulo', 'conteudo']
     prepopulated_fields = {'slug': ('titulo',)}
     date_hierarchy = 'publicado_em'
+    readonly_fields = ['trending_score', 'views', 'clicks', 'shares']
     
     fieldsets = (
         ('Conteúdo Principal', {
@@ -27,6 +28,10 @@ class NoticiaAdmin(admin.ModelAdmin):
         }),
         ('Data e Hora', {
             'fields': ('publicado_em',)
+        }),
+        ('Métricas de Engajamento', {
+            'fields': ('views', 'clicks', 'shares', 'trending_score'),
+            'classes': ('collapse',)
         }),
         ('Imagem', {
             'fields': ('imagem', 'imagem_alt', 'imagem_credito', 'imagem_licenca', 'imagem_fonte_url'),

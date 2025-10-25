@@ -51,6 +51,27 @@ class Noticia(models.Model):
         help_text="Se marcado, esta notícia será exibida como destaque no topo da home"
     )
 
+    # Métricas de engajamento para sistema de trending
+    views = models.PositiveIntegerField(
+        default=0,
+        help_text="Número de visualizações da notícia"
+    )
+    
+    clicks = models.PositiveIntegerField(
+        default=0,
+        help_text="Número de cliques na notícia"
+    )
+    
+    shares = models.PositiveIntegerField(
+        default=0,
+        help_text="Número de compartilhamentos"
+    )
+    
+    trending_score = models.FloatField(
+        default=0.0,
+        help_text="Score calculado para trending (atualizado automaticamente)"
+    )
+
     # Campo de imagem - URL externa de serviços gratuitos
     imagem = models.URLField(
         max_length=1000,
@@ -79,3 +100,51 @@ class Noticia(models.Model):
 
     def get_absolute_url(self):
         return reverse("noticia", args=[self.slug])
+    
+    def calculate_trending_score(self):
+        """Calcula o score de trending baseado em engajamento e recência"""
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        # Fatores de peso
+        VIEWS_WEIGHT = 1.0
+        CLICKS_WEIGHT = 2.0
+        SHARES_WEIGHT = 3.0
+        RECENCY_WEIGHT = 0.1
+        
+        # Score baseado em engajamento
+        engagement_score = (
+            self.views * VIEWS_WEIGHT +
+            self.clicks * CLICKS_WEIGHT +
+            self.shares * SHARES_WEIGHT
+        )
+        
+        # Score baseado em recência (mais recente = maior score)
+        now = timezone.now()
+        days_old = (now - self.publicado_em).days
+        recency_score = max(0, 30 - days_old) * RECENCY_WEIGHT
+        
+        # Score final
+        total_score = engagement_score + recency_score
+        
+        # Atualiza o campo trending_score
+        self.trending_score = total_score
+        return total_score
+    
+    def increment_views(self):
+        """Incrementa o contador de visualizações"""
+        self.views += 1
+        self.calculate_trending_score()
+        self.save(update_fields=['views', 'trending_score'])
+    
+    def increment_clicks(self):
+        """Incrementa o contador de cliques"""
+        self.clicks += 1
+        self.calculate_trending_score()
+        self.save(update_fields=['clicks', 'trending_score'])
+    
+    def increment_shares(self):
+        """Incrementa o contador de compartilhamentos"""
+        self.shares += 1
+        self.calculate_trending_score()
+        self.save(update_fields=['shares', 'trending_score'])
