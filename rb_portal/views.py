@@ -7,7 +7,7 @@ from rb_noticias.models import Noticia, Categoria
 from rb_portal.models import ConfiguracaoSite
 
 def home(request):
-    # Buscar todas as notícias publicadas
+    # Buscar todas as notícias publicadas ordenadas por data de publicação (mais recente primeiro)
     all_news = Noticia.objects.filter(status=Noticia.Status.PUBLICADO).order_by("-publicado_em")
     
     # Buscar notícia em destaque primeiro
@@ -17,11 +17,11 @@ def home(request):
     if not featured:
         featured = all_news.first()
     
-    # Buscar outras notícias (excluindo a featured)
+    # Buscar outras notícias (excluindo a featured) - sempre as mais recentes
     others_qs = all_news.exclude(id=featured.id) if featured else all_news
-    others = list(others_qs[:3])
+    others = list(others_qs[:3])  # As 3 mais recentes após a featured
 
-    # Para paginação, usar todas as notícias exceto a featured
+    # Para paginação, usar todas as notícias exceto a featured (ordenadas por data)
     paginator = Paginator(others_qs, 10)
     page_obj = paginator.get_page(request.GET.get("page") or 1)
 
