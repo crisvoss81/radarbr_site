@@ -12,6 +12,7 @@ from core.views import robots_txt
 from rb_noticias.sitemaps import NoticiasSitemap, CategoriaSitemap, StaticViewsSitemap
 from rb_noticias.feeds import UltimasNoticiasFeed
 from rb_ingestor.management.commands.automacao_webhook import automacao_webhook_view
+import rb_noticias.api_views
 
 sitemaps = {
     "noticias": NoticiasSitemap,
@@ -49,6 +50,9 @@ urlpatterns = [
 
     # Webhook para automação
     path("webhook/automacao/", automacao_webhook_view, name="automacao_webhook"),
+
+    # API endpoints
+    path("api/increment-shares/", rb_noticias.api_views.increment_shares, name="increment_shares"),
 
 ]
 

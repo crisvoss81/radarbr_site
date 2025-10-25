@@ -61,14 +61,30 @@ def test_images(request):
 
 def post_detail(request, slug):
     obj = get_object_or_404(Noticia, slug=slug, status=Noticia.Status.PUBLICADO)
+    
+    # Incrementar contador de visualizações
+    obj.increment_views()
+    
     relacionados = (
         Noticia.objects.filter(categoria=obj.categoria, status=Noticia.Status.PUBLICADO)
         .exclude(pk=obj.pk)
         .order_by("-publicado_em")[:6]
     )
+    
+    # Sistema de trending híbrido para sidebar
+    trending = Noticia.objects.filter(
+        status=Noticia.Status.PUBLICADO
+    ).exclude(id=obj.id).order_by('-trending_score', '-publicado_em')[:4]
+    
+    # Buscar notícias para fallback
+    qs = Noticia.objects.filter(status=Noticia.Status.PUBLICADO).order_by("-publicado_em")
+    others = list(qs.exclude(id=obj.id)[:3])
+    
     ctx = {
         "object": obj,
         "related_articles": relacionados,
+        "trending": trending,
+        "others": others,
         "cats": Categoria.objects.all().order_by("nome"),
     }
     return render(request, "rb_portal/post_detail.html", ctx)

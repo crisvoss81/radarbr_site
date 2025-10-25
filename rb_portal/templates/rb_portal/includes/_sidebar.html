@@ -25,13 +25,13 @@
           <a href="{{ obj.get_absolute_url }}" class="trending-link">
             <div class="trending-image">
               {% if obj.imagem %}
-                <img 
-                  src="{{ obj.imagem }}" 
-                  width="60" height="40"
-                  loading="lazy" decoding="async"
-                  alt="{{ obj.imagem_alt|default:obj.titulo|striptags }}"
-                  class="trending-img"
-                >
+                     <img 
+                       src="{{ obj.imagem }}" 
+                       width="80" height="60"
+                       loading="lazy" decoding="async"
+                       alt="{{ obj.imagem_alt|default:obj.titulo|striptags }}"
+                       class="trending-img"
+                     >
               {% else %}
                 <div class="trending-ph trending-ph--{{ obj.categoria.slug|default:'geral' }}">
                   <div class="trending-ph-icon">📰</div>
