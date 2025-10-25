@@ -7,26 +7,22 @@ from rb_noticias.models import Noticia, Categoria
 from rb_portal.models import ConfiguracaoSite
 
 def home(request):
+    # Buscar todas as notícias publicadas
+    all_news = Noticia.objects.filter(status=Noticia.Status.PUBLICADO).order_by("-publicado_em")
+    
     # Buscar notícia em destaque primeiro
-    featured = Noticia.objects.filter(
-        status=Noticia.Status.PUBLICADO,
-        destaque=True
-    ).order_by("-publicado_em").first()
+    featured = all_news.filter(destaque=True).first()
     
     # Se não houver destaque, pegar a mais recente
     if not featured:
-        featured = Noticia.objects.filter(
-            status=Noticia.Status.PUBLICADO
-        ).order_by("-publicado_em").first()
+        featured = all_news.first()
     
     # Buscar outras notícias (excluindo a featured)
-    qs = Noticia.objects.filter(status=Noticia.Status.PUBLICADO).order_by("-publicado_em")
-    if featured:
-        qs = qs.exclude(id=featured.id)
-    
-    others = list(qs[:3])
+    others_qs = all_news.exclude(id=featured.id) if featured else all_news
+    others = list(others_qs[:3])
 
-    paginator = Paginator(qs, 10)
+    # Para paginação, usar todas as notícias exceto a featured
+    paginator = Paginator(others_qs, 10)
     page_obj = paginator.get_page(request.GET.get("page") or 1)
 
     ctx = {
