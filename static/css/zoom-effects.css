@@ -1182,13 +1182,13 @@
   color: white;
 }
 
-.share-btn--twitter {
-  background: #1da1f2;
+.share-btn--x {
+  background: #000000;
   color: white;
 }
 
-.share-btn--twitter:hover {
-  background: #0d8bd9;
+.share-btn--x:hover {
+  background: #333333;
   color: white;
 }
 
