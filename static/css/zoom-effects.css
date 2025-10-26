@@ -1145,85 +1145,91 @@
 .share-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 10px 16px;
-  border: 1px solid #d1d5db;
+  padding: 12px 20px;
+  border: none;
   border-radius: 8px;
-  background: white;
-  color: #374151;
+  background: #1877f2;
+  color: white;
   text-decoration: none;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
   transition: all 0.3s ease;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .share-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  opacity: 0.9;
+}
+
+.share-btn svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
 }
 
 .share-btn--facebook {
-  color: #1877f2;
-  border-color: #1877f2;
-}
-
-.share-btn--facebook:hover {
   background: #1877f2;
   color: white;
 }
 
-.share-btn--twitter {
-  color: #1da1f2;
-  border-color: #1da1f2;
+.share-btn--facebook:hover {
+  background: #0e5d9f;
+  color: white;
 }
 
-.share-btn--twitter:hover {
+.share-btn--twitter {
   background: #1da1f2;
   color: white;
 }
 
-.share-btn--linkedin {
-  color: #0077b5;
-  border-color: #0077b5;
+.share-btn--twitter:hover {
+  background: #0d8bd9;
+  color: white;
 }
 
-.share-btn--linkedin:hover {
+.share-btn--linkedin {
   background: #0077b5;
   color: white;
 }
 
-.share-btn--whatsapp {
-  color: #25d366;
-  border-color: #25d366;
-}
-
-.share-btn--whatsapp:hover {
-  background: #25d366;
+.share-btn--linkedin:hover {
+  background: #005885;
   color: white;
 }
 
 .share-btn--instagram {
-  color: #e4405f;
-  border-color: #e4405f;
-}
-
-.share-btn--instagram:hover {
   background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
   color: white;
 }
 
-.share-btn--copy {
-  color: #6b7280;
-  border-color: #6b7280;
+.share-btn--instagram:hover {
+  background: linear-gradient(45deg, #e8831f 0%, #d6592c 25%, #cc1e29 50%, #b71c54 75%, #a2156a 100%);
+  color: white;
 }
 
-.share-btn--copy:hover {
+.share-btn--whatsapp {
+  background: #25d366;
+  color: white;
+}
+
+.share-btn--whatsapp:hover {
+  background: #1da851;
+  color: white;
+}
+
+.share-btn--copy {
   background: #6b7280;
   color: white;
 }
-  border-radius: 8px;
-  transition: transform 0.3s ease;
+
+.share-btn--copy:hover {
+  background: #4b5563;
+  color: white;
 }
 
 .post-figure img {
