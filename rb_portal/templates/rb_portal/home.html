@@ -38,7 +38,7 @@
 
     <!-- Três Imagens em Destaque com Títulos Abaixo -->
     <div class="featured-grid">
-      {% for obj in page_obj.object_list|slice:'1:4' %}
+      {% for obj in page_obj.object_list|slice:':3' %}
         <article class="featured-item">
           <a class="featured-thumb" href="{{ obj.get_absolute_url }}" aria-label="{{ obj.titulo|striptags }}">
             {% if obj.imagem %}
@@ -68,7 +68,7 @@
 
     <!-- Lista de Notícias Restantes -->
     <div class="list">
-      {% for obj in page_obj.object_list|slice:'4:' %}
+      {% for obj in page_obj.object_list|slice:'3:' %}
         {% include 'rb_portal/includes/_card.html' with obj=obj %}
       {% empty %}
         <p class="muted">Nenhuma notícia encontrada.</p>

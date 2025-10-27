@@ -8,7 +8,12 @@ from rb_portal.models import ConfiguracaoSite
 
 def home(request):
     # Buscar todas as notícias publicadas ordenadas por data de publicação (mais recente primeiro)
-    all_news = Noticia.objects.filter(status=Noticia.Status.PUBLICADO).order_by("-publicado_em")
+    # IMPORTANTE: Filtrar apenas notícias com data de publicação <= agora
+    from django.utils import timezone
+    all_news = Noticia.objects.filter(
+        status=Noticia.Status.PUBLICADO,
+        publicado_em__lte=timezone.now()  # Apenas notícias já publicadas (não agendadas)
+    ).order_by("-criado_em")  # Ordenar por data de criação para ordem cronológica real
     
     # Buscar notícia em destaque primeiro
     featured = all_news.filter(destaque=True).first()
@@ -17,24 +22,24 @@ def home(request):
     if not featured:
         featured = all_news.first()
     
-    # Buscar outras notícias (excluindo a featured) - sempre as mais recentes
+    # Buscar outras notícias para exibição (excluindo a featured) - sempre as mais recentes
+    # IMPORTANTE: Usar todas as notícias em ordem cronológica, não apenas as 3 primeiras
     others_qs = all_news.exclude(id=featured.id) if featured else all_news
-    others = list(others_qs[:3])  # As 3 mais recentes após a featured
 
-    # Sistema de trending híbrido (recência + engajamento)
+    # Sistema de trending híbrido (recência + engajamento) para sidebar
     trending = Noticia.objects.filter(
-        status=Noticia.Status.PUBLICADO
+        status=Noticia.Status.PUBLICADO,
+        publicado_em__lte=timezone.now()
     ).exclude(id=featured.id if featured else None).order_by(
-        '-trending_score', '-publicado_em'
+        '-trending_score', '-criado_em'
     )[:4]
 
-    # Para paginação, usar todas as notícias exceto a featured (ordenadas por data)
+    # Para paginação, usar TODAS as notícias (exceto a featured) em ordem cronológica
     paginator = Paginator(others_qs, 10)
     page_obj = paginator.get_page(request.GET.get("page") or 1)
 
     ctx = {
         "featured": featured,
-        "others": others,
         "trending": trending,
         "page_obj": page_obj,
         "cats": Categoria.objects.all().order_by("nome"),
