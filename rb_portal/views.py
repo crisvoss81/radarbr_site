@@ -43,6 +43,7 @@ def home(request):
             "featured": featured,
             "trending": trending,
             "page_obj": page_obj,
+            "others": list(others_qs[:4]),  # Adicionar others para sidebar
             "cats": Categoria.objects.all().order_by("nome"),
         }
         return render(request, "rb_portal/home.html", ctx)
@@ -64,6 +65,7 @@ def home(request):
             "featured": featured,
             "trending": [],
             "page_obj": page_obj,
+            "others": list(others_qs[:4]),  # Adicionar others para sidebar no fallback
             "cats": Categoria.objects.all().order_by("nome"),
         }
         return render(request, "rb_portal/home.html", ctx)
