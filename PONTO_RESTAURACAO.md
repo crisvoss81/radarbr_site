@@ -1,8 +1,8 @@
 # 🎯 PONTO DE RESTAURAÇÃO - RadarBR
 
-**Data:** 20 de Janeiro de 2025 - 18:20  
-**Commit:** `df3047d`  
-**Tag:** `BACKUP-RADARBR-20251020-1820`
+**Data:** 28 de Outubro de 2025 - 10:48  
+**Commit:** `0cf993e`  
+**Tag:** `restore-20251028-104819`
 
 ## 📋 **ESTADO ATUAL DO PROJETO**
 
@@ -140,22 +140,19 @@ python manage.py smart_trends_publish --strategy mixed --limit 3
 
 ## 🔄 **COMO RESTAURAR ESTE PONTO**
 
-### **Se algo der errado:**
+### **Se algo der errado (restaurar este ponto):**
 ```bash
-# Voltar para este commit específico
-git checkout df3047d
+# Voltar para esta tag
+git checkout restore-20251028-104819
 
-# Ou usar a tag
-git checkout BACKUP-RADARBR-20251020-1820
+# Ou resetar hard para este ponto
+git reset --hard restore-20251028-104819
 
-# Para restaurar completamente
-git reset --hard df3047d
+# Criar nova branch a partir deste ponto
+git checkout -b restauracao-20251028 restore-20251028-104819
 ```
 
-### **Para criar nova branch a partir deste ponto:**
-```bash
-git checkout -b nova-feature df3047d
-```
+> Observação: mantivemos os detalhes do ponto anterior abaixo para histórico.
 
 ## 📈 **MÉTRICAS DE QUALIDADE**
 
