@@ -32,28 +32,40 @@ class ImageSearchEngine:
     
     def extract_keywords(self, title: str, content: str = "") -> List[str]:
         """
-        Extrai palavras-chave relevantes do título e conteúdo.
-        Prioriza termos que provavelmente terão imagens disponíveis.
+        Extrai palavras-chave RELEVANTES do título focando em termos específicos.
+        Prioriza termos concretos que terão imagens específicas disponíveis.
         """
-        # Combinar título e conteúdo
-        text = f"{title} {content}".lower()
+        # FOCAR APENAS NO TÍTULO (mais específico)
+        text = title.lower()
         
         # Remover caracteres especiais e dividir em palavras
         words = re.findall(r'\b\w+\b', text)
         
-        # Filtrar palavras muito curtas e comuns
+        # STOP WORDS expandido
         stop_words = {
-            'a', 'o', 'e', 'de', 'da', 'do', 'em', 'na', 'no', 'para', 'com', 'por',
-            'que', 'se', 'mais', 'como', 'mas', 'ou', 'ser', 'ter', 'estar', 'fazer',
-            'dizer', 'poder', 'querer', 'saber', 'ver', 'dar', 'ir', 'vir', 'sair',
-            'chegar', 'ficar', 'passar', 'trabalhar', 'viver', 'morrer', 'nascer',
-            'crescer', 'desenvolver', 'criar', 'construir', 'destruir', 'mudar',
-            'transformar', 'melhorar', 'piorar', 'aumentar', 'diminuir', 'subir',
-            'descer', 'entrar', 'sair', 'abrir', 'fechar', 'começar', 'terminar',
-            'continuar', 'parar', 'acabar', 'começar', 'iniciar', 'finalizar'
+            # Artigos, preposições, conjunções
+            'a', 'o', 'as', 'os', 'um', 'uma', 'de', 'da', 'do', 'das', 'dos',
+            'em', 'na', 'no', 'nas', 'nos', 'para', 'por', 'com', 'sem', 'sob',
+            'sobre', 'atrás', 'através', 'entre', 'durante', 'até', 'desde',
+            # Conjunções
+            'que', 'se', 'mas', 'porém', 'porque', 'como', 'quando', 'onde',
+            'então', 'logo', 'assim', 'portanto', 'ou', 'e', 'nem', 'também',
+            # Pronomes
+            'ele', 'ela', 'eles', 'elas', 'eu', 'nós', 'vós', 'você', 'vocês',
+            'seu', 'sua', 'seus', 'suas', 'meu', 'minha', 'meus', 'minhas',
+            # Verbos comuns
+            'ser', 'ter', 'estar', 'haver', 'fazer', 'dizer', 'ir', 'vir',
+            'ver', 'dar', 'chegar', 'ficar', 'passar', 'sair', 'entrar',
+            'abrir', 'fechar', 'começar', 'terminar', 'acabar', 'iniciar',
+            # Palavras genéricas
+            'muito', 'mais', 'menos', 'bem', 'mal', 'melhor', 'pior',
+            'grande', 'pequeno', 'novo', 'velho', 'junto', 'sozinho',
+            'hoje', 'ontem', 'amanhã', 'agora', 'depois', 'antes',
+            # Números
+            'um', 'dois', 'três', 'quatro', 'cinco', 'dez', 'mil'
         }
         
-        # Filtrar palavras relevantes
+        # EXTRAIR APENAS TERMOS CONCRETOS E ESPECÍFICOS
         keywords = []
         for word in words:
             if (len(word) >= 4 and 
@@ -62,24 +74,18 @@ class ImageSearchEngine:
                 word not in keywords):
                 keywords.append(word)
         
-        # Priorizar palavras do título
-        title_words = re.findall(r'\b\w+\b', title.lower())
-        title_keywords = [w for w in title_words if len(w) >= 4 and w.isalpha()]
+        # Remover termos muito genéricos mesmo depois do filtro
+        generic_terms = {
+            'notícia', 'noticia', 'artigo', 'matéria', 'materia', 'reportagem',
+            'reportagem', 'texto', 'conteúdo', 'conteudo', 'informação',
+            'informacao', 'dados', 'resultado', 'resultados', 'estudo',
+            'pesquisa', 'análise', 'analise', 'relatório', 'relatorio'
+        }
         
-        # Combinar e priorizar
-        final_keywords = []
+        keywords = [w for w in keywords if w not in generic_terms]
         
-        # Adicionar palavras do título primeiro
-        for word in title_keywords:
-            if word not in final_keywords:
-                final_keywords.append(word)
-        
-        # Adicionar outras palavras relevantes
-        for word in keywords:
-            if word not in final_keywords and len(final_keywords) < 5:
-                final_keywords.append(word)
-        
-        return final_keywords[:5]  # Máximo 5 palavras-chave
+        # LIMITAR A 3-4 TERMOS MAIS RELEVANTES (mais específico)
+        return keywords[:4]
     
     def search_unsplash(self, keywords: List[str]) -> Optional[str]:
         """Busca imagem no Unsplash."""
