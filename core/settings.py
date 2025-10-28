@@ -71,6 +71,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "core.context_processors.site_constants",
+            "core.context_processors.site_config",
                 "core.context_processors.categorias_nav",
             ],
         },

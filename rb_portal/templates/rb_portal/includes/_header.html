@@ -47,9 +47,11 @@
 
       <!-- Redes sociais -->
       <nav class="social flex gap-2">
-        <a href="https://facebook.com/radarbr" target="_blank" class="sbtn bg-[#c1121f] w-9 h-9 flex items-center justify-center rounded-full text-white">
+        {% if config.facebook_url %}
+        <a href="{{ config.facebook_url }}" target="_blank" rel="noopener" class="sbtn bg-[#c1121f] w-9 h-9 flex items-center justify-center rounded-full text-white">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.57 9.9v-7h-2v-2.9h2v-2.2c0-2 1.2-3.1 3-3.1.9 0 1.8.17 1.8.17v2h-1c-1 0-1.3.62-1.3 1.26v1.87h2.3L14.8 14.9h-2.1v7A10 10 0 0 0 22 12Z"/></svg>
         </a>
+        {% endif %}
         <a href="https://youtube.com" target="_blank" class="sbtn bg-[#c1121f] w-9 h-9 flex items-center justify-center rounded-full text-white">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M23 7.5a3.5 3.5 0 0 0-2.46-2.47C18.7 4.5 12 4.5 12 4.5s-6.7 0-8.54.53A3.5 3.5 0 0 0 1 7.5C.5 9.35.5 12 .5 12s0 2.65.53 4.5A3.5 3.5 0 0 0 3.5 19c1.84.53 8.5.53 8.5.53s6.7 0 8.54-.53A3.5 3.5 0 0 0 23 16.5c.53-1.85.53-4.5.53-4.5s0-2.65-.53-4.5ZM9.75 15.02V8.98L15.5 12l-5.75 3.02Z"/></svg>
         </a>

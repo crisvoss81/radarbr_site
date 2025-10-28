@@ -17,6 +17,15 @@ def site_constants(request):
         "debug": getattr(settings, "DEBUG", False),
     }
 
+def site_config(_request):
+    """Disponibiliza `config` (ConfiguracaoSite) globalmente aos templates."""
+    try:
+        ConfiguracaoSite = apps.get_model("rb_portal", "ConfiguracaoSite")
+        return {"config": ConfiguracaoSite.get_config()}
+    except Exception:
+        # Em caso de erro (migracoes pendentes, etc), evita quebrar templates
+        return {"config": None}
+
 def categorias_nav(_request):
     Categoria = None
     for label in ("rb_noticias", "noticias"):
