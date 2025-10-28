@@ -13,7 +13,7 @@ def home(request):
     all_news = Noticia.objects.filter(
         status=Noticia.Status.PUBLICADO,
         publicado_em__lte=timezone.now()  # Apenas notícias já publicadas (não agendadas)
-    ).order_by("-criado_em")  # Ordenar por data de criação para ordem cronológica real
+    ).order_by("-publicado_em")  # Ordenar por data de publicação
     
     # Buscar notícia em destaque primeiro
     featured = all_news.filter(destaque=True).first()
@@ -31,7 +31,7 @@ def home(request):
         status=Noticia.Status.PUBLICADO,
         publicado_em__lte=timezone.now()
     ).exclude(id=featured.id if featured else None).order_by(
-        '-trending_score', '-criado_em'
+        '-trending_score', '-publicado_em'
     )[:4]
 
     # Para paginação, usar TODAS as notícias (exceto a featured) em ordem cronológica
