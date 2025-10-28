@@ -6,4 +6,6 @@ class RbNoticiasConfig(AppConfig):
     name = 'rb_noticias'
     
     def ready(self):
-        import rb_noticias.signals
+        # Temporariamente desabilitado para evitar erro 500
+        # import rb_noticias.signals
+        pass
