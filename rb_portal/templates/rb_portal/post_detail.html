@@ -131,8 +131,19 @@
   {% endif %}
 
   <div class="post-content">
+    {% if object.show_youtube and object.youtube_urls %}
+      {% render_youtube_embeds object.youtube_urls as ytblock %}
+      {% if ytblock %}
+        {{ object.conteudo|inject_between_sections:ytblock|split_content_sections|safe }}
+      {% else %}
+        {{ object.conteudo|split_content_sections|safe }}
+      {% endif %}
+    {% else %}
     {{ object.conteudo|split_content_sections|safe }}
+    {% endif %}
   </div>
+
+  {# Vídeos agora são injetados entre as seções do conteúdo #}
 
   <!-- Botões de Compartilhamento -->
   <div class="share-buttons">

@@ -37,6 +37,11 @@ class NoticiaAdmin(admin.ModelAdmin):
             'fields': ('imagem', 'imagem_alt', 'imagem_credito', 'imagem_licenca', 'imagem_fonte_url'),
             'classes': ('collapse',)
         }),
+        ('Vídeos (YouTube) - opcional', {
+            'fields': ('show_youtube', 'youtube_urls'),
+            'description': 'Para exibir vídeos, marque a opção e cole uma ou mais URLs do YouTube (uma por linha).',
+            'classes': ('collapse',)
+        }),
         ('Fonte', {
             'fields': ('fonte_url', 'fonte_nome'),
             'classes': ('collapse',)

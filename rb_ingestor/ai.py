@@ -132,58 +132,48 @@ def generate_article(topic: str, *, model: str | None = None, min_words: int = 7
     model = model or MODEL_DEFAULT
 
     system = (
-        "Você é um redator sênior especializado em SEO para portal de notícias brasileiro. "
-        "Escreva em PT-BR com tom natural, humano e envolvente. "
-        "Use variações de vocabulário, sinônimos e expressões coloquiais brasileiras. "
-        "Evite repetições e linguagem robótica. "
-        "Nunca invente dados específicos (datas, placares, preços). "
-        "Foque em conteúdo de valor real para o leitor brasileiro."
+        "Você é um jornalista brasileiro experiente escrevendo para um portal de notícias. "
+        "Escreva com tom profissional mas acessível, como se estivesse explicando para um leitor comum. "
+        "Evite linguagem excessivamente técnica ou acadêmica. "
+        "Não use expressões forçadas ou jargões de marketing. "
+        "Seja direto, informativo e natural. "
+        "Nunca invente números, datas ou fatos específicos. "
+        "Se não souber algo, seja honesto sobre as limitações. "
+        "Foque em informar com clareza e objetividade."
     )
 
     user = f"""
-Gere um ARTIGO EM JSON sobre o tópico entre <topic>…</topic>. Regras:
+Crie um artigo jornalístico completo sobre o tópico abaixo.
 
-<topic>{topic.strip()}</topic>
+TÓPICO: {topic.strip()}
 
-[OBJETIVO SEO]
-- Tamanho alvo: {min_words}-{min_words+300} palavras (conteúdo substancial e natural).
-- Densidade de palavra-chave: 1-2% (natural, não forçada).
-- Use sinônimos e variações da palavra-chave principal.
-- Linguagem natural, parágrafos variados (2-5 linhas).
-- Tom conversacional e envolvente.
+FORMATO (JSON):
+{{
+    "title": "Título informativo e direto (50-70 caracteres)",
+    "dek": "Resumo claro do artigo (120-150 caracteres)",
+    "html": "Conteúdo em HTML sem tags <html>/<body>"
+}}
 
-[ESTRUTURA SEO]
-- Retorne **apenas** um JSON com campos: "title", "dek", "html".
-- title: 50-60 caracteres, inclua palavra-chave principal naturalmente.
-- dek: 150-160 caracteres, resumo envolvente com palavra-chave.
-- html: conteúdo em HTML sem <html>/<body>, seguindo:
+ESTRUTURA DO CONTEÚDO (HTML):
+<h2>Subtítulo 1</h2>
+<p>Conteúdo relevante...</p>
 
-<h2>Introdução Natural</h2>
-<p>Parágrafo de abertura envolvente que introduz o tema...</p>
+<h2>Subtítulo 2</h2>
+<p>Conteúdo relevante...</p>
 
-<h2>Desenvolvimento Principal</h2>
-<p>Conteúdo detalhado com informações valiosas...</p>
-<p>Use transições naturais entre parágrafos...</p>
+<p>Continue com mais parágrafos, se necessário.</p>
 
-<h2>Aspectos Importantes</h2>
-<ul><li>Ponto relevante 1</li><li>Ponto relevante 2</li><li>Ponto relevante 3</li></ul>
-
-<h2>Impacto e Relevância</h2>
-<p>Como isso afeta o leitor brasileiro...</p>
-
-<h2>Perguntas Frequentes</h2>
-<h3>Pergunta natural 1</h3><p>Resposta útil e completa.</p>
-<h3>Pergunta natural 2</h3><p>Resposta útil e completa.</p>
-
-[REGRAS DE QUALIDADE]
-- Use expressões brasileiras naturais ("cara", "galera", "rola", etc.).
-- Varie o vocabulário (não repita palavras desnecessariamente).
-- Não use marcações Markdown; apenas HTML.
-- Não coloque tag <h1> no corpo.
-- Não cite que foi gerado por IA.
-- Sem links externos.
-- Conteúdo único e original.
-- NUNCA retorne nada além do JSON final.
+DIRETRIZES:
+- Mínimo de {min_words} palavras no total
+- Escreva como um jornalista profissional explicando para o leitor comum
+- Use linguagem clara e objetiva
+- Evite jargões e expressões exageradas
+- Não force palavras-chave - seja natural
+- Não invente fatos, números ou datas específicas
+- Não use expressões de IA como "vale a pena", "é essencial", "é fundamental"
+- Não crie perguntas frequentes artificiais
+- Mantenha tom informativo e equilibrado
+- Retorne APENAS o JSON, sem explicações antes ou depois
 """
 
     try:

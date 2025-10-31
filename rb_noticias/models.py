@@ -85,6 +85,17 @@ class Noticia(models.Model):
     imagem_licenca = models.CharField(max_length=120, blank=True, default="")
     imagem_fonte_url = models.CharField(max_length=300, blank=True, default="")
 
+    # Vídeos do YouTube (opcional)
+    show_youtube = models.BooleanField(
+        default=False,
+        help_text="Se marcado, exibe os vídeos do YouTube neste artigo"
+    )
+    youtube_urls = models.TextField(
+        blank=True,
+        default="",
+        help_text="Cole uma ou mais URLs do YouTube, uma por linha"
+    )
+
     fonte_url = models.URLField(max_length=1000, unique=True, blank=True, default="")
     fonte_nome = models.CharField(max_length=160, blank=True, default="")
 
