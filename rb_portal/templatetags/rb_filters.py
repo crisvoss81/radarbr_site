@@ -26,48 +26,14 @@ def extract_dek(html: str) -> str:
 @register.filter
 def split_content_sections(html: str) -> str:
     """
-    Divide o conteúdo HTML em duas seções baseadas em H2 tags
-    e insere um banner AdSense entre elas.
+    Retorna o conteúdo HTML sem modificações.
+    (Função mantida para compatibilidade, mas não divide mais o conteúdo)
     """
     if not html:
         return html
     
-    # Banner AdSense HTML (oculta em desenvolvimento para evitar espaço vazio)
-    adsense_banner = ''
-    if not getattr(settings, 'DEBUG', True):
-        adsense_banner = '''
-        <div class="ad-slot ad-slot--content-middle" style="margin: 1.25rem 0; text-align: center;">
-            <ins class="adsbygoogle"
-                 style="display:block"
-                 data-ad-client="ca-pub-4840700734"
-                 data-ad-slot="4840700734"
-                 data-ad-format="auto"
-                 data-full-width-responsive="true"></ins>
-            <script>
-                 (adsbygoogle = window.adsbygoogle || []).push({});
-            </script>
-        </div>
-        '''
-    
-    # Encontrar todas as tags H2
-    h2_pattern = r'<h2[^>]*>.*?</h2>'
-    h2_matches = list(re.finditer(h2_pattern, html, re.IGNORECASE | re.DOTALL))
-    
-    if len(h2_matches) < 2:
-        # Se não há pelo menos 2 H2s, retorna o conteúdo original
-        return html
-    
-    # Pegar o segundo H2 como divisor (final da primeira seção)
-    second_h2_start = h2_matches[1].start()
-    
-    # Dividir o conteúdo: primeira seção vai até antes do segundo H2
-    first_section = html[:second_h2_start]
-    second_section = html[second_h2_start:]
-    
-    # Combinar com o banner no meio (ou nada, se em DEBUG)
-    result = first_section + adsense_banner + second_section
-    
-    return mark_safe(result)
+    # Retornar conteúdo original sem divisão ou banner
+    return mark_safe(html)
 
 @register.filter
 def meta_description_from_highlights(html: str) -> str:
