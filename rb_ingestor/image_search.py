@@ -188,10 +188,27 @@ class ImageSearchEngine:
         return None
     
     def validate_image_url(self, url: str) -> bool:
-        """Valida se a URL da imagem é acessível."""
+        """Valida se a URL da imagem é acessível, válida e atende critérios de qualidade"""
         try:
-            response = requests.head(url, headers=self.headers, timeout=5)
-            return response.status_code == 200
+            response = requests.head(url, headers=self.headers, timeout=10, allow_redirects=True)
+            if response.status_code != 200:
+                return False
+            
+            # Verificar tamanho mínimo (rejeitar imagens muito pequenas)
+            content_length = response.headers.get('Content-Length')
+            if content_length and int(content_length) < 15000:  # Menos de 15KB é muito pequeno
+                return False
+            
+            # Verificar tipo de imagem
+            content_type = response.headers.get('Content-Type', '').lower()
+            if content_type and 'image' not in content_type:
+                # Se não tem content-type, verificar extensão
+                url_lower = url.lower()
+                valid_extensions = ['.jpg', '.jpeg', '.png', '.webp']
+                if not any(ext in url_lower for ext in valid_extensions):
+                    return False
+            
+            return True
         except:
             return False
     
@@ -235,7 +252,7 @@ class ImageSearchEngine:
                 if image_url and self.validate_image_url(image_url):
                     # Cachear resultado
                     self._cache[cache_key] = image_url
-                    logger.info(f"Imagem encontrada via {api_name}: {image_url}")
+                    logger.info(f"✅ Imagem encontrada via {api_name}: {image_url}")
                     return image_url
                 
                 # Pequena pausa entre APIs

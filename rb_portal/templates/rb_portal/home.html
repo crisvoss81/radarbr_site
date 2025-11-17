@@ -15,8 +15,7 @@
           <a class="super-hero-thumb" href="{{ featured.get_absolute_url }}" aria-label="{{ featured.titulo|striptags }}">
             {% if featured.imagem %}
               <img 
-                src="{% cloudinary_image_url featured.imagem width=1200 height=600 crop='fill' %}"
-                {% cloudinary_responsive_image featured.imagem %}
+                src="{{ featured.imagem }}"
                 width="1200" height="600"
                 loading="eager" fetchpriority="high" decoding="async"
                 alt="{{ featured.imagem_alt|default:featured.titulo|striptags }}"
@@ -43,8 +42,7 @@
           <a class="featured-thumb" href="{{ obj.get_absolute_url }}" aria-label="{{ obj.titulo|striptags }}">
             {% if obj.imagem %}
               <img 
-                src="{% cloudinary_image_url obj.imagem width=400 height=250 crop='fill' %}"
-                {% cloudinary_responsive_image obj.imagem %}
+                src="{{ obj.imagem }}"
                 width="400" height="250"
                 loading="lazy" decoding="async"
                 alt="{{ obj.imagem_alt|default:obj.titulo|striptags }}"

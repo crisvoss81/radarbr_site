@@ -42,15 +42,27 @@ def generate_enhanced_article(topic: str, news_context: Optional[Dict] = None, m
             messages=[
                 {
                     "role": "system",
-                    "content": "Você é um jornalista especializado brasileiro com expertise em análise de notícias e criação de conteúdo SEO otimizado. Seu trabalho é criar artigos informativos, precisos e envolventes baseados em fatos reais."
+                    "content": f"""Você é um jornalista especializado brasileiro escrevendo para um portal de notícias real.
+
+REGRAS FUNDAMENTAIS:
+1. Escreva como uma PESSOA REAL, não como IA
+2. Cada artigo deve ter estrutura ÚNICA e DIFERENTE
+3. VARIE sempre: subtítulos, tamanho de parágrafos, início de frases
+4. Evite padrões repetitivos ao máximo
+5. Seja NATURAL, HUMANO e ESPECÍFICO baseado na notícia real
+6. Não use expressões genéricas de IA
+7. Escreva como se estivesse contando uma história interessante"""
                 },
                 {
                     "role": "user",
                     "content": prompt
                 }
             ],
-            temperature=0.7,
-            max_tokens=4000
+            temperature=0.9,  # Mais criatividade para variação
+            max_tokens=4000,
+            top_p=0.95,  # Mais diversidade
+            frequency_penalty=0.5,  # Penaliza repetições (evita padrões)
+            presence_penalty=0.3  # Incentiva novos tópicos e variações
         )
         
         content = response.choices[0].message.content
@@ -90,31 +102,35 @@ REQUISITOS OBRIGATÓRIOS:
 - MÍNIMO de {min_words} palavras (ideal: {min_words + 200})
 - Artigo baseado nos FATOS REAIS da notícia, não genérico
 - Linguagem jornalística profissional e envolvente
-- ESTRUTURA OBRIGATÓRIA: EXATAMENTE 2 subtítulos H2 (não mais, não menos)
-- Parágrafos informativos e desenvolvidos (4-5 frases cada)
+- VARIAÇÃO DE ESTRUTURA: EVITE subtítulos H2 - prefira texto corrido bem estruturado (máximo 1 H2, preferencialmente 0)
+- VARIE tamanhos de parágrafos: alguns curtos (2-3 frases), outros médios (4-5 frases)
 - Incluir listas quando apropriado
 - Densidade de palavra-chave natural (1-2%)
 - Contexto brasileiro quando relevante
 - Tom informativo mas acessível
 
-ESTRUTURA OBRIGATÓRIA (EXATAMENTE 2 H2):
-1. **Primeiro H2** (4-5 parágrafos informativos)
-   - Contextualize a notícia específica
-   - Explique por que é importante agora
-   - Mencione os fatos principais
-   - Desenvolva cada ponto com detalhes
+CRÍTICO - EVITAR PADRÕES ARTIFICIAIS:
+- ❌ NÃO use estruturas fixas como "Introdução", "Desenvolvimento", "Conclusão"
+- ❌ NÃO use sempre os mesmos padrões de subtítulos
+- ❌ NÃO comece parágrafos sempre da mesma forma
+- ❌ NÃO termine com: "é fundamental", "vale a pena", "é essencial"
+- ✅ VARIE o estilo dos subtítulos (perguntas, afirmações, descrições)
+- ✅ VARIE o tamanho dos parágrafos
+- ✅ Escreva como um JORNALISTA REAL, não como IA
 
-2. **Segundo H2** (4-5 parágrafos informativos)
-   - Detalhe os acontecimentos específicos
-   - Cite informações da fonte quando possível
-   - Explique o contexto histórico se relevante
-   - Desenvolva análises e implicações
+SUBTÍTULOS (USE COM EXTREMA MODERAÇÃO):
+- ⚠️ EVITE usar H2 - prefira texto corrido sem subtítulos
+- Use H2 APENAS quando ABSOLUTAMENTE necessário para organização
+- MÁXIMO 1 H2 por artigo (a maioria dos artigos deve ter 0 H2)
+- Prefira parágrafos bem desenvolvidos sem dividir com subtítulos
+- NÃO use H2 para separar seções genéricas
+- Se usar H2, que seja algo ESPECÍFICO e realmente necessário
 
 IMPORTANTE - DESENVOLVIMENTO DE CONTEÚDO:
 - NÃO finalize antes de atingir o mínimo de {min_words} palavras
-- Desenvolva cada parágrafo com 4-5 frases completas
-- Seja detalhado e informativo
-- Use transições naturais entre parágrafos
+- VARIE tamanhos de parágrafos: alguns curtos (2-3 frases), outros médios (4-5 frases)
+- Seja detalhado e informativo quando apropriado
+- Use transições naturais e variadas entre parágrafos
 
 IMPORTANTE - EVITAR PLÁGIO:
 - NUNCA copie títulos de outros portais
@@ -171,43 +187,35 @@ REQUISITOS OBRIGATÓRIOS:
 - Mínimo de {min_words} palavras (ideal: {min_words + 200})
 - Artigo informativo e atualizado sobre o tópico
 - Linguagem jornalística profissional e envolvente
-- Estrutura com subtítulos H2 e H3 informativos
-- Parágrafos curtos e objetivos (máximo 4 linhas)
+- VARIAÇÃO DE ESTRUTURA: EVITE subtítulos H2 - prefira texto corrido bem estruturado (máximo 1 H2, preferencialmente 0)
+- VARIE tamanhos de parágrafos: alguns curtos (2-3 frases), outros médios (4-5 frases)
 - Incluir listas quando apropriado
 - Densidade de palavras-chave natural (1-2%)
 - Contexto brasileiro quando relevante
 - Tom informativo mas acessível
 
-ESTRUTURA OBRIGATÓRIA:
-1. **Introdução Impactante** (2-3 parágrafos)
-   - Contextualize o tópico
-   - Explique por que é relevante agora
-   - Apresente os pontos principais
+CRÍTICO - EVITAR PADRÕES ARTIFICIAIS:
+- ❌ NÃO use estruturas fixas como "Introdução", "Desenvolvimento", "Conclusão"
+- ❌ NÃO use sempre os mesmos padrões de subtítulos
+- ❌ NÃO comece parágrafos sempre da mesma forma
+- ❌ NÃO termine com: "é fundamental", "vale a pena", "é essencial"
+- ✅ VARIE o estilo dos subtítulos (perguntas, afirmações, descrições)
+- ✅ VARIE o tamanho dos parágrafos
+- ✅ Escreva como um JORNALISTA REAL, não como IA
 
-2. **Desenvolvimento Principal** (4-5 parágrafos)
-   - Detalhe os aspectos principais do tópico
-   - Explique o contexto histórico se relevante
-   - Forneça informações atualizadas
+SUBTÍTULOS (USE COM EXTREMA MODERAÇÃO):
+- ⚠️ EVITE usar H2 - prefira texto corrido sem subtítulos
+- Use H2 APENAS quando ABSOLUTAMENTE necessário para organização
+- MÁXIMO 1 H2 por artigo (a maioria dos artigos deve ter 0 H2)
+- Prefira parágrafos bem desenvolvidos sem dividir com subtítulos
+- NÃO use H2 para separar seções genéricas
+- Se usar H2, que seja algo ESPECÍFICO e realmente necessário
 
-3. **Análise e Impacto** (3-4 parágrafos)
-   - Analise as implicações do tópico
-   - Explique quem é afetado e como
-   - Discuta possíveis consequências
-
-4. **Contexto Brasileiro** (2-3 parágrafos)
-   - Como isso afeta o Brasil especificamente
-   - Situação atual no Brasil
-   - Impacto na sociedade brasileira
-
-5. **Perspectivas Futuras** (2-3 parágrafos)
-   - O que esperar nos próximos meses
-   - Possíveis desenvolvimentos
-   - Tendências futuras
-
-6. **Conclusão Forte** (1-2 parágrafos)
-   - Resumo dos pontos principais
-   - Importância do tópico
-   - Chamada para acompanhamento
+COMO ESTRUTURAR (VARIE):
+- Comece de formas diferentes (não sempre "Este tema...")
+- Desenvolva os pontos principais naturalmente
+- Inclua contexto brasileiro quando relevante (mas integrado, não como seção obrigatória)
+- Varie a forma de finalizar (nem sempre com resumo genérico)
 
 IMPORTANTE:
 - Seja específico e factual sobre o tópico
@@ -232,6 +240,10 @@ def process_enhanced_response(content: str, topic: str, news_context: Optional[D
     
     if json_content:
         try:
+            # Limpar JSON antes de parsear (remover vírgulas trailing)
+            json_content = re.sub(r',\s*}', '}', json_content)
+            json_content = re.sub(r',\s*]', ']', json_content)
+            
             data = json.loads(json_content)
             
             # Validar e limpar dados
@@ -264,7 +276,6 @@ def extract_json_from_response(content: str) -> Optional[str]:
     
     # Procurar por blocos JSON
     patterns = [
-        r'\{[^{}]*"title"[^{}]*\}',  # JSON simples
         r'```json\s*(\{.*?\})\s*```',  # JSON em bloco de código
         r'```\s*(\{.*?\})\s*```',  # JSON em bloco genérico
     ]
@@ -279,7 +290,13 @@ def extract_json_from_response(content: str) -> Optional[str]:
     end = content.rfind('}')
     
     if start != -1 and end != -1 and end > start:
-        return content[start:end+1]
+        json_str = content[start:end+1]
+        
+        # Limpar JSON: remover vírgulas trailing antes de chaves de fechamento
+        json_str = re.sub(r',\s*}', '}', json_str)
+        json_str = re.sub(r',\s*]', ']', json_str)
+        
+        return json_str
     
     return None
 
