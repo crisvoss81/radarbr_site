@@ -16,7 +16,12 @@
         // Detectar mudanças no título para sugerir slug e fonte URL
         $('#id_titulo').on('input', function() {
             autoGenerateSlug();
-            autoGenerateFonteUrl();
+            autoGenerateFonteUrlFromSlug();
+        });
+        
+        // Detectar mudanças no slug para atualizar fonte_url
+        $('#id_slug').on('input', function() {
+            autoGenerateFonteUrlFromSlug();
         });
         
         // Detectar mudanças na categoria para atualizar alt text
@@ -57,9 +62,12 @@
         var titulo = $('#id_titulo').val();
         if (!titulo) return;
         
-        // Gerar slug baseado no título
+        // Gerar slug baseado no título usando a mesma lógica do Django
+        // Normalizar caracteres especiais e acentos
         var slug = titulo
             .toLowerCase()
+            .normalize('NFD') // Normalizar caracteres Unicode
+            .replace(/[\u0300-\u036f]/g, '') // Remover acentos
             .replace(/[^a-z0-9\s-]/g, '') // Remover caracteres especiais
             .replace(/\s+/g, '-') // Substituir espaços por hífens
             .replace(/-+/g, '-') // Remover hífens duplicados
@@ -68,45 +76,36 @@
         // Limitar tamanho do slug
         slug = slug.substring(0, 180);
         
-        // Preencher campo slug se estiver vazio
+        // Preencher campo slug automaticamente
         var slugField = $('#id_slug');
-        if (!slugField.val()) {
+        
+        // Se o slug estiver vazio, preencher automaticamente
+        // Isso garante que sempre haverá um slug quando o título for preenchido
+        if (!slugField.val() || slugField.val().trim() === '') {
             slugField.val(slug);
         }
     }
     
-    function autoGenerateFonteUrl() {
-        var titulo = $('#id_titulo').val();
-        if (!titulo) return;
+    function autoGenerateFonteUrlFromSlug() {
+        // Obter o slug atual
+        var slug = $('#id_slug').val();
+        if (!slug || slug.trim() === '') return;
         
-        // Gerar fonte URL SEO-friendly baseada no título
-        var tituloSlug = titulo
-            .toLowerCase()
-            .replace(/[^a-z0-9\s-]/g, '') // Remover caracteres especiais
-            .replace(/\s+/g, '-') // Substituir espaços por hífens
-            .replace(/-+/g, '-') // Remover hífens duplicados
-            .replace(/^-|-$/g, ''); // Remover hífens do início/fim
-        
-        // Limitar tamanho do slug do título
-        tituloSlug = tituloSlug.substring(0, 30);
-        
-        // Gerar timestamp atual
-        var now = new Date();
-        var timestamp = now.getFullYear().toString() + 
-                       (now.getMonth() + 1).toString().padStart(2, '0') + 
-                       now.getDate().toString().padStart(2, '0');
-        
-        // Gerar ID único simples
-        var uniqueId = Math.random().toString(36).substring(2, 8);
-        
-        // Criar fonte URL SEO-friendly
-        var fonteUrl = `radarbr-${tituloSlug}-${timestamp}-${uniqueId}`;
+        // Criar URL completa usando o slug
+        // Formato: https://radarbr.com.br/noticia/slug-da-noticia
+        var baseUrl = window.location.origin; // Pega o domínio atual
+        var fonteUrl = baseUrl + '/noticia/' + slug;
         
         // Preencher campo fonte URL se estiver vazio
         var fonteUrlField = $('#id_fonte_url');
-        if (!fonteUrlField.val()) {
+        if (!fonteUrlField.val() || fonteUrlField.val().trim() === '') {
             fonteUrlField.val(fonteUrl);
         }
+    }
+    
+    // Manter função antiga para compatibilidade (mas não será chamada)
+    function autoGenerateFonteUrl() {
+        autoGenerateFonteUrlFromSlug();
     }
     
     function updateImageAltText() {

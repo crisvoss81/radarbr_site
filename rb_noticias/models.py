@@ -109,6 +109,41 @@ class Noticia(models.Model):
     def __str__(self):
         return self.titulo
 
+    def save(self, *args, **kwargs):
+        """Gera slug automaticamente a partir do título se não foi fornecido"""
+        # 1. Gerar slug se não existir
+        if not self.slug and self.titulo:
+            self.slug = slugify(self.titulo)[:180]
+            # Garantir que o slug seja único
+            original_slug = self.slug
+            counter = 1
+            while Noticia.objects.filter(slug=self.slug).exclude(pk=self.pk).exists():
+                self.slug = f"{original_slug}-{counter}"[:180]
+                counter += 1
+        elif self.slug:
+            # Validar slug se foi alterado manualmente
+            self.slug = slugify(self.slug)[:180]
+        
+        # 2. Preencher fonte_url automaticamente com o slug se estiver vazio
+        if self.slug and (not self.fonte_url or self.fonte_url.strip() == ''):
+            # Criar URL completa usando o slug
+            from django.conf import settings
+            try:
+                # Tentar pegar SITE_BASE_URL das configurações
+                site_url = getattr(settings, 'SITE_BASE_URL', None)
+                if not site_url:
+                    # Fallback: usar URL padrão
+                    site_url = 'https://radarbr.com.br'
+                
+                # Construir URL completa
+                absolute_url = self.get_absolute_url()  # Retorna: /noticia/slug
+                self.fonte_url = f"{site_url.rstrip('/')}{absolute_url}"
+            except Exception:
+                # Fallback: usar URL padrão com o slug
+                self.fonte_url = f"https://radarbr.com.br/noticia/{self.slug}"
+        
+        super().save(*args, **kwargs)
+
     def get_absolute_url(self):
         return reverse("noticia", args=[self.slug])
     
